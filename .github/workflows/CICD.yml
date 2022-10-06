@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   windows_release:
-    uses: ./github/workflows/Build.yml
+    uses: ./.github/workflows/build.yml
     with:
       platform: windows-2019
       configuration: Release
@@ -28,7 +28,7 @@ jobs:
       enable_coverage: false
 
   windows_debug:
-    uses: ./github/workflows/Build.yml
+    uses: ./.github/workflows/Build.yml
     with:
       platform: windows-2019
       configuration: Debug
@@ -36,7 +36,7 @@ jobs:
       enable_coverage: false
 
   ubuntu_release:
-    uses: ./github/workflows/Build.yml
+    uses: ./.github/workflows/Build.yml
     with:
       platform: ubuntu-20.04
       configuration: Release
@@ -44,7 +44,7 @@ jobs:
       enable_coverage: false
   
   ubuntu_debug:
-    uses: ./github/workflows/Build.yml
+    uses: ./.github/workflows/Build.yml
     with:
       platform: ubuntu-20.04
       configuration: Debug
@@ -52,7 +52,7 @@ jobs:
       enable_coverage: false
 
   ubuntu_release_sanitizers:
-    uses: ./github/workflows/Build.yml
+    uses: ./.github/workflows/Build.yml
     with:
       platform: ubuntu-20.04
       configuration: Release
@@ -60,7 +60,7 @@ jobs:
       enable_coverage: false
   
   ubuntu_debug_sanitizers:
-    uses: ./github/workflows/Build.yml
+    uses: ./.github/workflows/Build.yml
     with:
       platform: ubuntu-20.04
       configuration: Debug
@@ -68,7 +68,7 @@ jobs:
       enable_coverage: false
   
   ubuntu_release_coverage:
-    uses: ./github/workflows/Build.yml
+    uses: ./.github/workflows/Build.yml
     with:
       platform: ubuntu-20.04
       configuration: Release
@@ -76,7 +76,7 @@ jobs:
       enable_coverage: true
 
   ubuntu_debug_coverage:
-    uses: ./github/workflows/Build.yml
+    uses: ./.github/workflows/Build.yml
     with:
       platform: ubuntu-20.04
       configuration: Debug
