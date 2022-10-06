@@ -40,4 +40,4 @@ target_include_directories("bpf_conformance" PRIVATE
 )
 
 
-target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB} "bpf_c_settings")
+target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB})
