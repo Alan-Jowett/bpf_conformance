@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: MIT
 
+# Main YML file for the CICD pipeline
+
 name: CI/CD
 
 on:
