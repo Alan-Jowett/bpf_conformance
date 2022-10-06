@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+
 name: CI/CD
 
 on:
@@ -50,11 +53,19 @@ jobs:
         key: ${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: Configure CMake
-      run: cmake \
+      run: |
+        if [ "${{inputs.enable_sanitizers}}" = "true" ]; then
+          export SANITIZER_FLAGS="-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all"
+        fi
+        if [ "${{inputs.enable_coverage}}" = "true" ]; then
+          export COVERAGE_FLAGS="-DCMAKE_CXX_FLAGS=\"--coverage\" -DCMAKE_C_FLAGS=\"--coverage\""
+        fi
+        cmake \
         -B ${{github.workspace}}/build \
         -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-        -DENABLE_SANITIZERS=${{inputs.enable_sanitizers}} \
-        -DENABLE_COVERAGE=${{inputs.enable_coverage}}
+        -DCMAKE_CXX_FLAGS="${{env.SANITIZER_FLAGS}}" \
+        -DCMAKE_C_FLAGS="${{env.SANITIZER_FLAGS}}" \
+        ${{env.COVERAGE_FLAGS}}
 
     - name: Build
       # Build your program with the given configuration
