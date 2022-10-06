@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
     "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-  find_package(yaml-cpp REQUIRED)
   find_package(Boost REQUIRED)
   find_package(Boost_program_options REQUIRED)
   find_package(boost_filesystem REQUIRED)
