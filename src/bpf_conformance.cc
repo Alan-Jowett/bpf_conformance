@@ -166,7 +166,7 @@ int main(int argc, char **argv)
             try {
                 return_value = std::stoul(return_value_string, nullptr, 16);
             }
-            catch (const std::exception &e)
+            catch (const std::exception &)
             {
                 std::cout << "Plugin returned invalid return value for test " << test << std::endl;
                 test_results[test] = false;

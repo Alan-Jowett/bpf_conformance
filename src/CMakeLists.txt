@@ -10,7 +10,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
   find_package(Boost_program_options REQUIRED)
   find_package(boost_filesystem REQUIRED)
   set(CMAKE_CXX_STANDARD 20)
-  set(PLATFORM_LIB pthread)
+  set(PLATFORM_LIB pthread boost_program_options boost_filesystem)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   find_program(NUGET nuget)
   if (NOT NUGET)
@@ -22,7 +22,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   endif()
   set(Boost_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/packages/boost/lib/native/include)
   set(Boost_LIBRARY_DIRS ${CMAKE_BINARY_DIR}/packages/boost_filesystem-vc142/lib/native ${CMAKE_BINARY_DIR}/packages/boost_program_options-vc142/lib/native)
-  
 endif ()
 
 include_directories(${Boost_INCLUDE_DIR})
@@ -42,4 +41,4 @@ target_include_directories("bpf_conformance" PRIVATE
 )
 
 
-target_link_libraries(bpf_conformance PRIVATE boost_program_options boost_filesystem ${PLATFORM_LIB})
+target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB})
