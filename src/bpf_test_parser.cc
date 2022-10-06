@@ -9,7 +9,7 @@
 #include "bpf_assembler.h"
 
 std::tuple<std::vector<uint8_t>, uint64_t, std::string, std::vector<ebpf_inst>>
-parse_test_file(const std::filesystem::path &data_file)
+parse_test_file(const std::filesystem::path& data_file)
 {
     enum class _state
     {
@@ -30,67 +30,45 @@ parse_test_file(const std::filesystem::path &data_file)
     std::string expected_error;
     std::string raw;
 
-    while (std::getline(data_in, line))
-    {
-        if (line.find("--") != std::string::npos)
-        {
-            if (line.find("asm") != std::string::npos)
-            {
+    while (std::getline(data_in, line)) {
+        if (line.find("--") != std::string::npos) {
+            if (line.find("asm") != std::string::npos) {
                 state = _state::state_assembly;
                 continue;
-            }
-            else if (line.find("result") != std::string::npos)
-            {
+            } else if (line.find("result") != std::string::npos) {
                 state = _state::state_result;
                 continue;
-            }
-            else if (line.find("mem") != std::string::npos)
-            {
+            } else if (line.find("mem") != std::string::npos) {
                 state = _state::state_memory;
                 continue;
-            }
-            else if (line.find("raw") != std::string::npos)
-            {
+            } else if (line.find("raw") != std::string::npos) {
                 state = _state::state_raw;
                 continue;
-            }
-            else if (line.find("result") != std::string::npos)
-            {
+            } else if (line.find("result") != std::string::npos) {
                 state = _state::state_result;
                 continue;
-            }
-            else if (line.find("no register offset") != std::string::npos)
-            {
+            } else if (line.find("no register offset") != std::string::npos) {
                 state = _state::state_ignore;
                 continue;
-            }
-            else if (line.find(" c") != std::string::npos)
-            {
+            } else if (line.find(" c") != std::string::npos) {
                 state = _state::state_ignore;
                 continue;
-            }
-            else if (line.find("error") != std::string::npos)
-            {
+            } else if (line.find("error") != std::string::npos) {
                 state = _state::state_error;
                 continue;
-            }
-            else
-            {
-                std::cout << "Skipping: Unknown directive " << line << " in file " <<  data_file << std::endl;
+            } else {
+                std::cout << "Skipping: Unknown directive " << line << " in file " << data_file << std::endl;
                 return {};
                 continue;
             }
         }
-        if (line.empty())
-        {
+        if (line.empty()) {
             continue;
         }
 
-        switch (state)
-        {
+        switch (state) {
         case _state::state_assembly:
-            if (line.find("#") != std::string::npos)
-            {
+            if (line.find("#") != std::string::npos) {
                 line = line.substr(0, line.find("#"));
             }
             data_out << line << std::endl;
@@ -112,30 +90,24 @@ parse_test_file(const std::filesystem::path &data_file)
         }
     }
 
-    if (expected_error.empty() && result_string.empty())
-    {
+    if (expected_error.empty() && result_string.empty()) {
         std::cout << "Skipping: No result or error in test file " << data_file << std::endl;
         return {};
     }
 
     uint64_t result_value;
-    if (result_string.empty())
-    {
+    if (result_string.empty()) {
         result_value = 0;
-    }
-    else if (result_string.find("0x") != std::string::npos)
-    {
+    } else if (result_string.find("0x") != std::string::npos) {
         result_value = std::stoull(result_string, nullptr, 16);
-    }
-    else
-    {
+    } else {
         result_value = std::stoull(result_string);
     }
 
     std::vector<ebpf_inst> instructions;
     if (!raw.empty()) {
         std::stringstream raw_stream(raw);
-        
+
         std::string byte;
         while (raw_stream >> line) {
             uint64_t value;
@@ -148,26 +120,22 @@ parse_test_file(const std::filesystem::path &data_file)
             *reinterpret_cast<uint64_t*>(&inst) = value;
             instructions.push_back(inst);
         }
-    }
-    else {
+    } else {
         data_out.seekg(0);
         instructions = bpf_assembler(data_out);
     }
 
-    if (instructions.empty())
-    {
+    if (instructions.empty()) {
         std::cout << "Skipping: No instructions in test file " << data_file << std::endl;
         return {};
     }
 
     std::vector<uint8_t> input_buffer;
 
-    if (!mem.empty())
-    {
+    if (!mem.empty()) {
         std::stringstream ss(mem);
         uint32_t value;
-        while (ss >> std::hex >> value)
-        {
+        while (ss >> std::hex >> value) {
             input_buffer.push_back(static_cast<uint8_t>(value));
         }
     }
