@@ -23,17 +23,17 @@ extern "C"
 
 /**
  * @brief Read in a string of hex bytes and return a vector of bytes.
- * 
+ *
  * @param[in] input String containing hex bytes.
  * @return Vector of bytes.
  */
-std::vector<uint8_t> base16_decode(const std::string &input)
+std::vector<uint8_t>
+base16_decode(const std::string& input)
 {
     std::vector<uint8_t> output;
     std::stringstream ss(input);
     std::string value;
-    while (std::getline(ss, value, ' '))
-    {
+    while (std::getline(ss, value, ' ')) {
         try {
             output.push_back(std::stoi(value, nullptr, 16));
         } catch (...) {
@@ -45,11 +45,12 @@ std::vector<uint8_t> base16_decode(const std::string &input)
 
 /**
  * @brief Convert a vector of bytes to a vector of bpf_insn.
- * 
+ *
  * @param[in] bytes Vector of bytes.
  * @return Vector of bpf_insn.
-*/
-std::vector<bpf_insn> bytes_to_ebpf_inst(std::vector<uint8_t> bytes)
+ */
+std::vector<bpf_insn>
+bytes_to_ebpf_inst(std::vector<uint8_t> bytes)
 {
     std::vector<bpf_insn> instructions(bytes.size() / sizeof(bpf_insn));
     memcpy(instructions.data(), bytes.data(), bytes.size());
@@ -58,11 +59,12 @@ std::vector<bpf_insn> bytes_to_ebpf_inst(std::vector<uint8_t> bytes)
 
 /**
  * @brief Create a prolog that loads the packet memory into R1 and the lenght into R2.
- * 
+ *
  * @param[in] size Expected size of the packet.
  * @return Vector of bpf_insn that represents the prolog.
  */
-std::vector<bpf_insn> generate_xdp_prolog(int size)
+std::vector<bpf_insn>
+generate_xdp_prolog(int size)
 {
     // Create a prolog that converts the BPF program to one that can be loaded
     // at the XDP attach point.
@@ -83,32 +85,30 @@ std::vector<bpf_insn> generate_xdp_prolog(int size)
     };
 }
 
-/** 
+/**
  * @brief This program reads BPF instructions from stdin and memory contents from
  * the first agument. It then executes the BPF program and prints the
  * value of r0 at the end of execution.
  */
-int main(int argc, char **argv)
+int
+main(int argc, char** argv)
 {
     bool debug = false;
     std::vector<std::string> args(argv + 1, argv + argc - 1);
     std::string program_string;
     std::string memory_string;
     std::getline(std::cin, program_string);
-    
+
     // First parameter is optional memory contents.
-    if (args.size() > 0 && args[0] != "--debug")
-    {
+    if (args.size() > 0 && args[0] != "--debug") {
         memory_string = args[0];
         args.erase(args.begin());
     }
-    if (args.size() > 0 && args[0] == "--debug")
-    {
+    if (args.size() > 0 && args[0] == "--debug") {
         debug = true;
         args.erase(args.begin());
     }
-    if (args.size() > 0)
-    {
+    if (args.size() > 0) {
         std::cerr << "Unexpected arguments: " << args[0] << std::endl;
         return 1;
     }
@@ -117,8 +117,7 @@ int main(int argc, char **argv)
     std::vector<uint8_t> memory = base16_decode(memory_string);
 
     // Add prolog if program accesses memory.
-    if (memory.size() > 0)
-    {
+    if (memory.size() > 0) {
         auto prolog_instructions = generate_xdp_prolog(memory.size());
         program.insert(program.begin(), prolog_instructions.begin(), prolog_instructions.end());
     }
@@ -126,9 +125,15 @@ int main(int argc, char **argv)
     // Load program into kernel.
     std::string log;
     log.resize(1024);
-    int fd = bpf_load_program(BPF_PROG_TYPE_XDP, reinterpret_cast<const bpf_insn *>(program.data()), static_cast<uint32_t>(program.size()), "MIT", 0, &log[0], log.size());
-    if (fd < 0)
-    {
+    int fd = bpf_load_program(
+        BPF_PROG_TYPE_XDP,
+        reinterpret_cast<const bpf_insn*>(program.data()),
+        static_cast<uint32_t>(program.size()),
+        "MIT",
+        0,
+        &log[0],
+        log.size());
+    if (fd < 0) {
         if (debug)
             std::cerr << "Failed to load program: " << log << std::endl;
         return 1;
@@ -138,9 +143,9 @@ int main(int argc, char **argv)
     uint32_t output_value = 0;
     unsigned int out_size = memory.size();
     uint32_t duration;
-    int result = bpf_prog_test_run(fd, 1, memory.data(), memory.size(), memory.data(), &out_size, &output_value, &duration);
-    if (result != 0)
-    {
+    int result =
+        bpf_prog_test_run(fd, 1, memory.data(), memory.size(), memory.data(), &out_size, &output_value, &duration);
+    if (result != 0) {
         if (debug)
             std::cerr << "Failed to run program: " << result << std::endl;
         return 1;

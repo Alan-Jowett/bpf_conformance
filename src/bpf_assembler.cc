@@ -26,7 +26,7 @@ static const std::unordered_map<std::string, int> _bpf_encode_register_map{
     {"r8", 8},
     {"r9", 9},
     {"r10", 10},
-// Add fake registers to support negative tests.
+    // Add fake registers to support negative tests.
     {"r11", 11},
     {"r12", 12},
     {"r13", 13},
