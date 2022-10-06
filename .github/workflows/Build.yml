@@ -1,0 +1,83 @@
+name: CI/CD
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: true
+        type: string
+      configuration:
+        required: true
+        type: string
+      enable_sanitizers:
+        required: false
+        type: boolean
+      enable_coverage:
+        required: false
+        type: boolean
+
+concurrency:
+  # Cancel any CI/CD workflow currently in progress for the same PR.
+  # Allow running concurrently with any other commits.
+  group: cicd-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ${{inputs.platform}}
+    env:
+      BUILD_TYPE: ${{inputs.configuration}}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install prerequisites
+      if: inputs.platform == 'ubuntu-20.04'
+      run: |
+        sudo apt-get install -y libboost-dev \
+         libboost-filesystem-dev \
+         libboost-program-options-dev \
+         libbpf-dev \
+         lcov
+
+    - name: Cache nuget packages
+      if: inputs.platform == 'windows-2019'
+      uses: actions/cache@ac8075791e805656e71b4ba23325ace9e3421120
+      env:
+        cache-name: cache-nuget-modules
+      with:
+        path: build\packages
+        key: ${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
+
+    - name: Configure CMake
+      run: cmake \
+        -B ${{github.workspace}}/build \
+        -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+        -DENABLE_SANITIZERS=${{inputs.enable_sanitizers}} \
+        -DENABLE_COVERAGE=${{inputs.enable_coverage}}
+
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake \
+        --build ${{github.workspace}}/build \
+        --config ${{env.BUILD_TYPE}}
+
+    - name: Test
+      if: inputs.platform == 'ubuntu-20.04'
+      working-directory: ${{github.workspace}}
+      run: |
+        sudo build/src/bpf_conformance --test_file_path tests --plugin_path build/libbpf_plugin/libbpf_plugin
+
+    - name: Generate code coverage report
+      if: inputs.enable_coverage == true
+      run: |
+        mkdir -p coverage
+        lcov --capture --directory build --include '*' --output-file coverage/lcov.info
+
+    - name: Coveralls Parallel
+      if: inputs.enable_coverage == true
+      uses: coverallsapp/github-action@v1.1.2
+      with:
+        github-token: ${{ secrets.github_token }}
+        flag-name: run-${{inputs.build_type}}-${{inputs.platform}}-${{inputs.arch}}
+        parallel: true
