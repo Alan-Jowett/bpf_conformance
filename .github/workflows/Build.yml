@@ -47,6 +47,12 @@ jobs:
         key: ${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: Configure CMake
+      if: inputs.platform == 'windows-2019'
+      run: |
+        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Configure CMake
+      if: inputs.platform == 'ubuntu-20.04'
       run: |
         if [ "${{inputs.enable_sanitizers}}" = "true" ]; then
           export SANITIZER_FLAGS="-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all"
@@ -55,17 +61,15 @@ jobs:
           export COVERAGE_FLAGS="-DCMAKE_CXX_FLAGS=\"--coverage\" -DCMAKE_C_FLAGS=\"--coverage\""
         fi
         cmake \
-        -B ${{github.workspace}}/build \
-        -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-        -DCMAKE_CXX_FLAGS="${{env.SANITIZER_FLAGS}}" \
-        -DCMAKE_C_FLAGS="${{env.SANITIZER_FLAGS}}" \
-        ${{env.COVERAGE_FLAGS}}
+          -B ${{github.workspace}}/build \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DCMAKE_CXX_FLAGS="${{env.SANITIZER_FLAGS}}" \
+          -DCMAKE_C_FLAGS="${{env.SANITIZER_FLAGS}}" \
+          ${{env.COVERAGE_FLAGS}}
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake \
-        --build ${{github.workspace}}/build \
-        --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Test
       if: inputs.platform == 'ubuntu-20.04'
