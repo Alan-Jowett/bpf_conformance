@@ -98,7 +98,7 @@ bpf_conformance(
             std::string line;
 
             // Read the return value from the plugin from stdout.
-            std::string return_value_string;
+            return_value_string;
             while (std::getline(output, line)) {
                 return_value_string += line;
             }
