@@ -39,10 +39,12 @@ add_executable(
 
 target_include_directories("bpf_conformance" PRIVATE
   "${Boost_INCLUDE_DIRS}"
+  "${CMAKE_SOURCE_DIR}/include"
 )
 
 target_include_directories("bpf_conformance_runner" PRIVATE
   "${Boost_INCLUDE_DIRS}"
+  "${CMAKE_SOURCE_DIR}/include"
 )
 
 target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB})
