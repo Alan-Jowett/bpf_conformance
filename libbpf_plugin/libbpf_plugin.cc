@@ -94,10 +94,13 @@ int
 main(int argc, char** argv)
 {
     bool debug = false;
-    std::vector<std::string> args(argv + 1, argv + argc - 1);
+    std::vector<std::string> args(argv, argv + argc - 1);
     std::string program_string;
     std::string memory_string;
     std::getline(std::cin, program_string);
+
+    // First argument is the program name.
+    args.erase(args.begin());
 
     // First parameter is optional memory contents.
     if (args.size() > 0 && args[0] != "--debug") {
