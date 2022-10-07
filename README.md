@@ -12,13 +12,18 @@ This project measures the conformance of a BPF runtime to the ISA. To measure co
 Run ```cmake -S . -B build``` to configure the project, then run ```cmake --build build``` to build the project.
 
 ## Running the test
-
-Start bpf_conformance, passing it the path to tests to execute and the path to the runtime under test.
+Start bpf_conformance_runner, passing it the path to tests to execute and the path to the runtime under test.
 
 Example using the libbpf_plugin (which uses the Linux BPF runtime)
-```build/src/bpf_conformance --test_file_path tests --plugin_path build/libbpf_plugin/libbpf_plugin```
+```build/src/bpf_conformance_runner --test_file_path tests --plugin_path build/libbpf_plugin/libbpf_plugin```
 
 Note: The libbpf_plugin requires root or BPF permissions.
+
+## Using bpf_conformance as a static lib
+The BPF Conformance tests can also be used as a static library as part of another tests.
+1) Include include/bpf_conformance.h
+2) Link against libbpf_conformance.a and boost_filesystem (depending on platform).
+3) Invoke bpf_conformance, passing it a list of test files.
 
 ## Interpeting results
 On completion of the test the bpf_conformance tools prints the list of tests that passes/failed and a summary count.
@@ -27,97 +32,97 @@ On completion of the test the bpf_conformance tools prints the list of tests tha
 sudo build/src/bpf_conformance --test_file_path tests --plugin_path bui
 ld/libbpf_plugin/libbpf_plugin
 Test results:
-"tests/add.data": Passed
-"tests/add64.data": Passed
-"tests/alu-arith.data": Passed
-"tests/alu-bit.data": Passed
-"tests/alu64-arith.data": Passed
-"tests/alu64-bit.data": Passed
-"tests/arsh-reg.data": Passed
-"tests/arsh.data": Passed
-"tests/arsh32-high-shift.data": Passed
-"tests/arsh64.data": Passed
-"tests/be16-high.data": Passed
-"tests/be16.data": Passed
-"tests/be32-high.data": Passed
-"tests/be32.data": Passed
-"tests/be64.data": Passed
-"tests/call_unwind_fail.data": Passed
-"tests/div-by-zero-reg.data": Passed
-"tests/div32-high-divisor.data": Passed
-"tests/div32-imm.data": Passed
-"tests/div32-reg.data": Passed
-"tests/div64-by-zero-reg.data": Passed
-"tests/div64-imm.data": Passed
-"tests/div64-reg.data": Passed
-"tests/exit-not-last.data": Passed
-"tests/exit.data": Passed
-"tests/jeq-imm.data": Passed
-"tests/jeq-reg.data": Passed
-"tests/jge-imm.data": Passed
-"tests/jgt-imm.data": Passed
-"tests/jgt-reg.data": Passed
-"tests/jit-bounce.data": Passed
-"tests/jle-imm.data": Passed
-"tests/jle-reg.data": Passed
-"tests/jlt-imm.data": Passed
-"tests/jlt-reg.data": Passed
-"tests/jne-reg.data": Passed
-"tests/jset-imm.data": Passed
-"tests/jset-reg.data": Passed
-"tests/jsge-imm.data": Passed
-"tests/jsge-reg.data": Passed
-"tests/jsgt-imm.data": Passed
-"tests/jsgt-reg.data": Passed
-"tests/jsle-imm.data": Passed
-"tests/jsle-reg.data": Passed
-"tests/jslt-imm.data": Passed
-"tests/jslt-reg.data": Passed
-"tests/lddw.data": Passed
-"tests/lddw2.data": Passed
-"tests/ldxb-all.data": Passed
-"tests/ldxb.data": Passed
-"tests/ldxdw.data": Passed
-"tests/ldxh-all.data": Passed
-"tests/ldxh-all2.data": Passed
-"tests/ldxh-same-reg.data": Passed
-"tests/ldxh.data": Passed
-"tests/ldxw-all.data": Passed
-"tests/ldxw.data": Passed
-"tests/le16.data": Passed
-"tests/le32.data": Passed
-"tests/le64.data": Passed
-"tests/lsh-reg.data": Passed
-"tests/mem-len.data": Passed
-"tests/mod-by-zero-reg.data": Passed
-"tests/mod.data": Passed
-"tests/mod32.data": Passed
-"tests/mod64-by-zero-reg.data": Passed
-"tests/mod64.data": Passed
-"tests/mov.data": Passed
-"tests/mul32-imm.data": Passed
-"tests/mul32-reg-overflow.data": Passed
-"tests/mul32-reg.data": Passed
-"tests/mul64-imm.data": Passed
-"tests/mul64-reg.data": Passed
-"tests/neg.data": Passed
-"tests/neg64.data": Passed
-"tests/prime.data": Passed
-"tests/rsh-reg.data": Passed
-"tests/rsh32.data": Passed
-"tests/stack.data": Passed
-"tests/stb.data": Passed
-"tests/stdw.data": Passed
-"tests/sth.data": Passed
-"tests/stw.data": Passed
-"tests/stxb-all.data": Passed
-"tests/stxb-all2.data": Passed
-"tests/stxb-chain.data": Passed
-"tests/stxb.data": Passed
-"tests/stxdw.data": Passed
-"tests/stxh.data": Passed
-"tests/stxw.data": Passed
-"tests/subnet.data": Passed
+PASS: "tests/add.data"
+PASS: "tests/add64.data"
+PASS: "tests/alu-arith.data"
+PASS: "tests/alu-bit.data"
+PASS: "tests/alu64-arith.data"
+PASS: "tests/alu64-bit.data"
+PASS: "tests/arsh-reg.data"
+PASS: "tests/arsh.data"
+PASS: "tests/arsh32-high-shift.data"
+PASS: "tests/arsh64.data"
+PASS: "tests/be16-high.data"
+PASS: "tests/be16.data"
+PASS: "tests/be32-high.data"
+PASS: "tests/be32.data"
+PASS: "tests/be64.data"
+PASS: "tests/call_unwind_fail.data"
+PASS: "tests/div-by-zero-reg.data"
+PASS: "tests/div32-high-divisor.data"
+PASS: "tests/div32-imm.data"
+PASS: "tests/div32-reg.data"
+PASS: "tests/div64-by-zero-reg.data"
+PASS: "tests/div64-imm.data"
+PASS: "tests/div64-reg.data"
+PASS: "tests/exit-not-last.data"
+PASS: "tests/exit.data"
+PASS: "tests/jeq-imm.data"
+PASS: "tests/jeq-reg.data"
+PASS: "tests/jge-imm.data"
+PASS: "tests/jgt-imm.data"
+PASS: "tests/jgt-reg.data"
+PASS: "tests/jit-bounce.data"
+PASS: "tests/jle-imm.data"
+PASS: "tests/jle-reg.data"
+PASS: "tests/jlt-imm.data"
+PASS: "tests/jlt-reg.data"
+PASS: "tests/jne-reg.data"
+PASS: "tests/jset-imm.data"
+PASS: "tests/jset-reg.data"
+PASS: "tests/jsge-imm.data"
+PASS: "tests/jsge-reg.data"
+PASS: "tests/jsgt-imm.data"
+PASS: "tests/jsgt-reg.data"
+PASS: "tests/jsle-imm.data"
+PASS: "tests/jsle-reg.data"
+PASS: "tests/jslt-imm.data"
+PASS: "tests/jslt-reg.data"
+PASS: "tests/lddw.data"
+PASS: "tests/lddw2.data"
+PASS: "tests/ldxb-all.data"
+PASS: "tests/ldxb.data"
+PASS: "tests/ldxdw.data"
+PASS: "tests/ldxh-all.data"
+PASS: "tests/ldxh-all2.data"
+PASS: "tests/ldxh-same-reg.data"
+PASS: "tests/ldxh.data"
+PASS: "tests/ldxw-all.data"
+PASS: "tests/ldxw.data"
+PASS: "tests/le16.data"
+PASS: "tests/le32.data"
+PASS: "tests/le64.data"
+PASS: "tests/lsh-reg.data"
+PASS: "tests/mem-len.data"
+PASS: "tests/mod-by-zero-reg.data"
+PASS: "tests/mod.data"
+PASS: "tests/mod32.data"
+PASS: "tests/mod64-by-zero-reg.data"
+PASS: "tests/mod64.data"
+PASS: "tests/mov.data"
+PASS: "tests/mul32-imm.data"
+PASS: "tests/mul32-reg-overflow.data"
+PASS: "tests/mul32-reg.data"
+PASS: "tests/mul64-imm.data"
+PASS: "tests/mul64-reg.data"
+PASS: "tests/neg.data"
+PASS: "tests/neg64.data"
+PASS: "tests/prime.data"
+PASS: "tests/rsh-reg.data"
+PASS: "tests/rsh32.data"
+PASS: "tests/stack.data"
+PASS: "tests/stb.data"
+PASS: "tests/stdw.data"
+PASS: "tests/sth.data"
+PASS: "tests/stw.data"
+PASS: "tests/stxb-all.data"
+PASS: "tests/stxb-all2.data"
+PASS: "tests/stxb-chain.data"
+PASS: "tests/stxb.data"
+PASS: "tests/stxdw.data"
+PASS: "tests/stxh.data"
+PASS: "tests/stxw.data"
+PASS: "tests/subnet.data"
 Passed 91 out of 91 tests.
 ```
 
