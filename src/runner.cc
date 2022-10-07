@@ -72,28 +72,29 @@ main(int argc, char** argv)
 
         size_t tests_passed = 0;
         size_t tests_run = 0;
-        std::map<std::filesystem::path, bpf_conformance_test_result_t> test_results = bpf_conformance(
+        auto test_results = bpf_conformance(
             tests, plugin_path, plugin_options, vm.count("list_opcodes"));
 
         // At the end of all the tests, print a summary of the results.
         std::cout << "Test results:" << std::endl;
         for (auto& test : test_results) {
-            switch (test.second) {
+            auto [result, message] = test.second;
+            switch (result) {
             case bpf_conformance_test_result_t::TEST_RESULT_PASS:
                 std::cout << "PASS: " << test.first << std::endl;
                 tests_passed++;
                 tests_run++;
                 break;
             case bpf_conformance_test_result_t::TEST_RESULT_FAIL:
-                std::cout << "FAIL: " << test.first << std::endl;
+                std::cout << "FAIL: " << test.first << " " << message << std::endl;
                 tests_run ++;
                 break;
             case bpf_conformance_test_result_t::TEST_RESULT_ERROR:
-                std::cout << "ERROR: " << test.first << std::endl;
+                std::cout << "ERROR: " << test.first << " " << message << std::endl;
                 tests_run++;
                 break;
             case bpf_conformance_test_result_t::TEST_RESULT_SKIP:
-                std::cout << "SKIP: " << test.first << std::endl;
+                std::cout << "SKIP: " << test.first << " " << message << std::endl;
                 break;
             }
         }

@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation
 // SPDX-License-Identifier: MIT
 
-#include <string>
-#include <vector>
+#include <boost/process.hpp>
+
 #include <iostream>
 #include <set>
 #include <sstream>
+#include <string>
+#include <vector>
 
-#include <boost/process.hpp>
 
 #include "bpf_test_parser.h"
 #include "opcode_names.h"
@@ -20,7 +21,7 @@
  * @return String of hex bytes.
  */
 std::string
-base_16_encode(const std::vector<uint8_t>& data)
+_base_16_encode(const std::vector<uint8_t>& data)
 {
     std::stringstream result;
     for (auto byte : data) {
@@ -37,7 +38,7 @@ base_16_encode(const std::vector<uint8_t>& data)
  * @return Vector of bytes.
  */
 std::vector<uint8_t>
-ebpf_inst_to_byte_vector(const std::vector<ebpf_inst>& instructions)
+_ebpf_inst_to_byte_vector(const std::vector<ebpf_inst>& instructions)
 {
     std::vector<uint8_t> result;
     for (auto instruction : instructions) {
@@ -49,7 +50,7 @@ ebpf_inst_to_byte_vector(const std::vector<ebpf_inst>& instructions)
     return result;
 }
 
-std::map<std::filesystem::path, bpf_conformance_test_result_t>
+std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>>
 bpf_conformance(
     const std::vector<std::filesystem::path>& test_files,
     const std::filesystem::path& plugin_path,
@@ -58,7 +59,7 @@ bpf_conformance(
 {
     std::set<uint8_t> opcodes_used;
     std::set<uint8_t> opcodes_not_used;
-    std::map<std::filesystem::path, bpf_conformance_test_result_t> test_results;
+    std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>> test_results;
 
     for (auto& test : test_files) {
         // Parse the test file and extract:
@@ -70,7 +71,7 @@ bpf_conformance(
 
         // It the test file has no BPF instructions, then skip it.
         if (byte_code.size() == 0) {
-            test_results[test] = bpf_conformance_test_result_t::TEST_RESULT_SKIP;
+            test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_SKIP, "Test file has no BPF instructions."};
             continue;
         }
 
@@ -86,13 +87,13 @@ bpf_conformance(
             // Pass the input memory to the plugin as arg[1] and any plugin options as arg[2].
             boost::process::child c(
                 plugin_path.string(),
-                base_16_encode(input_memory),
+                _base_16_encode(input_memory),
                 plugin_options,
                 boost::process::std_out > output,
                 boost::process::std_in < input);
 
             // Pass the BPF instructions to the plugin as stdin.
-            input << base_16_encode(ebpf_inst_to_byte_vector(byte_code)) << std::endl;
+            input << _base_16_encode(_ebpf_inst_to_byte_vector(byte_code)) << std::endl;
             input.close();
             std::string line;
 
@@ -105,13 +106,11 @@ bpf_conformance(
             c.wait();
 
             if (c.exit_code() != 0) {
-                std::cout << "Plugin failed to execute test " << test << std::endl;
-                test_results[test] = bpf_conformance_test_result_t::TEST_RESULT_ERROR;
+                test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_ERROR, "Plugin failed to execute test and returned " + std::to_string(c.exit_code())};
                 continue;
             }
         } catch (boost::process::process_error& e) {
-            std::cout << "Plugin failed to execute test " << test << " with error " << e.what() << std::endl;
-            test_results[test] = bpf_conformance_test_result_t::TEST_RESULT_ERROR;
+            test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_ERROR, "Plugin failed to execute test with error " + std::string(e.what())};
             continue;
         }
 
@@ -120,18 +119,14 @@ bpf_conformance(
         try {
             return_value = std::stoul(return_value_string, nullptr, 16);
         } catch (const std::exception&) {
-            std::cout << "Plugin returned invalid return value for test " << test << std::endl;
-            test_results[test] = bpf_conformance_test_result_t::TEST_RESULT_ERROR;
+            test_results[test] = { bpf_conformance_test_result_t::TEST_RESULT_ERROR, "Plugin returned invalid return value " + return_value_string};
             continue;
         }
 
         if (return_value != (uint32_t)expected_return_value) {
-            std::cerr << "Test failure: " << test << std::endl;
-            std::cerr << "Expected return value: " << expected_return_value << std::endl;
-            std::cerr << "Actual return value: " << return_value << std::endl;
-            test_results[test] = bpf_conformance_test_result_t::TEST_RESULT_FAIL;
+            test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_FAIL, "Plugin returned incorrect return value " + return_value_string + " expected " + std::to_string(expected_return_value)};
         } else {
-            test_results[test] = bpf_conformance_test_result_t::TEST_RESULT_PASS;
+            test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_PASS, ""};
         }
     }
 
