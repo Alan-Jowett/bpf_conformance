@@ -12,7 +12,7 @@
 
 #include "bpf_test_parser.h"
 #include "opcode_names.h"
-#include "bpf_conformance.h"
+#include "../include/bpf_conformance.h"
 
 /**
  * @brief Convert a vector of bytes to a string of hex bytes.
@@ -98,7 +98,6 @@ bpf_conformance(
             std::string line;
 
             // Read the return value from the plugin from stdout.
-            return_value_string;
             while (std::getline(output, line)) {
                 return_value_string += line;
             }
@@ -106,7 +105,19 @@ bpf_conformance(
             c.wait();
 
             if (c.exit_code() != 0) {
-                test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_ERROR, "Plugin failed to execute test and returned " + std::to_string(c.exit_code())};
+                if (expected_error_string.empty()) {
+                    test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_FAIL, "Plugin returned error code " + std::to_string(c.exit_code()) +  " and output " + return_value_string};
+                } else {
+                    auto cr = return_value_string.find('\r');
+                    if (cr != std::string::npos) {
+                        return_value_string = return_value_string.substr(0, cr);
+                    }
+                    if (expected_error_string == return_value_string) {
+                        test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_PASS, ""};
+                    } else {
+                        test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_FAIL, "Plugin returned error code " + std::to_string(c.exit_code()) +  " and output " + return_value_string + " but expected " + expected_error_string};
+                    }
+                }
                 continue;
             }
         } catch (boost::process::process_error& e) {
@@ -117,7 +128,7 @@ bpf_conformance(
         // Parse the return value from the plugin and compare it with the expected return value.
         uint32_t return_value = 0;
         try {
-            return_value = std::stoul(return_value_string, nullptr, 16);
+            return_value = std::stoull(return_value_string, nullptr, 16);
         } catch (const std::exception&) {
             test_results[test] = { bpf_conformance_test_result_t::TEST_RESULT_ERROR, "Plugin returned invalid return value " + return_value_string};
             continue;

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <boost/program_options.hpp>
 
-#include "bpf_conformance.h"
+#include "../include/bpf_conformance.h"
 
 // This program reads a collection of BPF test programs from the test folder,
 // assembles the BPF programs to byte code, calls the plugin to execute the
