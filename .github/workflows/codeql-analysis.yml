@@ -14,12 +14,6 @@
 #
 name: "CodeQL"
 
-concurrency:
-  # Cancel any CI/CD workflow currently in progress for the same PR.
-  # Allow running concurrently with any other commits.
-  group: cicd-${{ github.event.pull_request.number || github.sha }}
-  cancel-in-progress: true
-
 on:
   push:
     branches: [ "main" ]
@@ -28,6 +22,12 @@ on:
     branches: [ "main" ]
   schedule:
     - cron: '41 12 * * 5'
+
+concurrency:
+  # Cancel any CI/CD workflow currently in progress for the same PR.
+  # Allow running concurrently with any other commits.
+  group: cicd-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
 
 jobs:
   analyze:
