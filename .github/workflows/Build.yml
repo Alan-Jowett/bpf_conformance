@@ -1,40 +1,45 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+
 name: CI/CD
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-
-concurrency:
-  # Cancel any CI/CD workflow currently in progress for the same PR.
-  # Allow running concurrently with any other commits.
-  group: cicd-${{ github.event.pull_request.number || github.sha }}
-  cancel-in-progress: true
+  workflow_call:
+    inputs:
+      platform:
+        required: true
+        type: string
+      configuration:
+        required: true
+        type: string
+      enable_sanitizers:
+        required: false
+        type: boolean
+      enable_coverage:
+        required: false
+        type: boolean
 
 jobs:
   build:
-    strategy:
-      matrix:
-        platform: [windows-2019, ubuntu-20.04]
-        configuration: [Debug, Release]
-
-    runs-on: ${{matrix.platform}}
+    runs-on: ${{inputs.platform}}
     env:
-      BUILD_TYPE: ${{matrix.configuration}}
+      BUILD_TYPE: ${{inputs.configuration}}
 
     steps:
     - uses: actions/checkout@v3
 
     - name: Install prerequisites
-      if: matrix.platform == 'ubuntu-20.04'
+      if: inputs.platform == 'ubuntu-20.04'
       run: |
-        sudo apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libbpf-dev
+        sudo apt-get install -y libboost-dev \
+         libboost-filesystem-dev \
+         libboost-program-options-dev \
+         libbpf-dev \
+         lcov
 
     - name: Cache nuget packages
-      if: matrix.platform == 'windows-2019'
-      uses: actions/cache@ac8075791e805656e71b4ba23325ace9e3421120
+      if: inputs.platform == 'windows-2019'
+      uses: actions/cache@56461b9eb0f8438fd15c7a9968e3c9ebb18ceff1
       env:
         cache-name: cache-nuget-modules
       with:
@@ -42,16 +47,46 @@ jobs:
         key: ${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      if: inputs.platform == 'windows-2019'
+      run: |
+        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Configure CMake
+      if: inputs.platform == 'ubuntu-20.04'
+      run: |
+        if [ "${{inputs.enable_sanitizers}}" = "true" ]; then
+          export SANITIZER_FLAGS="-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all"
+        fi
+        if [ "${{inputs.enable_coverage}}" = "true" ]; then
+          export COVERAGE_FLAGS="-DCMAKE_CXX_FLAGS=\"--coverage\" -DCMAKE_C_FLAGS=\"--coverage\""
+        fi
+        cmake \
+          -B ${{github.workspace}}/build \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DCMAKE_CXX_FLAGS="${SANITIZER_FLAGS}" \
+          -DCMAKE_C_FLAGS="${SANITIZER_FLAGS}" \
+          ${COVERAGE_FLAGS}
 
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Test
-      if: matrix.platform == 'ubuntu-20.04'
+      if: inputs.platform == 'ubuntu-20.04'
       working-directory: ${{github.workspace}}
       run: |
         sudo build/src/bpf_conformance --test_file_path tests --plugin_path build/libbpf_plugin/libbpf_plugin --list_opcodes true
+
+    - name: Generate code coverage report
+      if: inputs.enable_coverage == true
+      run: |
+        mkdir -p coverage
+        lcov --capture --directory build --include '${{github.workspace}}/*' --output-file coverage/lcov.info
+
+    - name: Coveralls Parallel
+      if: inputs.enable_coverage == true
+      uses: coverallsapp/github-action@v1.1.2
+      with:
+        github-token: ${{ secrets.github_token }}
+        flag-name: run-${{inputs.build_type}}-${{inputs.platform}}-${{inputs.arch}}
+        parallel: true

@@ -77,15 +77,15 @@ int
 main(int argc, char** argv)
 {
     try {
-        std::set<uint8_t> opcodes_used; 
+        std::set<uint8_t> opcodes_used;
         std::set<uint8_t> opcodes_not_used;
 
         boost::program_options::options_description desc("Options");
         desc.add_options()("help", "Print help messages")(
             "test_file_path", boost::program_options::value<std::string>(), "Path to test files")(
             "plugin_path", boost::program_options::value<std::string>(), "Path to plugin")(
-            "plugin_options", boost::program_options::value<std::string>(), "Options to pass to plugin")
-            ("list_opcodes", boost::program_options::value<bool>(), "List opcodes used in tests");
+            "plugin_options", boost::program_options::value<std::string>(), "Options to pass to plugin")(
+            "list_opcodes", boost::program_options::value<bool>(), "List opcodes used in tests");
 
         boost::program_options::variables_map vm;
         boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
@@ -195,7 +195,6 @@ main(int argc, char** argv)
 
         std::cout << "Passed " << tests_passed << " out of " << tests_run << " tests." << std::endl;
 
-
         if (vm.count("list_opcodes") && vm["list_opcodes"].as<bool>()) {
             // Compute list of opcodes not used in tests.
             for (auto& opcode : opcodes_from_spec) {
@@ -213,7 +212,6 @@ main(int argc, char** argv)
                 std::cout << opcode_to_name(opcode) << std::endl;
             }
         }
-
 
         return 0;
     } catch (std::filesystem::filesystem_error& e) {

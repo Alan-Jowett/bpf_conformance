@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+
+# Main YML file for the CICD pipeline
+
 name: CI/CD
 
 on:
@@ -14,44 +19,78 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        platform: [windows-2019, ubuntu-20.04]
-        configuration: [Debug, Release]
+  windows_release:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: windows-2019
+      configuration: Release
+      enable_sanitizers: false
+      enable_coverage: false
 
-    runs-on: ${{matrix.platform}}
-    env:
-      BUILD_TYPE: ${{matrix.configuration}}
+  windows_debug:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: windows-2019
+      configuration: Debug
+      enable_sanitizers: false
+      enable_coverage: false
 
+  ubuntu_release:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: ubuntu-20.04
+      configuration: Release
+      enable_sanitizers: false
+      enable_coverage: false
+  
+  ubuntu_debug:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: ubuntu-20.04
+      configuration: Debug
+      enable_sanitizers: false
+      enable_coverage: false
+
+  ubuntu_release_sanitizers:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: ubuntu-20.04
+      configuration: Release
+      enable_sanitizers: true
+      enable_coverage: false
+  
+  ubuntu_debug_sanitizers:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: ubuntu-20.04
+      configuration: Debug
+      enable_sanitizers: true
+      enable_coverage: false
+  
+  ubuntu_release_coverage:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: ubuntu-20.04
+      configuration: Release
+      enable_sanitizers: false
+      enable_coverage: true
+
+  ubuntu_debug_coverage:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: ubuntu-20.04
+      configuration: Debug
+      enable_sanitizers: false
+      enable_coverage: true
+
+  finish:
+    needs: 
+      - ubuntu_release_coverage
+      - ubuntu_debug_coverage
+    runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Install prerequisites
-      if: matrix.platform == 'ubuntu-20.04'
-      run: |
-        sudo apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libbpf-dev
-
-    - name: Cache nuget packages
-      if: matrix.platform == 'windows-2019'
-      uses: actions/cache@ac8075791e805656e71b4ba23325ace9e3421120
-      env:
-        cache-name: cache-nuget-modules
+    - name: Coveralls Finished
+      uses: coverallsapp/github-action@master
       with:
-        path: build\packages
-        key: ${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
-
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-    - name: Test
-      if: matrix.platform == 'ubuntu-20.04'
-      working-directory: ${{github.workspace}}
-      run: |
-        sudo build/src/bpf_conformance --test_file_path tests --plugin_path build/libbpf_plugin/libbpf_plugin
+        github-token: ${{ secrets.github_token }}
+        parallel-finished: true
