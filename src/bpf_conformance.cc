@@ -4,12 +4,14 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <set>
 #include <sstream>
 
 #include <boost/process.hpp>
 #include <boost/program_options.hpp>
 
 #include "bpf_test_parser.h"
+#include "opcode_names.h"
 
 // This program reads a collection of BPF test programs from the test folder,
 // assembles the BPF programs to byte code, calls the plugin to execute the
@@ -75,11 +77,15 @@ int
 main(int argc, char** argv)
 {
     try {
+        std::set<uint8_t> opcodes_used;
+        std::set<uint8_t> opcodes_not_used;
+
         boost::program_options::options_description desc("Options");
         desc.add_options()("help", "Print help messages")(
             "test_file_path", boost::program_options::value<std::string>(), "Path to test files")(
             "plugin_path", boost::program_options::value<std::string>(), "Path to plugin")(
-            "plugin_options", boost::program_options::value<std::string>(), "Options to pass to plugin");
+            "plugin_options", boost::program_options::value<std::string>(), "Options to pass to plugin")(
+            "list_opcodes", boost::program_options::value<bool>(), "List opcodes used in tests");
 
         boost::program_options::variables_map vm;
         boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
@@ -122,6 +128,10 @@ main(int argc, char** argv)
             // It the test file has no BPF instructions, then skip it.
             if (byte_code.size() == 0) {
                 continue;
+            }
+
+            for (const auto& inst : byte_code) {
+                opcodes_used.insert(inst.opcode);
             }
 
             tests_run++;
@@ -184,6 +194,24 @@ main(int argc, char** argv)
         }
 
         std::cout << "Passed " << tests_passed << " out of " << tests_run << " tests." << std::endl;
+
+        if (vm.count("list_opcodes") && vm["list_opcodes"].as<bool>()) {
+            // Compute list of opcodes not used in tests.
+            for (auto& opcode : opcodes_from_spec) {
+                if (opcodes_used.find(opcode) == opcodes_used.end()) {
+                    opcodes_not_used.insert(opcode);
+                }
+            }
+
+            std::cout << "Opcodes used:" << std::endl;
+            for (auto opcode : opcodes_used) {
+                std::cout << opcode_to_name(opcode) << std::endl;
+            }
+            std::cout << "Opcodes not used:" << std::endl;
+            for (auto opcode : opcodes_not_used) {
+                std::cout << opcode_to_name(opcode) << std::endl;
+            }
+        }
 
         return 0;
     } catch (std::filesystem::filesystem_error& e) {
