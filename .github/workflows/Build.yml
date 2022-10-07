@@ -19,12 +19,6 @@ on:
         required: false
         type: boolean
 
-concurrency:
-  # Cancel any CI/CD workflow currently in progress for the same PR.
-  # Allow running concurrently with any other commits.
-  group: cicd-${{ github.event.pull_request.number || github.sha }}
-  cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ${{inputs.platform}}
