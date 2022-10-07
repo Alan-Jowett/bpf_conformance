@@ -45,5 +45,5 @@ target_include_directories("bpf_conformance_runner" PRIVATE
   "${Boost_INCLUDE_DIRS}"
 )
 
-
+target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB})
 target_link_libraries(bpf_conformance_runner PRIVATE ${PLATFORM_LIB} "bpf_conformance")
