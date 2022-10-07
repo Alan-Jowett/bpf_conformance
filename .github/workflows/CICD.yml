@@ -42,7 +42,7 @@ jobs:
       configuration: Release
       enable_sanitizers: false
       enable_coverage: false
-  
+
   ubuntu_debug:
     uses: ./.github/workflows/Build.yml
     with:
@@ -58,7 +58,7 @@ jobs:
       configuration: Release
       enable_sanitizers: true
       enable_coverage: false
-  
+
   ubuntu_debug_sanitizers:
     uses: ./.github/workflows/Build.yml
     with:
@@ -66,7 +66,7 @@ jobs:
       configuration: Debug
       enable_sanitizers: true
       enable_coverage: false
-  
+
   ubuntu_release_coverage:
     uses: ./.github/workflows/Build.yml
     with:
@@ -84,7 +84,7 @@ jobs:
       enable_coverage: true
 
   finish:
-    needs: 
+    needs:
       - ubuntu_release_coverage
       - ubuntu_debug_coverage
     runs-on: ubuntu-20.04

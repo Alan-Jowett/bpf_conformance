@@ -141,7 +141,7 @@ static const std::set<uint8_t> opcodes_from_spec = {
 
 /**
  * @brief Get the display name of an opcode.
- * 
+ *
  * @param[in] opcode Opcode to lookup.
  * @return Human readable name of the opcode.
  */

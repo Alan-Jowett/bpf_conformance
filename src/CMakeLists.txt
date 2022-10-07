@@ -26,18 +26,24 @@ endif ()
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIRS})
 
-add_executable(
-  bpf_conformance
+add_library("bpf_conformance"
   bpf_assembler.cc
   bpf_test_parser.cc
   bpf_conformance.cc
 )
 
-# Required for the ebpf_inst type
+add_executable(
+  bpf_conformance_runner
+  runner.cc
+)
+
 target_include_directories("bpf_conformance" PRIVATE
-  "${CMAKE_SOURCE_DIR}/vm"
+  "${Boost_INCLUDE_DIRS}"
+)
+
+target_include_directories("bpf_conformance_runner" PRIVATE
   "${Boost_INCLUDE_DIRS}"
 )
 
 
-target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB})
+target_link_libraries(bpf_conformance_runner PRIVATE ${PLATFORM_LIB} "bpf_conformance")
