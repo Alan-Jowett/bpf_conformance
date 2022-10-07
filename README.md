@@ -1,5 +1,6 @@
 # BPF Conformance
 [![CI/CD](https://github.com/Alan-Jowett/bpf_conformance/actions/workflows/CICD.yml/badge.svg)](https://github.com/Alan-Jowett/bpf_conformance/actions/workflows/CICD.yml)
+[![Coverage Status](https://coveralls.io/repos/github/Alan-Jowett/bpf_conformance/badge.svg?branch=main)](https://coveralls.io/github/Alan-Jowett/bpf_conformance?branch=main)
 
 This project measures the conformance of a BPF runtime to the ISA. To measure conformance the BPF runtime under test is built into a plugin process that does:
 1) Accept both BPF byte code an initial memory.
