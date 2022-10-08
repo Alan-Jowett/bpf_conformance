@@ -119,10 +119,12 @@ main(int argc, char** argv)
         memory_string = args[0];
         args.erase(args.begin());
     }
+
     if (args.size() > 0 && args[0] == "--debug") {
         debug = true;
         args.erase(args.begin());
     }
+
     if (args.size() > 0 && args[0].size() > 0) {
         std::cerr << "Unexpected arguments: " << args[0] << std::endl;
         return 1;
