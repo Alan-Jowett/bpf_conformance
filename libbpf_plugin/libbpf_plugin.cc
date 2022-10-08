@@ -95,7 +95,7 @@ main(int argc, char** argv)
 {
     bool debug = false;
     std::vector<std::string> args(argv, argv + argc);
-    if (argc.size() > 0) {
+    if (args.size() > 0) {
         args.erase(args.begin());
     }
     std::string program_string;
