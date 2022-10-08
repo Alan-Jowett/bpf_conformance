@@ -95,23 +95,37 @@ main(int argc, char** argv)
 {
     bool debug = false;
     std::vector<std::string> args(argv, argv + argc);
+    if (args.size() > 0) {
+        args.erase(args.begin());
+    }
     std::string program_string;
     std::string memory_string;
-    std::getline(std::cin, program_string);
 
-    // First argument is the program name.
-    args.erase(args.begin());
+    if (args.size() > 0 && args[0] == "--help") {
+        std::cout << "usage: " << argv[0] << " [--program <base16 program bytes>] [<base16 memory bytes>] [--debug]" << std::endl;
+        return 1;
+    }
 
-    // First parameter is optional memory contents.
+    if (args.size() > 1 && args[0] == "--program") {
+        args.erase(args.begin());
+        program_string = args[0];
+        args.erase(args.begin());
+    } else {
+        std::getline(std::cin, program_string);
+    }
+
+    // Next parameter is optional memory contents.
     if (args.size() > 0 && args[0] != "--debug") {
         memory_string = args[0];
         args.erase(args.begin());
     }
+
     if (args.size() > 0 && args[0] == "--debug") {
         debug = true;
         args.erase(args.begin());
     }
-    if (args.size() > 0) {
+
+    if (args.size() > 0 && args[0].size() > 0) {
         std::cerr << "Unexpected arguments: " << args[0] << std::endl;
         return 1;
     }
