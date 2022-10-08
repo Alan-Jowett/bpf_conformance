@@ -15,7 +15,7 @@ Run ```cmake -S . -B build``` to configure the project, then run ```cmake --buil
 Start bpf_conformance_runner, passing it the path to tests to execute and the path to the runtime under test.
 
 Example using the libbpf_plugin (which uses the Linux BPF runtime)
-```build/src/bpf_conformance_runner --test_file_path tests --plugin_path build/libbpf_plugin/libbpf_plugin```
+```build/src/bpf_conformance_runner --test_file_directory tests --plugin_path build/libbpf_plugin/libbpf_plugin```
 
 Note: The libbpf_plugin requires root or BPF permissions.
 
@@ -29,7 +29,7 @@ The BPF Conformance tests can also be used as a static library as part of anothe
 On completion of the test the bpf_conformance tools prints the list of tests that passes/failed and a summary count.
 
 ```
-sudo build/src/bpf_conformance --test_file_path tests --plugin_path bui
+sudo build/src/bpf_conformance --test_file_directory tests --plugin_path bui
 ld/libbpf_plugin/libbpf_plugin
 Test results:
 PASS: "tests/add.data"
