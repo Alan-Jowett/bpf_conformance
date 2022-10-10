@@ -40,7 +40,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install prerequisites
+    - name: Install prerequisites - Ubuntu-20.04
       if: inputs.platform == 'ubuntu-20.04'
       run: |
         sudo apt-get install -y libboost-dev \
@@ -48,6 +48,15 @@ jobs:
          libboost-program-options-dev \
          libbpf-dev \
          lcov
+
+    - name: Install prerequisites - macos-11
+      if: inputs.platform == 'macos-11'
+      run: |
+        brew install \
+          cmake \
+          ninja \
+          ccache \
+          boost
 
     - name: Cache nuget packages
       if: inputs.platform == 'windows-2019'
@@ -64,7 +73,7 @@ jobs:
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Configure CMake
-      if: inputs.platform == 'ubuntu-20.04'
+      if: inputs.platform == 'ubuntu-20.04' || inputs.platform == 'macos-11'
       run: |
         if [ "${{inputs.enable_sanitizers}}" = "true" ]; then
           export SANITIZER_FLAGS="-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all"
