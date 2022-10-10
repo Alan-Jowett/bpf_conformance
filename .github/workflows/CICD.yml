@@ -87,6 +87,18 @@ jobs:
       enable_sanitizers: false
       enable_coverage: true
 
+  macos_release:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: macos-11
+      configuration: Release
+
+  macos_debug:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: macos-11
+      configuration: Debug
+
   finish:
     needs:
       - ubuntu_release_coverage
