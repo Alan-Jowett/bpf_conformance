@@ -11,6 +11,15 @@ This project measures the conformance of a BPF runtime to the ISA. To measure co
 
 Run ```cmake -S . -B build``` to configure the project, then run ```cmake --build build``` to build the project.
 
+## Using a published package
+Select the desired version from [bpf_conformance](https://github.com/Alan-Jowett/bpf_conformance/pkgs/container/bpf_conformance)
+
+Assume the package is named: "ghcr.io/alan-jowett/bpf_conformance:main"
+```
+docker run --privileged -it --rm ghcr.io/alan-jowett/bpf_conformance:main src/bpf_conformance_runner --test_file_directory tests --plugin_path libbpf_plugin/l
+ibbpf_plugin
+```
+
 ## Running the test
 Start bpf_conformance_runner, passing it the path to tests to execute and the path to the runtime under test.
 

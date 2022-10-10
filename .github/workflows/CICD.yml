@@ -11,6 +11,9 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+  packages: write
 
 concurrency:
   # Cancel any CI/CD workflow currently in progress for the same PR.
@@ -42,6 +45,7 @@ jobs:
       configuration: Release
       enable_sanitizers: false
       enable_coverage: false
+      publish_docker: true
 
   ubuntu_debug:
     uses: ./.github/workflows/Build.yml
@@ -94,3 +98,4 @@ jobs:
       with:
         github-token: ${{ secrets.github_token }}
         parallel-finished: true
+
