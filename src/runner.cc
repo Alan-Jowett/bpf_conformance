@@ -109,7 +109,7 @@ main(int argc, char** argv)
 
         std::cout << "Passed " << tests_passed << " out of " << tests_run << " tests." << std::endl;
 
-        return 0;
+        return tests_passed == tests_run ? 0 : 1;
     } catch (std::filesystem::filesystem_error& e) {
         std::cerr << "Error reading test files: " << e.what() << std::endl;
         return 2;
