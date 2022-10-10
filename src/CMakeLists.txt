@@ -5,11 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
     "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-  find_package(Boost REQUIRED)
-  find_package(Boost_program_options REQUIRED)
-  find_package(boost_filesystem REQUIRED)
-  set(CMAKE_CXX_STANDARD 20)
-  set(PLATFORM_LIB pthread boost_program_options boost_filesystem)
+  find_package(Boost REQUIRED COMPONENTS program_options filesystem)
+  set(PLATFORM_LIB pthread "${Boost_LIBRARIES}")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   find_program(NUGET nuget)
   if ("${BOOST_VERSION}" STREQUAL "")
