@@ -14,6 +14,17 @@ include("cmake/FindLibBpf.cmake")
 
 add_subdirectory("src")
 
+file(COPY tests DESTINATION .)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  file(COPY Docker/Windows/Dockerfile DESTINATION .)
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  file(COPY Docker/Linux/Dockerfile DESTINATION .)
+endif()
+
+
 if (LIBBPF_FOUND)
     add_subdirectory("libbpf_plugin")
 endif()
