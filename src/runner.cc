@@ -101,6 +101,9 @@ main(int argc, char** argv)
             case bpf_conformance_test_result_t::TEST_RESULT_SKIP:
                 std::cout << "SKIP: " << test.first << " " << message << std::endl;
                 break;
+            case bpf_conformance_test_result_t::TEST_RESULT_UNKNOWN:
+                std::cout << "UNKNOWN: " << test.first << " " << message << std::endl;
+                break;
             }
         }
 
