@@ -30,4 +30,5 @@ bpf_conformance(
     const std::vector<std::filesystem::path>& test_files,
     const std::filesystem::path& plugin_path,
     const std::string& plugin_options,
-    bool list_opcodes_tested);
+    bool list_opcodes_tested = false,
+    bool debug = false);

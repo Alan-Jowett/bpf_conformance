@@ -44,7 +44,8 @@ main(int argc, char** argv)
             "test_file_directory", boost::program_options::value<std::string>(), "Path to test file directory")(
             "plugin_path", boost::program_options::value<std::string>(), "Path to plugin")(
             "plugin_options", boost::program_options::value<std::string>(), "Options to pass to plugin")(
-            "list_opcodes", boost::program_options::value<bool>(), "List opcodes used in tests");
+            "list_opcodes", boost::program_options::value<bool>(), "List opcodes used in tests")(
+            "debug", boost::program_options::value<bool>(), "Print debug information");
 
         boost::program_options::variables_map vm;
         boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
@@ -78,7 +79,9 @@ main(int argc, char** argv)
 
         size_t tests_passed = 0;
         size_t tests_run = 0;
-        auto test_results = bpf_conformance(tests, plugin_path, plugin_options, vm.count("list_opcodes"));
+        bool show_opcodes = vm.count("list_opcodes") ? vm["list_opcodes"].as<bool>() : false;
+        bool debug = vm.count("debug") ? vm["debug"].as<bool>() : false;
+        auto test_results = bpf_conformance(tests, plugin_path, plugin_options, vm.count("list_opcodes"), debug);
 
         // At the end of all the tests, print a summary of the results.
         std::cout << "Test results:" << std::endl;

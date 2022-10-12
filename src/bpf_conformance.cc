@@ -55,7 +55,8 @@ bpf_conformance(
     const std::vector<std::filesystem::path>& test_files,
     const std::filesystem::path& plugin_path,
     const std::string& plugin_options,
-    bool list_opcodes_tested)
+    bool list_opcodes_tested,
+    bool debug)
 {
     std::set<uint8_t> opcodes_used;
     std::set<uint8_t> opcodes_not_used;
@@ -79,6 +80,13 @@ bpf_conformance(
             opcodes_used.insert(inst.opcode);
         }
 
+        if (debug) {
+            std::cerr << "Test file: " << test << std::endl;
+            std::cerr << "Input memory: " << _base_16_encode(input_memory) << std::endl;
+            std::cerr << "Expected return value: " << expected_return_value << std::endl;
+            std::cerr << "Expected error string: " << expected_error_string << std::endl;
+            std::cerr << "Byte code: " << _base_16_encode(_ebpf_inst_to_byte_vector(byte_code)) << std::endl;
+        }
         std::string return_value_string;
         try {
             // Call the plugin to execute the BPF program.
