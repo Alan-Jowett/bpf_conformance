@@ -136,7 +136,7 @@ jobs:
       working-directory: ${{github.workspace}}
       run: |
         build/src/bpf_conformance_runner > result.txt || cat result.txt
-        greq -q "test_file_path or test_file_directory is required" result.txt
+        grep -q "test_file_path or test_file_directory is required" result.txt
 
     - name: Test - No plugin_path
       if: inputs.platform == 'ubuntu-20.04'
