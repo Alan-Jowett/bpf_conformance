@@ -143,7 +143,7 @@ jobs:
       working-directory: ${{github.workspace}}
       run: |
         build/src/bpf_conformance_runner --test_file_path tests > result.txt || cat result.txt
-        greq -q "plugin_path is required" result.txt
+        grep -q "plugin_path is required" result.txt
 
     - name: Test - Invalid CPU version
       if: inputs.platform == 'ubuntu-20.04'
