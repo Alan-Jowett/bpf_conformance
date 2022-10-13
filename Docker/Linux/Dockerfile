@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: MIT
 
-FROM ubuntu:20.04
+FROM ubuntu:22.0
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
