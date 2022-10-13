@@ -3,7 +3,7 @@
 -- asm
 mov32 r0, 0
 mov32 r1, 0x7
-jset r1, 0x8, +4 # Not taken
+jset r1, 0x8, exit # Not taken
 
 mov32 r0, 1
 mov32 r1, 0x9

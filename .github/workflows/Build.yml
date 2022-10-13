@@ -92,11 +92,31 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    - name: Test
+    - name: Test - BPF ISA v1
       if: inputs.platform == 'ubuntu-20.04'
       working-directory: ${{github.workspace}}
       run: |
-        sudo build/src/bpf_conformance_runner --test_file_directory tests --plugin_path build/libbpf_plugin/libbpf_plugin --list_opcodes true > result.txt
+        sudo build/src/bpf_conformance_runner --test_file_directory tests --plugin_path build/libbpf_plugin/libbpf_plugin --list_opcodes true --cpu_version v1 --debug true > result.txt
+        cat result.txt
+        if grep -q "FAIL" result.txt; then
+          exit 1
+        fi
+
+    - name: Test - BPF ISA v2
+      if: inputs.platform == 'ubuntu-20.04'
+      working-directory: ${{github.workspace}}
+      run: |
+        sudo build/src/bpf_conformance_runner --test_file_directory tests --plugin_path build/libbpf_plugin/libbpf_plugin --list_opcodes true  --cpu_version v2 --debug true > result.txt
+        cat result.txt
+        if grep -q "FAIL" result.txt; then
+          exit 1
+        fi
+
+    - name: Test - BPF ISA v3
+      if: inputs.platform == 'ubuntu-20.04'
+      working-directory: ${{github.workspace}}
+      run: |
+        sudo build/src/bpf_conformance_runner --test_file_directory tests --plugin_path build/libbpf_plugin/libbpf_plugin --list_opcodes true --cpu_version v3 --debug true  > result.txt
         cat result.txt
         if grep -q "FAIL" result.txt; then
           exit 1
