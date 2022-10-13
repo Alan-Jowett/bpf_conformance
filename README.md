@@ -16,15 +16,14 @@ Select the desired version from [bpf_conformance](https://github.com/Alan-Jowett
 
 Assume the package is named: "ghcr.io/alan-jowett/bpf_conformance:main"
 ```
-docker run --privileged -it --rm ghcr.io/alan-jowett/bpf_conformance:main src/bpf_conformance_runner --test_file_directory tests --plugin_path libbpf_plugin/l
-ibbpf_plugin
+docker run --privileged -it --rm ghcr.io/alan-jowett/bpf_conformance:main src/bpf_conformance_runner --test_file_directory tests --plugin_path libbpf_plugin/libbpf_plugin --cpu_version v3
 ```
 
 ## Running the test
 Start bpf_conformance_runner, passing it the path to tests to execute and the path to the runtime under test.
 
 Example using the libbpf_plugin (which uses the Linux BPF runtime)
-```build/src/bpf_conformance_runner --test_file_directory tests --plugin_path build/libbpf_plugin/libbpf_plugin```
+```build/src/bpf_conformance_runner --test_file_directory tests --plugin_path build/libbpf_plugin/libbpf_plugin --cpu_version v3```
 
 Note: The libbpf_plugin requires root or BPF permissions.
 
@@ -34,7 +33,7 @@ The BPF Conformance tests can also be used as a static library as part of anothe
 2) Link against libbpf_conformance.a and boost_filesystem (depending on platform).
 3) Invoke bpf_conformance, passing it a list of test files.
 
-## Interpeting results
+## Interpreting results
 On completion of the test the bpf_conformance tools prints the list of tests that passes/failed and a summary count.
 
 ```
