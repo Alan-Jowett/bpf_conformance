@@ -11,6 +11,7 @@ if (IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
 endif ()
 
 include("cmake/FindLibBpf.cmake")
+include(CTest)
 
 add_subdirectory("src")
 
