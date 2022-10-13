@@ -13,13 +13,12 @@
 #include <sstream>
 #include <linux/bpf.h>
 
-extern "C"
-{
-    enum bpf_stats_type
-    {
-    };
+// This is a work around for bpf_stats_type enum not being defined in
+// linux/bpf.h. This enum is defined in bpf.h in the kernel source tree.
+#define bpf_stats_type bpf_stats_type_fake
+enum bpf_stats_type_fake {};
 #include <bpf/bpf.h>
-}
+#undef bpf_stats_type_fake
 
 /**
  * @brief Read in a string of hex bytes and return a vector of bytes.
