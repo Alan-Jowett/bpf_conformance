@@ -80,7 +80,7 @@ main(int argc, char** argv)
             } else if (cpu_version == "v3") {
                 CPU_version = bpf_conformance_test_CPU_version_t::v3;
             } else {
-                std::cout << "Invalid cpu_version" << std::endl;
+                std::cout << "Invalid CPU version" << std::endl;
                 return 1;
             }
         }
