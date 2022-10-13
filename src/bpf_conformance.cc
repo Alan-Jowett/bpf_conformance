@@ -33,7 +33,7 @@ _base_16_encode(const std::vector<uint8_t>& data)
 /**
  * @brief Convert a vector of ebpf instructions to a vector of bytes.
  *
- * @param[in] instructions Intructions to convert.
+ * @param[in] instructions Instructions to convert.
  * @return Vector of bytes.
  */
 std::vector<uint8_t>
