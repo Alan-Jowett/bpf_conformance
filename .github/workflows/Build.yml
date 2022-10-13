@@ -40,8 +40,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install prerequisites - Ubuntu-22.0
-      if: inputs.platform == 'ubuntu-22.0'
+    - name: Install prerequisites - Ubuntu-22.04
+      if: inputs.platform == 'ubuntu-22.04'
       run: |
         sudo apt-get install -y libboost-dev \
          libboost-filesystem-dev \
@@ -73,7 +73,7 @@ jobs:
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Configure CMake
-      if: inputs.platform == 'ubuntu-22.0' || inputs.platform == 'macos-11'
+      if: inputs.platform == 'ubuntu-22.04' || inputs.platform == 'macos-11'
       run: |
         if [ "${{inputs.enable_sanitizers}}" = "true" ]; then
           export SANITIZER_FLAGS="-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all"
@@ -93,7 +93,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Test - BPF ISA v1
-      if: inputs.platform == 'ubuntu-22.0'
+      if: inputs.platform == 'ubuntu-22.04'
       working-directory: ${{github.workspace}}
       run: |
         sudo build/src/bpf_conformance_runner --test_file_directory tests --plugin_path build/libbpf_plugin/libbpf_plugin --list_opcodes true --cpu_version v1 --debug true > result.txt
@@ -103,7 +103,7 @@ jobs:
         fi
 
     - name: Test - BPF ISA v2
-      if: inputs.platform == 'ubuntu-22.0'
+      if: inputs.platform == 'ubuntu-22.04'
       working-directory: ${{github.workspace}}
       run: |
         sudo build/src/bpf_conformance_runner --test_file_directory tests --plugin_path build/libbpf_plugin/libbpf_plugin --list_opcodes true  --cpu_version v2 --debug true > result.txt
@@ -113,7 +113,7 @@ jobs:
         fi
 
     - name: Test - BPF ISA v3
-      if: inputs.platform == 'ubuntu-22.0'
+      if: inputs.platform == 'ubuntu-22.04'
       working-directory: ${{github.workspace}}
       run: |
         sudo build/src/bpf_conformance_runner --test_file_directory tests --plugin_path build/libbpf_plugin/libbpf_plugin --list_opcodes true --cpu_version v3 --debug true  > result.txt

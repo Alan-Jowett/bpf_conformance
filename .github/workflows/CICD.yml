@@ -41,7 +41,7 @@ jobs:
   ubuntu_release:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-22.0
+      platform: ubuntu-22.04
       configuration: Release
       enable_sanitizers: false
       enable_coverage: false
@@ -50,7 +50,7 @@ jobs:
   ubuntu_debug:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-22.0
+      platform: ubuntu-22.04
       configuration: Debug
       enable_sanitizers: false
       enable_coverage: false
@@ -58,7 +58,7 @@ jobs:
   ubuntu_release_sanitizers:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-22.0
+      platform: ubuntu-22.04
       configuration: Release
       enable_sanitizers: true
       enable_coverage: false
@@ -66,7 +66,7 @@ jobs:
   ubuntu_debug_sanitizers:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-22.0
+      platform: ubuntu-22.04
       configuration: Debug
       enable_sanitizers: true
       enable_coverage: false
@@ -74,7 +74,7 @@ jobs:
   ubuntu_release_coverage:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-22.0
+      platform: ubuntu-22.04
       configuration: Release
       enable_sanitizers: false
       enable_coverage: true
@@ -82,7 +82,7 @@ jobs:
   ubuntu_debug_coverage:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-22.0
+      platform: ubuntu-22.04
       configuration: Debug
       enable_sanitizers: false
       enable_coverage: true
@@ -103,7 +103,7 @@ jobs:
     needs:
       - ubuntu_release_coverage
       - ubuntu_debug_coverage
-    runs-on: ubuntu-22.0
+    runs-on: ubuntu-22.04
     steps:
     - name: Coveralls Finished
       uses: coverallsapp/github-action@1.1.3
