@@ -150,3 +150,51 @@ set_tests_properties(
   WILL_FAIL true
   PASS_REGULAR_EXPRESSION "Plugin returned error code 1 and output but expected Invalid"
 )
+
+add_test(
+  NAME verifier_failure
+  COMMAND sudo ${CMAKE_BINARY_DIR}/src/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/error.data --plugin_path ${CMAKE_BINARY_DIR}/libbpf_plugin/libbpf_plugin --plugin_options "--debug"
+  )
+
+set_tests_properties(
+  verifier_failure
+  PROPERTIES
+  WILL_FAIL true
+  FAIL_REGULAR_EXPRESSION "Plugin returned error code 1 and output Failed to load program"
+)
+
+add_test(
+  NAME invalid_register
+  COMMAND sudo ${CMAKE_BINARY_DIR}/src/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_register.data --plugin_path ${CMAKE_BINARY_DIR}/libbpf_plugin/libbpf_plugin --plugin_options "--debug"
+  )
+
+set_tests_properties(
+  invalid_register
+  PROPERTIES
+  WILL_FAIL true
+  FAIL_REGULAR_EXPRESSION "Invalid register: r50"
+)
+
+add_test(
+  NAME invalid_offset
+  COMMAND sudo ${CMAKE_BINARY_DIR}/src/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_offset.data --plugin_path ${CMAKE_BINARY_DIR}/libbpf_plugin/libbpf_plugin --plugin_options "--debug"
+  )
+
+set_tests_properties(
+  invalid_offset
+  PROPERTIES
+  WILL_FAIL true
+  FAIL_REGULAR_EXPRESSION "Failed to decode register and offset: r1"
+)
+
+add_test(
+  NAME invalid_operand_count
+  COMMAND sudo ${CMAKE_BINARY_DIR}/src/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_operand_count.data --plugin_path ${CMAKE_BINARY_DIR}/libbpf_plugin/libbpf_plugin --plugin_options "--debug"
+  )
+
+set_tests_properties(
+  invalid_operand_count
+  PROPERTIES
+  WILL_FAIL true
+  FAIL_REGULAR_EXPRESSION "Invalid number of operands for mnemonic: lddw"
+)
