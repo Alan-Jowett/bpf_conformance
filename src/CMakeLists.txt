@@ -222,3 +222,16 @@ set_tests_properties(
   WILL_FAIL true
   FAIL_REGULAR_EXPRESSION "Invalid mnemonic: ldxq"
 )
+
+
+add_test(
+  NAME libbpf_plugin_usage
+  COMMAND sudo ${CMAKE_BINARY_DIR}/libbpf_plugin/libbpf_plugin --help
+  )
+
+set_tests_properties(
+  libbpf_plugin_usage
+  PROPERTIES
+  WILL_FAIL true
+  FAIL_REGULAR_EXPRESSION "usage: libbpf_plugin"
+)
