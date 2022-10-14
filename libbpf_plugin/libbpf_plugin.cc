@@ -151,7 +151,7 @@ main(int argc, char** argv)
         log.size());
     if (fd < 0) {
         if (debug)
-            std::cerr << "Failed to load program: " << log << std::endl;
+            std::cout << "Failed to load program: " << log << std::endl;
         return 1;
     }
 
@@ -163,7 +163,7 @@ main(int argc, char** argv)
         bpf_prog_test_run(fd, 1, memory.data(), memory.size(), memory.data(), &out_size, &output_value, &duration);
     if (result != 0) {
         if (debug)
-            std::cerr << "Failed to run program: " << result << std::endl;
+            std::cout << "Failed to run program: " << result << std::endl;
         return 1;
     }
 

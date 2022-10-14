@@ -139,7 +139,7 @@ typedef class _bpf_assembler
         reg_end = (reg_end != std::string::npos) ? reg_end : operand.find(']');
 
         if (reg_start == std::string::npos || reg_end == std::string::npos) {
-            throw std::runtime_error(std::string("Invalid operand: ") + operand);
+            throw std::runtime_error(std::string("Failed to decode register and offset: ") + operand);
         }
 
         if (operand.substr(reg_end).starts_with(']')) {
@@ -156,12 +156,6 @@ typedef class _bpf_assembler
     _encode_ld(const std::string& mnemonic, const std::vector<std::string>& operands)
     {
         std::array<ebpf_inst, 2> inst{};
-        if (mnemonic != "lddw") {
-            throw std::runtime_error(std::string("Invalid mnemonic: ") + mnemonic);
-        }
-        if (operands.size() != 2) {
-            throw std::runtime_error(std::string("Wrong operand count: ") + mnemonic);
-        }
         inst[0].opcode = EBPF_OP_LDDW;
         inst[0].dst = _decode_register(operands[0]);
         uint64_t immediate = _decode_imm64(operands[1]);
@@ -175,9 +169,6 @@ typedef class _bpf_assembler
     _encode_ldx(const std::string& mnemonic, const std::vector<std::string>& operands)
     {
         ebpf_inst inst{};
-        if (operands.size() != 2) {
-            throw std::runtime_error(std::string("Wrong operand count: ") + mnemonic);
-        }
         inst.dst = _decode_register(operands[0]);
         auto [src, offset] = _decode_register_and_offset(operands[1]);
         inst.src = src;
@@ -190,8 +181,6 @@ typedef class _bpf_assembler
             inst.opcode = EBPF_OP_LDXH;
         } else if (mnemonic == "ldxw") {
             inst.opcode = EBPF_OP_LDXW;
-        } else {
-            throw std::runtime_error(std::string("Invalid mnemonic: ") + mnemonic);
         }
 
         return inst;
@@ -201,9 +190,6 @@ typedef class _bpf_assembler
     _encode_st(const std::string& mnemonic, const std::vector<std::string>& operands)
     {
         ebpf_inst inst{};
-        if (operands.size() != 2) {
-            throw std::runtime_error(std::string("Wrong operand count: ") + mnemonic);
-        }
         auto [dst, offset] = _decode_register_and_offset(operands[0]);
         inst.dst = dst;
         inst.offset = offset;
@@ -215,8 +201,6 @@ typedef class _bpf_assembler
             inst.opcode = EBPF_OP_STH;
         } else if (mnemonic == "stw") {
             inst.opcode = EBPF_OP_STW;
-        } else {
-            throw std::runtime_error(std::string("Invalid mnemonic: ") + mnemonic);
         }
         inst.imm = _decode_imm32(operands[1]);
         return inst;
@@ -226,9 +210,6 @@ typedef class _bpf_assembler
     _encode_stx(const std::string& mnemonic, const std::vector<std::string>& operands)
     {
         ebpf_inst inst{};
-        if (operands.size() != 2) {
-            throw std::runtime_error(std::string("Wrong operand count: ") + mnemonic);
-        }
         auto [dst, offset] = _decode_register_and_offset(operands[0]);
         inst.dst = dst;
         inst.offset = offset;
@@ -241,8 +222,6 @@ typedef class _bpf_assembler
             inst.opcode = EBPF_OP_STXH;
         } else if (mnemonic == "stxw") {
             inst.opcode = EBPF_OP_STXW;
-        } else {
-            throw std::runtime_error(std::string("Invalid mnemonic: ") + mnemonic);
         }
 
         return inst;
@@ -254,31 +233,15 @@ typedef class _bpf_assembler
         ebpf_inst inst{};
         std::string alu_op;
         if (mnemonic.starts_with("be")) {
-            if (operands.size() != 1) {
-                throw std::runtime_error(std::string("Wrong operand count: ") + mnemonic);
-            }
             inst.opcode = EBPF_OP_BE;
             inst.dst = _decode_register(operands[0]);
             inst.imm = _decode_imm32(mnemonic.substr(2));
             return inst;
         } else if (mnemonic.starts_with("le")) {
-            if (operands.size() != 1) {
-                throw std::runtime_error(std::string("Wrong operand count: ") + mnemonic);
-            }
             inst.opcode = EBPF_OP_LE;
             inst.dst = _decode_register(operands[0]);
             inst.imm = _decode_imm32(mnemonic.substr(2));
             return inst;
-        }
-
-        if (mnemonic.starts_with("neg")) {
-            if (operands.size() != 1) {
-                throw std::runtime_error(std::string("Wrong operand count: ") + mnemonic);
-            }
-        } else {
-            if (operands.size() != 2) {
-                throw std::runtime_error(std::string("Wrong operand count: ") + mnemonic);
-            }
         }
 
         if (mnemonic.ends_with("32")) {
@@ -289,9 +252,7 @@ typedef class _bpf_assembler
             alu_op = mnemonic;
         }
         auto iter = _bpf_encode_alu_ops.find(alu_op);
-        if (iter == _bpf_encode_alu_ops.end()) {
-            throw std::runtime_error(std::string("Invalid mnemonic: ") + mnemonic);
-        }
+        // It is not possible to reach here with no match.
         inst.opcode |= iter->second << 4;
 
         inst.dst = _decode_register(operands[0]);
@@ -315,29 +276,17 @@ typedef class _bpf_assembler
         ebpf_inst inst{};
         inst.opcode |= EBPF_CLS_JMP;
         if (mnemonic == "ja") {
-            if (operands.size() != 1) {
-                throw std::runtime_error(std::string("Wrong operand count: ") + mnemonic);
-            }
-
             inst.offset = _decode_jump_target(operands[0]);
         } else if (mnemonic == "exit") {
-            if (operands.size() != 0) {
-                throw std::runtime_error(std::string("Wrong operand count: ") + mnemonic);
-            }
             inst.opcode = EBPF_OP_EXIT;
         } else if (mnemonic == "call") {
-            if (operands.size() != 1) {
-                throw std::runtime_error(std::string("Wrong operand count: ") + mnemonic);
-            }
             inst.opcode = EBPF_OP_CALL;
             inst.imm = _decode_imm32(operands[0]);
         } else {
-            if (operands.size() != 3) {
-                throw std::runtime_error(std::string("Wrong operand count: ") + mnemonic);
-            }
             mnemonic.ends_with("32") ? inst.opcode = EBPF_CLS_JMP32 : inst.opcode |= EBPF_CLS_JMP;
             auto iter =
                 _bpf_encode_jmp_ops.find(mnemonic.ends_with("32") ? mnemonic.substr(0, mnemonic.size() - 2) : mnemonic);
+            // It is not possible to reach here with no match.
             inst.opcode |= iter->second << 4;
             inst.dst = _decode_register(operands[0]);
             if (operands[1].starts_with('r')) {
@@ -352,45 +301,42 @@ typedef class _bpf_assembler
         return inst;
     }
 
-    // const std::function<bpf_encode_result_t(const std::string&, const std::vector<std::string>&)> some =
-    // std::mem_fn(&_bpf_assembler::_encode_alu);
-
-    const std::unordered_map<std::string, bpf_encode_t> _bpf_mnemonic_map{
-        {"add", &_bpf_assembler::_encode_alu},   {"add32", &_bpf_assembler::_encode_alu},
-        {"and", &_bpf_assembler::_encode_alu},   {"and32", &_bpf_assembler::_encode_alu},
-        {"arsh", &_bpf_assembler::_encode_alu},  {"arsh32", &_bpf_assembler::_encode_alu},
-        {"be16", &_bpf_assembler::_encode_alu},  {"be32", &_bpf_assembler::_encode_alu},
-        {"be64", &_bpf_assembler::_encode_alu},  {"call", &_bpf_assembler::_encode_jmp},
-        {"div", &_bpf_assembler::_encode_alu},   {"div32", &_bpf_assembler::_encode_alu},
-        {"exit", &_bpf_assembler::_encode_jmp},  {"ja", &_bpf_assembler::_encode_jmp},
-        {"jeq", &_bpf_assembler::_encode_jmp},   {"jeq32", &_bpf_assembler::_encode_jmp},
-        {"jge", &_bpf_assembler::_encode_jmp},   {"jge32", &_bpf_assembler::_encode_jmp},
-        {"jgt", &_bpf_assembler::_encode_jmp},   {"jgt32", &_bpf_assembler::_encode_jmp},
-        {"jle", &_bpf_assembler::_encode_jmp},   {"jle32", &_bpf_assembler::_encode_jmp},
-        {"jlt", &_bpf_assembler::_encode_jmp},   {"jlt32", &_bpf_assembler::_encode_jmp},
-        {"jne", &_bpf_assembler::_encode_jmp},   {"jne32", &_bpf_assembler::_encode_jmp},
-        {"jset", &_bpf_assembler::_encode_jmp},  {"jset32", &_bpf_assembler::_encode_jmp},
-        {"jsge", &_bpf_assembler::_encode_jmp},  {"jsge32", &_bpf_assembler::_encode_jmp},
-        {"jsgt", &_bpf_assembler::_encode_jmp},  {"jsgt32", &_bpf_assembler::_encode_jmp},
-        {"jsle", &_bpf_assembler::_encode_jmp},  {"jsle32", &_bpf_assembler::_encode_jmp},
-        {"jslt", &_bpf_assembler::_encode_jmp},  {"jslt32", &_bpf_assembler::_encode_jmp},
-        {"lddw", &_bpf_assembler::_encode_ld},   {"ldxb", &_bpf_assembler::_encode_ldx},
-        {"ldxdw", &_bpf_assembler::_encode_ldx}, {"ldxh", &_bpf_assembler::_encode_ldx},
-        {"ldxw", &_bpf_assembler::_encode_ldx},  {"le16", &_bpf_assembler::_encode_alu},
-        {"le32", &_bpf_assembler::_encode_alu},  {"le64", &_bpf_assembler::_encode_alu},
-        {"lsh", &_bpf_assembler::_encode_alu},   {"lsh32", &_bpf_assembler::_encode_alu},
-        {"mod", &_bpf_assembler::_encode_alu},   {"mod32", &_bpf_assembler::_encode_alu},
-        {"mov", &_bpf_assembler::_encode_alu},   {"mov32", &_bpf_assembler::_encode_alu},
-        {"mul", &_bpf_assembler::_encode_alu},   {"mul32", &_bpf_assembler::_encode_alu},
-        {"neg", &_bpf_assembler::_encode_alu},   {"neg32", &_bpf_assembler::_encode_alu},
-        {"or", &_bpf_assembler::_encode_alu},    {"or32", &_bpf_assembler::_encode_alu},
-        {"rsh", &_bpf_assembler::_encode_alu},   {"rsh32", &_bpf_assembler::_encode_alu},
-        {"stb", &_bpf_assembler::_encode_st},    {"stdw", &_bpf_assembler::_encode_st},
-        {"sth", &_bpf_assembler::_encode_st},    {"stw", &_bpf_assembler::_encode_st},
-        {"stxb", &_bpf_assembler::_encode_stx},  {"stxdw", &_bpf_assembler::_encode_stx},
-        {"stxh", &_bpf_assembler::_encode_stx},  {"stxw", &_bpf_assembler::_encode_stx},
-        {"sub", &_bpf_assembler::_encode_alu},   {"sub32", &_bpf_assembler::_encode_alu},
-        {"xor", &_bpf_assembler::_encode_alu},   {"xor32", &_bpf_assembler::_encode_alu},
+    const std::unordered_map<std::string, std::tuple<bpf_encode_t, size_t>> _bpf_mnemonic_map{
+        {"add", {&_bpf_assembler::_encode_alu, 2}},   {"add32", {&_bpf_assembler::_encode_alu, 2}},
+        {"and", {&_bpf_assembler::_encode_alu, 2}},   {"and32", {&_bpf_assembler::_encode_alu, 2}},
+        {"arsh", {&_bpf_assembler::_encode_alu, 2}},  {"arsh32", {&_bpf_assembler::_encode_alu, 2}},
+        {"be16", {&_bpf_assembler::_encode_alu, 1}},  {"be32", {&_bpf_assembler::_encode_alu, 1}},
+        {"be64", {&_bpf_assembler::_encode_alu, 1}},  {"call", {&_bpf_assembler::_encode_jmp, 1}},
+        {"div", {&_bpf_assembler::_encode_alu, 2}},   {"div32", {&_bpf_assembler::_encode_alu, 2}},
+        {"exit", {&_bpf_assembler::_encode_jmp, 0}},  {"ja", {&_bpf_assembler::_encode_jmp, 1}},
+        {"jeq", {&_bpf_assembler::_encode_jmp, 3}},   {"jeq32", {&_bpf_assembler::_encode_jmp, 3}},
+        {"jge", {&_bpf_assembler::_encode_jmp, 3}},   {"jge32", {&_bpf_assembler::_encode_jmp, 3}},
+        {"jgt", {&_bpf_assembler::_encode_jmp, 3}},   {"jgt32", {&_bpf_assembler::_encode_jmp, 3}},
+        {"jle", {&_bpf_assembler::_encode_jmp, 3}},   {"jle32", {&_bpf_assembler::_encode_jmp, 3}},
+        {"jlt", {&_bpf_assembler::_encode_jmp, 3}},   {"jlt32", {&_bpf_assembler::_encode_jmp, 3}},
+        {"jne", {&_bpf_assembler::_encode_jmp, 3}},   {"jne32", {&_bpf_assembler::_encode_jmp, 3}},
+        {"jset", {&_bpf_assembler::_encode_jmp, 3}},  {"jset32", {&_bpf_assembler::_encode_jmp, 3}},
+        {"jsge", {&_bpf_assembler::_encode_jmp, 3}},  {"jsge32", {&_bpf_assembler::_encode_jmp, 3}},
+        {"jsgt", {&_bpf_assembler::_encode_jmp, 3}},  {"jsgt32", {&_bpf_assembler::_encode_jmp, 3}},
+        {"jsle", {&_bpf_assembler::_encode_jmp, 3}},  {"jsle32", {&_bpf_assembler::_encode_jmp, 3}},
+        {"jslt", {&_bpf_assembler::_encode_jmp, 3}},  {"jslt32", {&_bpf_assembler::_encode_jmp, 3}},
+        {"lddw", {&_bpf_assembler::_encode_ld, 2}},   {"ldxb", {&_bpf_assembler::_encode_ldx, 2}},
+        {"ldxdw", {&_bpf_assembler::_encode_ldx, 2}}, {"ldxh", {&_bpf_assembler::_encode_ldx, 2}},
+        {"ldxw", {&_bpf_assembler::_encode_ldx, 2}},  {"le16", {&_bpf_assembler::_encode_alu, 1}},
+        {"le32", {&_bpf_assembler::_encode_alu, 1}},  {"le64", {&_bpf_assembler::_encode_alu, 1}},
+        {"lsh", {&_bpf_assembler::_encode_alu, 2}},   {"lsh32", {&_bpf_assembler::_encode_alu, 2}},
+        {"mod", {&_bpf_assembler::_encode_alu, 2}},   {"mod32", {&_bpf_assembler::_encode_alu, 2}},
+        {"mov", {&_bpf_assembler::_encode_alu, 2}},   {"mov32", {&_bpf_assembler::_encode_alu, 2}},
+        {"mul", {&_bpf_assembler::_encode_alu, 2}},   {"mul32", {&_bpf_assembler::_encode_alu, 2}},
+        {"neg", {&_bpf_assembler::_encode_alu, 1}},   {"neg32", {&_bpf_assembler::_encode_alu, 1}},
+        {"or", {&_bpf_assembler::_encode_alu, 2}},    {"or32", {&_bpf_assembler::_encode_alu, 2}},
+        {"rsh", {&_bpf_assembler::_encode_alu, 2}},   {"rsh32", {&_bpf_assembler::_encode_alu, 2}},
+        {"stb", {&_bpf_assembler::_encode_st, 2}},    {"stdw", {&_bpf_assembler::_encode_st, 2}},
+        {"sth", {&_bpf_assembler::_encode_st, 2}},    {"stw", {&_bpf_assembler::_encode_st, 2}},
+        {"stxb", {&_bpf_assembler::_encode_stx, 2}},  {"stxdw", {&_bpf_assembler::_encode_stx, 2}},
+        {"stxh", {&_bpf_assembler::_encode_stx, 2}},  {"stxw", {&_bpf_assembler::_encode_stx, 2}},
+        {"sub", {&_bpf_assembler::_encode_alu, 2}},   {"sub32", {&_bpf_assembler::_encode_alu, 2}},
+        {"xor", {&_bpf_assembler::_encode_alu, 2}},   {"xor32", {&_bpf_assembler::_encode_alu, 2}},
 
     };
 
@@ -447,8 +393,13 @@ typedef class _bpf_assembler
             if (iter == _bpf_mnemonic_map.end()) {
                 throw std::runtime_error(std::string("Invalid mnemonic: ") + mnemonic);
             }
+            auto [handler, num_operands] = iter->second;
+            if (operands.size() != num_operands) {
+                throw std::runtime_error(std::string("Invalid number of operands for mnemonic: ") +
+                                         mnemonic);
+            }
             // Invoke handler and store result.
-            auto result = (this->*iter->second)(mnemonic, operands);
+            auto result = (this->*handler)(mnemonic, operands);
             if (std::holds_alternative<ebpf_inst>(result)) {
                 output.emplace_back(std::get<ebpf_inst>(result));
             } else {
