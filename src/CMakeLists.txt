@@ -66,7 +66,7 @@ add_test(
 
 add_test(
   NAME bpf_conformance_v3
-  COMMAND sudo ${CMAKE_BINARY_DIR}/src/bpf_conformance_runner --test_file_directory ${CMAKE_BINARY_DIR}/tests --plugin_path ${CMAKE_BINARY_DIR}/libbpf_plugin/libbpf_plugin --cpu_version v3
+  COMMAND sudo ${CMAKE_BINARY_DIR}/src/bpf_conformance_runner --test_file_directory ${CMAKE_BINARY_DIR}/tests --plugin_path ${CMAKE_BINARY_DIR}/libbpf_plugin/libbpf_plugin --cpu_version v3 --debug true --list_opcodes true
 )
 
 add_test(
