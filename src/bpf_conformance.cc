@@ -49,11 +49,33 @@ _ebpf_inst_to_byte_vector(const std::vector<ebpf_inst>& instructions)
     return result;
 }
 
+void
+log_debug_result(
+    std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>> test_results,
+    const std::filesystem::path& test)
+{
+    auto [result, message] = test_results[test];
+    switch (result) {
+    case bpf_conformance_test_result_t::TEST_RESULT_PASS:
+        std::cout << "Test " << test << " succeeded" << std::endl;
+        break;
+    case bpf_conformance_test_result_t::TEST_RESULT_FAIL:
+        std::cout << "Test " << test << " failed: " << message << std::endl;
+        break;
+    case bpf_conformance_test_result_t::TEST_RESULT_SKIP:
+        std::cout << "Test " << test << " skipped: " << message << std::endl;
+        break;
+    case bpf_conformance_test_result_t::TEST_RESULT_ERROR:
+        std::cout << "Test " << test << " error: " << message << std::endl;
+        break;
+    }
+}
+
 std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>>
 bpf_conformance(
     const std::vector<std::filesystem::path>& test_files,
     const std::filesystem::path& plugin_path,
-    const std::string& plugin_options,
+    const std::vector<std::string>& plugin_options,
     bpf_conformance_test_CPU_version_t CPU_version,
     bool list_opcodes_tested,
     bool debug)
@@ -74,6 +96,7 @@ bpf_conformance(
         if (byte_code.size() == 0) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_SKIP, "Test file has no BPF instructions."};
+            log_debug_result(test_results, test);
             continue;
         }
 
@@ -97,6 +120,7 @@ bpf_conformance(
         if (required_cpu_version > CPU_version) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_SKIP, "Test file contains unsupported instructions."};
+            log_debug_result(test_results, test);
             continue;
         }
 
@@ -114,17 +138,19 @@ bpf_conformance(
         }
 
         std::string return_value_string;
+        std::string error_string;
         try {
             // Call the plugin to execute the BPF program.
             boost::process::ipstream output;
+            boost::process::ipstream error;
             boost::process::opstream input;
             // Pass the input memory to the plugin as arg[1] and any plugin options as arg[2].
             boost::process::child c(
                 plugin_path.string(),
                 _base_16_encode(input_memory),
-                plugin_options,
+                boost::process::args(plugin_options),
                 boost::process::std_out > output,
-                boost::process::std_in < input);
+                boost::process::std_in<input, boost::process::std_err> error);
 
             // Pass the BPF instructions to the plugin as stdin.
             input << _base_16_encode(_ebpf_inst_to_byte_vector(byte_code)) << std::endl;
@@ -136,11 +162,18 @@ bpf_conformance(
                 return_value_string += line;
             }
             output.close();
+
+            while (std::getline(error, line)) {
+                error_string += line;
+            }
             c.wait();
 
             // If the plugin returned a non-zero exit code, then check to see if the error string matches the expected
             // error string.
             if (c.exit_code() != 0) {
+                if (return_value_string.empty() && !error_string.empty()) {
+                    return_value_string = error_string;
+                }
                 if (expected_error_string.empty()) {
                     test_results[test] = {
                         bpf_conformance_test_result_t::TEST_RESULT_FAIL,
@@ -153,6 +186,7 @@ bpf_conformance(
                     }
                     if (expected_error_string == return_value_string) {
                         test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_PASS, ""};
+
                     } else {
                         test_results[test] = {
                             bpf_conformance_test_result_t::TEST_RESULT_FAIL,
@@ -160,12 +194,27 @@ bpf_conformance(
                                 return_value_string + " but expected " + expected_error_string};
                     }
                 }
+                if (debug) {
+                    auto [result, message] = test_results[test];
+                    std::cerr << "Test:" << test
+                              << (result == bpf_conformance_test_result_t::TEST_RESULT_PASS ? "PASS" : "FAIL")
+                              << message << std::endl;
+                }
+
+                log_debug_result(test_results, test);
                 continue;
             }
         } catch (boost::process::process_error& e) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_ERROR,
                 "Plugin failed to execute test with error " + std::string(e.what())};
+            if (debug) {
+                auto [result, message] = test_results[test];
+                std::cerr << "Test:" << test
+                          << (result == bpf_conformance_test_result_t::TEST_RESULT_PASS ? "PASS" : "FAIL") << message
+                          << std::endl;
+            }
+            log_debug_result(test_results, test);
             continue;
         }
 
@@ -188,6 +237,7 @@ bpf_conformance(
         } else {
             test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_PASS, ""};
         }
+        log_debug_result(test_results, test);
     }
 
     // If the caller asked for a list of opcodes used by the tests, then print the list.

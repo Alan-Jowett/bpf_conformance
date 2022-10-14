@@ -36,7 +36,7 @@ std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::s
 bpf_conformance(
     const std::vector<std::filesystem::path>& test_files,
     const std::filesystem::path& plugin_path,
-    const std::string& plugin_options,
+    const std::vector<std::string>& plugin_options,
     bpf_conformance_test_CPU_version_t CPU_version = bpf_conformance_test_CPU_version_t::v3,
     bool list_opcodes_tested = false,
     bool debug = false);
