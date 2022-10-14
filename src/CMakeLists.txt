@@ -198,3 +198,27 @@ set_tests_properties(
   WILL_FAIL true
   FAIL_REGULAR_EXPRESSION "Invalid number of operands for mnemonic: lddw"
 )
+
+add_test(
+  NAME invalid_label
+  COMMAND sudo ${CMAKE_BINARY_DIR}/src/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_label.data --plugin_path ${CMAKE_BINARY_DIR}/libbpf_plugin/libbpf_plugin --plugin_options "--debug"
+  )
+
+set_tests_properties(
+  invalid_label
+  PROPERTIES
+  WILL_FAIL true
+  FAIL_REGULAR_EXPRESSION "Invalid label: NOT_A_LABEL"
+)
+
+add_test(
+  NAME invalid_mnemonic
+  COMMAND sudo ${CMAKE_BINARY_DIR}/src/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_mnemonic.data --plugin_path ${CMAKE_BINARY_DIR}/libbpf_plugin/libbpf_plugin --plugin_options "--debug"
+  )
+
+set_tests_properties(
+  invalid_mnemonic
+  PROPERTIES
+  WILL_FAIL true
+  FAIL_REGULAR_EXPRESSION "Invalid mnemonic: ldxq"
+)
