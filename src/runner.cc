@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <sstream>
 #include <boost/program_options.hpp>
 
 #include "../include/bpf_conformance.h"
@@ -68,7 +69,14 @@ main(int argc, char** argv)
         }
 
         std::string plugin_path = vm["plugin_path"].as<std::string>();
-        std::string plugin_options = vm.count("plugin_options") ? vm["plugin_options"].as<std::string>() : "";
+        std::stringstream plugin_options_stream(vm.count("plugin_options") ? vm["plugin_options"].as<std::string>() : "");
+
+        std::vector<std::string> plugin_options;
+        std::string option;
+        while (std::getline(plugin_options_stream, option, ' ')) {
+            plugin_options.push_back(option);
+        }
+
         // Assume latest version if not specified.
         bpf_conformance_test_CPU_version_t CPU_version = bpf_conformance_test_CPU_version_t::v3;
         if (vm.count("cpu_version")) {
