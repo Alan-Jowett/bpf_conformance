@@ -98,7 +98,7 @@ jobs:
       with:
         name: bpf_conformance-${{env.BUILD_TYPE}}
         path: |
-          ${{github.workspace}}/build/**/bpf_conformance_runner.exe
+          ${{github.workspace}}/build/bin
           ${{github.workspace}}/build/tests
 
     - name: Tests
