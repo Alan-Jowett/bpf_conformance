@@ -92,14 +92,29 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
+    - name: Prepare for upload
+      if: inputs.platform == 'windows-2019' && (github.event_name == 'schedule' || github.event_name == 'push')
+      run: |
+        md -p ${{github.workspace}}/build/upload
+        cp ${{github.workspace}}/build/bin/${{env.BUILD_TYPE}}/bpf_conformance_runner.exe ${{github.workspace}}/build/upload/bpf_conformance_runner.exe
+        cp ${{github.workspace}}/build/bin/${{env.BUILD_TYPE}}/bpf_conformance_runner.pdb ${{github.workspace}}/build/upload/bpf_conformance_runner.pdb
+        cp -r ${{github.workspace}}/tests ${{github.workspace}}/build/upload
+
     - name: Upload build as artifact
-      if: inputs.platform == 'windows-2019' # && (github.event_name == 'schedule' || github.event_name == 'push')
+      if: inputs.platform == 'windows-2019' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'RelWithDebInfo'
       uses: actions/upload-artifact@v2
       with:
-        name: bpf_conformance-${{env.BUILD_TYPE}}
+        name: bpf_conformance-Release
         path: |
-          ${{github.workspace}}/build/bin
-          ${{github.workspace}}/build/tests
+          ${{github.workspace}}/build/upload
+
+    - name: Upload build as artifact
+      if: inputs.platform == 'windows-2019' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'Debug'
+      uses: actions/upload-artifact@v2
+      with:
+        name: bpf_conformance-Debug
+        path: |
+          ${{github.workspace}}/build/upload
 
     - name: Tests
       if: inputs.platform == 'ubuntu-22.04'
