@@ -93,9 +93,9 @@ typedef class _bpf_assembler
     _decode_imm32(const std::string& str)
     {
         if (str.find("0x") == std::string::npos) {
-            return std::stoul(str);
+            return static_cast<uint32_t>(std::stoull(str));
         } else {
-            return std::stoul(str, nullptr, 16);
+            return static_cast<uint32_t>(std::stoull(str, nullptr, 16));
         }
     }
 
@@ -103,9 +103,9 @@ typedef class _bpf_assembler
     _decode_offset(const std::string& str)
     {
         if (str.find("0x") == std::string::npos) {
-            return static_cast<uint16_t>(std::stoul(str));
+            return static_cast<uint16_t>(std::stoull(str));
         } else {
-            return static_cast<uint16_t>(std::stoul(str, nullptr, 16));
+            return static_cast<uint16_t>(std::stoull(str, nullptr, 16));
         }
     }
 

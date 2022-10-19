@@ -226,7 +226,7 @@ bpf_conformance(
         // Parse the return value from the plugin and compare it with the expected return value.
         uint32_t return_value = 0;
         try {
-            return_value = std::stoull(return_value_string, nullptr, 16);
+            return_value = static_cast<uint32_t>(std::stoull(return_value_string, nullptr, 16));
         } catch (const std::exception&) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_ERROR,

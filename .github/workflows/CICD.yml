@@ -26,7 +26,7 @@ jobs:
     uses: ./.github/workflows/Build.yml
     with:
       platform: windows-2019
-      configuration: Release
+      configuration: RelWithDebInfo
       enable_sanitizers: false
       enable_coverage: false
 
