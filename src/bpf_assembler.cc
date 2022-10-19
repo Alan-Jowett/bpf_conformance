@@ -301,6 +301,108 @@ typedef class _bpf_assembler
         return inst;
     }
 
+    bpf_encode_result_t
+    _encode_atomic_add(const std::string& mnemonic, const std::vector<std::string>& operands)
+    {
+        ebpf_inst inst{};
+        if (mnemonic.ends_with("32")) {
+            inst.opcode = EBPF_OP_ATOMIC32_STORE;
+        } else {
+            inst.opcode = EBPF_OP_ATOMIC_STORE;
+        }
+        auto [dst, offset] = _decode_register_and_offset(operands[0]);
+        inst.dst = dst;
+        inst.offset = offset;
+        inst.src = _decode_register(operands[1]);
+        inst.imm = EBPF_ALU_OP_ADD;
+        return inst;
+    }
+
+    bpf_encode_result_t
+    _encode_atomic_and(const std::string& mnemonic, const std::vector<std::string>& operands)
+    {
+        ebpf_inst inst{};
+        if (mnemonic.ends_with("32")) {
+            inst.opcode = EBPF_OP_ATOMIC32_STORE;
+        } else {
+            inst.opcode = EBPF_OP_ATOMIC_STORE;
+        }
+        auto [dst, offset] = _decode_register_and_offset(operands[0]);
+        inst.dst = dst;
+        inst.offset = offset;
+        inst.src = _decode_register(operands[1]);
+        inst.imm = EBPF_ALU_OP_AND;
+        return inst;
+    }
+
+    bpf_encode_result_t
+    _encode_atomic_or(const std::string& mnemonic, const std::vector<std::string>& operands)
+    {
+        ebpf_inst inst{};
+        if (mnemonic.ends_with("32")) {
+            inst.opcode = EBPF_OP_ATOMIC32_STORE;
+        } else {
+            inst.opcode = EBPF_OP_ATOMIC_STORE;
+        }
+        auto [dst, offset] = _decode_register_and_offset(operands[0]);
+        inst.dst = dst;
+        inst.offset = offset;
+        inst.src = _decode_register(operands[1]);
+        inst.imm = EBPF_ALU_OP_OR;
+        return inst;
+    }
+
+    bpf_encode_result_t
+    _encode_atomic_xor(const std::string& mnemonic, const std::vector<std::string>& operands)
+    {
+        ebpf_inst inst{};
+        if (mnemonic.ends_with("32")) {
+            inst.opcode = EBPF_OP_ATOMIC32_STORE;
+        } else {
+            inst.opcode = EBPF_OP_ATOMIC_STORE;
+        }
+        auto [dst, offset] = _decode_register_and_offset(operands[0]);
+        inst.dst = dst;
+        inst.offset = offset;
+        inst.src = _decode_register(operands[1]);
+        inst.imm = EBPF_ALU_OP_XOR;
+        return inst;
+    }
+
+    bpf_encode_result_t
+    _encode_atomic_xchg(const std::string& mnemonic, const std::vector<std::string>& operands)
+    {
+        ebpf_inst inst{};
+        if (mnemonic.ends_with("32")) {
+            inst.opcode = EBPF_OP_ATOMIC32_STORE;
+        } else {
+            inst.opcode = EBPF_OP_ATOMIC_STORE;
+        }
+        auto [dst, offset] = _decode_register_and_offset(operands[0]);
+        inst.dst = dst;
+        inst.offset = offset;
+        inst.src = _decode_register(operands[1]);
+        inst.imm = EPBF_ATOMIC_OP_XCHG;
+        return inst;
+    }
+
+    bpf_encode_result_t
+    _encode_atomic_cmpxchg(const std::string& mnemonic, const std::vector<std::string>& operands)
+    {
+        ebpf_inst inst{};
+        if (mnemonic.ends_with("32")) {
+            inst.opcode = EBPF_OP_ATOMIC32_STORE;
+        } else {
+            inst.opcode = EBPF_OP_ATOMIC_STORE;
+        }
+        auto [dst, offset] = _decode_register_and_offset(operands[0]);
+        inst.dst = dst;
+        inst.offset = offset;
+        inst.src = _decode_register(operands[1]);
+        inst.imm = EBPF_ATOMIC_OP_CMPXCHG;
+        return inst;
+    }
+
     const std::unordered_map<std::string, std::tuple<bpf_encode_t, size_t>> _bpf_mnemonic_map{
         {"add", {&_bpf_assembler::_encode_alu, 2}},   {"add32", {&_bpf_assembler::_encode_alu, 2}},
         {"and", {&_bpf_assembler::_encode_alu, 2}},   {"and32", {&_bpf_assembler::_encode_alu, 2}},
@@ -337,7 +439,21 @@ typedef class _bpf_assembler
         {"stxh", {&_bpf_assembler::_encode_stx, 2}},  {"stxw", {&_bpf_assembler::_encode_stx, 2}},
         {"sub", {&_bpf_assembler::_encode_alu, 2}},   {"sub32", {&_bpf_assembler::_encode_alu, 2}},
         {"xor", {&_bpf_assembler::_encode_alu, 2}},   {"xor32", {&_bpf_assembler::_encode_alu, 2}},
+    };
 
+    const std::unordered_map<std::string, std::tuple<bpf_encode_t, size_t>> _bpf_encode_atomic_ops{
+        {"add", {&_bpf_assembler::_encode_atomic_add, 2}},
+        {"add32", {&_bpf_assembler::_encode_atomic_add, 2}},
+        {"and", {&_bpf_assembler::_encode_atomic_and, 2}},
+        {"and32", {&_bpf_assembler::_encode_atomic_and, 2}},
+        {"or", {&_bpf_assembler::_encode_atomic_or, 2}},
+        {"or32", {&_bpf_assembler::_encode_atomic_or, 2}},
+        {"xor", {&_bpf_assembler::_encode_atomic_xor, 2}},
+        {"xor32", {&_bpf_assembler::_encode_atomic_xor, 2}},
+        {"xchg", {&_bpf_assembler::_encode_atomic_xchg, 2}},
+        {"xchg32", {&_bpf_assembler::_encode_atomic_xchg, 2}},
+        {"cmpxchg", {&_bpf_assembler::_encode_atomic_cmpxchg, 2}},
+        {"cmpxchg32", {&_bpf_assembler::_encode_atomic_cmpxchg, 2}},
     };
 
   public:
@@ -388,18 +504,39 @@ typedef class _bpf_assembler
             // Assume not a jump instruction.
             _jump_instructions.push_back({});
 
-            // Find the handler for this mnemonic.
-            auto iter = _bpf_mnemonic_map.find(mnemonic);
-            if (iter == _bpf_mnemonic_map.end()) {
+            bpf_encode_t encode = nullptr;
+            size_t operand_count = 0;
+            if (mnemonic == "lock") {
+                // Find the handler for this atomic operation.
+                if (operands.size() == 0) {
+                    throw std::runtime_error("Invalid number of operands for lock");
+                }
+                auto iter = _bpf_encode_atomic_ops.find(operands[0]);
+                if (iter != _bpf_encode_atomic_ops.end()) {
+                    mnemonic = operands[0];
+                    operands.erase(operands.begin());
+                    std::tie(encode, operand_count) = iter->second;
+                }
+            } else {
+                // Find the handler for this mnemonic.
+                auto iter = _bpf_mnemonic_map.find(mnemonic);
+                if (iter != _bpf_mnemonic_map.end()) {
+                    std::tie(encode, operand_count) = iter->second;
+                }
+            }
+
+            // Check if the mnemonic is valid.
+            if (encode == nullptr) {
                 throw std::runtime_error(std::string("Invalid mnemonic: ") + mnemonic);
             }
-            auto [handler, num_operands] = iter->second;
-            if (operands.size() != num_operands) {
-                throw std::runtime_error(std::string("Invalid number of operands for mnemonic: ") +
-                                         mnemonic);
+
+            // Check if the number of operands is valid.
+            if (operands.size() != operand_count) {
+                throw std::runtime_error(std::string("Invalid number of operands for mnemonic: ") + mnemonic);
             }
+
             // Invoke handler and store result.
-            auto result = (this->*handler)(mnemonic, operands);
+            auto result = (this->*encode)(mnemonic, operands);
             if (std::holds_alternative<ebpf_inst>(result)) {
                 output.emplace_back(std::get<ebpf_inst>(result));
             } else {

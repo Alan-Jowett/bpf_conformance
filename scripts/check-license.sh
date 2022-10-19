@@ -11,7 +11,7 @@
 set -o errexit
 set -o pipefail
 
-license=("Copyright (c) Microsoft Corporation" "SPDX-License-Identifier: MIT")
+license=("Copyright" "SPDX-License-Identifier")
 
 root=$(git rev-parse --show-toplevel)
 
