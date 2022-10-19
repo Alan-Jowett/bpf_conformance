@@ -235,3 +235,15 @@ set_tests_properties(
   WILL_FAIL true
   FAIL_REGULAR_EXPRESSION "usage: libbpf_plugin"
 )
+
+add_test(
+  NAME invalid_lock
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_lock.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
+  )
+
+set_tests_properties(
+  invalid_lock
+  PROPERTIES
+  WILL_FAIL true
+  FAIL_REGULAR_EXPRESSION "Invalid number of operands for lock"
+)
