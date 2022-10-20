@@ -1,0 +1,7 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+ja NOT_A_LABEL
+exit
+-- result
+0x11

@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <sstream>
 #include <boost/program_options.hpp>
 
 #include "../include/bpf_conformance.h"
@@ -44,7 +45,9 @@ main(int argc, char** argv)
             "test_file_directory", boost::program_options::value<std::string>(), "Path to test file directory")(
             "plugin_path", boost::program_options::value<std::string>(), "Path to plugin")(
             "plugin_options", boost::program_options::value<std::string>(), "Options to pass to plugin")(
-            "list_opcodes", boost::program_options::value<bool>(), "List opcodes used in tests");
+            "list_opcodes", boost::program_options::value<bool>(), "List opcodes used in tests")(
+            "debug", boost::program_options::value<bool>(), "Print debug information")(
+            "cpu_version", boost::program_options::value<std::string>(), "CPU version");
 
         boost::program_options::variables_map vm;
         boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
@@ -66,7 +69,29 @@ main(int argc, char** argv)
         }
 
         std::string plugin_path = vm["plugin_path"].as<std::string>();
-        std::string plugin_options = vm.count("plugin_options") ? vm["plugin_options"].as<std::string>() : "";
+        std::stringstream plugin_options_stream(vm.count("plugin_options") ? vm["plugin_options"].as<std::string>() : "");
+
+        std::vector<std::string> plugin_options;
+        std::string option;
+        while (std::getline(plugin_options_stream, option, ' ')) {
+            plugin_options.push_back(option);
+        }
+
+        // Assume latest version if not specified.
+        bpf_conformance_test_CPU_version_t CPU_version = bpf_conformance_test_CPU_version_t::v3;
+        if (vm.count("cpu_version")) {
+            std::string cpu_version = vm["cpu_version"].as<std::string>();
+            if (cpu_version == "v1") {
+                CPU_version = bpf_conformance_test_CPU_version_t::v1;
+            } else if (cpu_version == "v2") {
+                CPU_version = bpf_conformance_test_CPU_version_t::v2;
+            } else if (cpu_version == "v3") {
+                CPU_version = bpf_conformance_test_CPU_version_t::v3;
+            } else {
+                std::cout << "Invalid CPU version" << std::endl;
+                return 1;
+            }
+        }
 
         std::vector<std::filesystem::path> tests;
         if (vm.count("test_file_path")) {
@@ -78,7 +103,9 @@ main(int argc, char** argv)
 
         size_t tests_passed = 0;
         size_t tests_run = 0;
-        auto test_results = bpf_conformance(tests, plugin_path, plugin_options, vm.count("list_opcodes"));
+        bool show_opcodes = vm.count("list_opcodes") ? vm["list_opcodes"].as<bool>() : false;
+        bool debug = vm.count("debug") ? vm["debug"].as<bool>() : false;
+        auto test_results = bpf_conformance(tests, plugin_path, plugin_options, CPU_version, show_opcodes, debug);
 
         // At the end of all the tests, print a summary of the results.
         std::cout << "Test results:" << std::endl;
@@ -101,12 +128,15 @@ main(int argc, char** argv)
             case bpf_conformance_test_result_t::TEST_RESULT_SKIP:
                 std::cout << "SKIP: " << test.first << " " << message << std::endl;
                 break;
+            case bpf_conformance_test_result_t::TEST_RESULT_UNKNOWN:
+                std::cout << "UNKNOWN: " << test.first << " " << message << std::endl;
+                break;
             }
         }
 
         std::cout << "Passed " << tests_passed << " out of " << tests_run << " tests." << std::endl;
 
-        return 0;
+        return tests_passed == tests_run ? 0 : 1;
     } catch (std::filesystem::filesystem_error& e) {
         std::cerr << "Error reading test files: " << e.what() << std::endl;
         return 2;

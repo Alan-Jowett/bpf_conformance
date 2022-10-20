@@ -3,7 +3,7 @@
 -- asm
 mov32 r0, 0
 mov r1, 0xfffffffe
-jsge r1, 0xffffffff, +5 # Not taken
+jsge r1, 0xffffffff, exit # Not taken
 jsge r1, 0, +4 # Not taken
 
 mov32 r0, 1

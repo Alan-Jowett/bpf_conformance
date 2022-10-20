@@ -5,7 +5,7 @@ mov32 r0, 0
 mov r1, 0xffffffff
 mov r2, 0xfffffffe
 mov32 r3, 0
-jsle r1, r2, +1 # Not taken
+jsle r1, r2, exit # Not taken
 jsle r1, r3, +1 # Taken
 exit
 mov32 r0, 1

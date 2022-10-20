@@ -3,8 +3,8 @@
 -- asm
 mov32 r0, 0
 mov32 r1, 5
-jlt r1, 4, +2 # Not taken
-jlt r1, 5, +1 # Not taken
+jlt r1, 4, exit # Not taken
+jlt r1, 5, exit # Not taken
 jlt r1, 6, +1 # Taken
 exit
 mov32 r0, 1

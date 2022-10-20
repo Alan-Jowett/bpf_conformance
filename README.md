@@ -1,6 +1,6 @@
 # BPF Conformance
-[![CI/CD](https://github.com/Alan-Jowett/bpf_conformance/actions/workflows/CICD.yml/badge.svg)](https://github.com/Alan-Jowett/bpf_conformance/actions/workflows/CICD.yml)
-[![Coverage Status](https://coveralls.io/repos/github/Alan-Jowett/bpf_conformance/badge.svg?branch=main)](https://coveralls.io/github/Alan-Jowett/bpf_conformance?branch=main)
+[![CI/CD](https://github.com/Alan-Jowett/bpf_conformance/actions/workflows/CICD.yml/badge.svg?branch=main)](https://github.com/Alan-Jowett/bpf_conformance/actions/workflows/CICD.yml)
+[![Coverage Status](https://coveralls.io/repos/github/Alan-Jowett/bpf_conformance/badge.png?branch=main)](https://coveralls.io/github/Alan-Jowett/bpf_conformance?branch=main)
 
 This project measures the conformance of a BPF runtime to the ISA. To measure conformance the BPF runtime under test is built into a plugin process that does:
 1) Accept both BPF byte code an initial memory.
@@ -11,11 +11,19 @@ This project measures the conformance of a BPF runtime to the ISA. To measure co
 
 Run ```cmake -S . -B build``` to configure the project, then run ```cmake --build build``` to build the project.
 
-## Running the test
-Start bpf_conformance_runner, passing it the path to tests to execute and the path to the runtime under test.
+## Using a published package
+Select the desired version from [bpf_conformance](https://github.com/Alan-Jowett/bpf_conformance/pkgs/container/bpf_conformance)
 
-Example using the libbpf_plugin (which uses the Linux BPF runtime)
-```build/src/bpf_conformance_runner --test_file_directory tests --plugin_path build/libbpf_plugin/libbpf_plugin```
+Assume the package is named: "ghcr.io/alan-jowett/bpf_conformance:main"
+```
+docker run --privileged -it --rm ghcr.io/alan-jowett/bpf_conformance:main src/bpf_conformance_runner --test_file_directory tests --plugin_path libbpf_plugin/libbpf_plugin --cpu_version v3
+```
+
+## Running the test
+Linux (test require Linux kernel BPF support):
+```
+cmake --build build --target test --
+```
 
 Note: The libbpf_plugin requires root or BPF permissions.
 
@@ -25,7 +33,7 @@ The BPF Conformance tests can also be used as a static library as part of anothe
 2) Link against libbpf_conformance.a and boost_filesystem (depending on platform).
 3) Invoke bpf_conformance, passing it a list of test files.
 
-## Interpeting results
+## Interpreting results
 On completion of the test the bpf_conformance tools prints the list of tests that passes/failed and a summary count.
 
 ```

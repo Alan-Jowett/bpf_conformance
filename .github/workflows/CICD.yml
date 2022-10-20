@@ -11,6 +11,9 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+  packages: write
 
 concurrency:
   # Cancel any CI/CD workflow currently in progress for the same PR.
@@ -23,7 +26,7 @@ jobs:
     uses: ./.github/workflows/Build.yml
     with:
       platform: windows-2019
-      configuration: Release
+      configuration: RelWithDebInfo
       enable_sanitizers: false
       enable_coverage: false
 
@@ -38,15 +41,16 @@ jobs:
   ubuntu_release:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-20.04
+      platform: ubuntu-22.04
       configuration: Release
       enable_sanitizers: false
       enable_coverage: false
+      publish_docker: true
 
   ubuntu_debug:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-20.04
+      platform: ubuntu-22.04
       configuration: Debug
       enable_sanitizers: false
       enable_coverage: false
@@ -54,7 +58,7 @@ jobs:
   ubuntu_release_sanitizers:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-20.04
+      platform: ubuntu-22.04
       configuration: Release
       enable_sanitizers: true
       enable_coverage: false
@@ -62,7 +66,7 @@ jobs:
   ubuntu_debug_sanitizers:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-20.04
+      platform: ubuntu-22.04
       configuration: Debug
       enable_sanitizers: true
       enable_coverage: false
@@ -70,7 +74,7 @@ jobs:
   ubuntu_release_coverage:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-20.04
+      platform: ubuntu-22.04
       configuration: Release
       enable_sanitizers: false
       enable_coverage: true
@@ -78,19 +82,32 @@ jobs:
   ubuntu_debug_coverage:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-20.04
+      platform: ubuntu-22.04
       configuration: Debug
       enable_sanitizers: false
       enable_coverage: true
+
+  macos_release:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: macos-11
+      configuration: Release
+
+  macos_debug:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: macos-11
+      configuration: Debug
 
   finish:
     needs:
       - ubuntu_release_coverage
       - ubuntu_debug_coverage
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Coveralls Finished
-      uses: coverallsapp/github-action@master
+      uses: coverallsapp/github-action@1.1.3
       with:
         github-token: ${{ secrets.github_token }}
         parallel-finished: true
+

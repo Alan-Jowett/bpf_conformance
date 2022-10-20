@@ -18,9 +18,21 @@ on:
       enable_coverage:
         required: false
         type: boolean
+      publish_docker:
+        required: false
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: alan-jowett/bpf_conformance
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   build:
+
     runs-on: ${{inputs.platform}}
     env:
       BUILD_TYPE: ${{inputs.configuration}}
@@ -28,8 +40,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install prerequisites
-      if: inputs.platform == 'ubuntu-20.04'
+    - name: Install prerequisites - Ubuntu-22.04
+      if: inputs.platform == 'ubuntu-22.04'
       run: |
         sudo apt-get install -y libboost-dev \
          libboost-filesystem-dev \
@@ -37,9 +49,18 @@ jobs:
          libbpf-dev \
          lcov
 
+    - name: Install prerequisites - macos-11
+      if: inputs.platform == 'macos-11'
+      run: |
+        brew install \
+          cmake \
+          ninja \
+          ccache \
+          boost
+
     - name: Cache nuget packages
       if: inputs.platform == 'windows-2019'
-      uses: actions/cache@56461b9eb0f8438fd15c7a9968e3c9ebb18ceff1
+      uses: actions/cache@9b0c1fce7a93df8e3bb8926b0d6e9d89e92f20a7
       env:
         cache-name: cache-nuget-modules
       with:
@@ -52,7 +73,7 @@ jobs:
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Configure CMake
-      if: inputs.platform == 'ubuntu-20.04'
+      if: inputs.platform == 'ubuntu-22.04' || inputs.platform == 'macos-11'
       run: |
         if [ "${{inputs.enable_sanitizers}}" = "true" ]; then
           export SANITIZER_FLAGS="-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all"
@@ -71,15 +92,35 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    - name: Test
-      if: inputs.platform == 'ubuntu-20.04'
+    - name: Prepare for upload
+      if: inputs.platform == 'windows-2019' && (github.event_name == 'schedule' || github.event_name == 'push')
+      run: |
+        md -p ${{github.workspace}}/build/upload
+        cp ${{github.workspace}}/build/bin/${{env.BUILD_TYPE}}/bpf_conformance_runner.exe ${{github.workspace}}/build/upload/bpf_conformance_runner.exe
+        cp ${{github.workspace}}/build/bin/${{env.BUILD_TYPE}}/bpf_conformance_runner.pdb ${{github.workspace}}/build/upload/bpf_conformance_runner.pdb
+        cp -r ${{github.workspace}}/tests ${{github.workspace}}/build/upload
+
+    - name: Upload build as artifact
+      if: inputs.platform == 'windows-2019' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'RelWithDebInfo'
+      uses: actions/upload-artifact@v2
+      with:
+        name: bpf_conformance-Release
+        path: |
+          ${{github.workspace}}/build/upload
+
+    - name: Upload build as artifact
+      if: inputs.platform == 'windows-2019' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'Debug'
+      uses: actions/upload-artifact@v2
+      with:
+        name: bpf_conformance-Debug
+        path: |
+          ${{github.workspace}}/build/upload
+
+    - name: Tests
+      if: inputs.platform == 'ubuntu-22.04'
       working-directory: ${{github.workspace}}
       run: |
-        sudo build/src/bpf_conformance_runner --test_file_directory tests --plugin_path build/libbpf_plugin/libbpf_plugin --list_opcodes true > result.txt
-        cat result.txt
-        if grep -q "FAIL" result.txt; then
-          exit 1
-        fi
+        cmake --build build --target test --
 
     - name: Generate code coverage report
       if: inputs.enable_coverage == true
@@ -89,8 +130,33 @@ jobs:
 
     - name: Coveralls Parallel
       if: inputs.enable_coverage == true
-      uses: coverallsapp/github-action@v1.1.2
+      uses: coverallsapp/github-action@1.1.3
       with:
         github-token: ${{ secrets.github_token }}
         flag-name: run-${{inputs.build_type}}-${{inputs.platform}}-${{inputs.arch}}
         parallel: true
+
+    - name: Log in to the Container registry
+      if: inputs.publish_docker == true
+      uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata (tags, labels) for Docker
+      if: inputs.publish_docker == true
+      id: meta
+      uses: docker/metadata-action@12cce9efe0d49980455aaaca9b071c0befcdd702
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+    - name: Build and push Docker image
+      if: inputs.publish_docker == true && github.event_name == 'push'
+      uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5
+      with:
+        context: build
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+

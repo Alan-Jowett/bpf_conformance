@@ -6,7 +6,7 @@ mov r0, r1
 ldxb r9, [r0+0]
 lsh r9, 0
 
-ldxb r8, [r0+1]
+ldxb r8, [r0+0x1]
 lsh r8, 4
 
 ldxb r7, [r0+2]

@@ -13,13 +13,12 @@
 #include <sstream>
 #include <linux/bpf.h>
 
-extern "C"
-{
-    enum bpf_stats_type
-    {
-    };
+// This is a work around for bpf_stats_type enum not being defined in
+// linux/bpf.h. This enum is defined in bpf.h in the kernel source tree.
+#define bpf_stats_type bpf_stats_type_fake
+enum bpf_stats_type_fake {};
 #include <bpf/bpf.h>
-}
+#undef bpf_stats_type_fake
 
 /**
  * @brief Read in a string of hex bytes and return a vector of bytes.
@@ -152,7 +151,7 @@ main(int argc, char** argv)
         log.size());
     if (fd < 0) {
         if (debug)
-            std::cerr << "Failed to load program: " << log << std::endl;
+            std::cout << "Failed to load program: " << log << std::endl;
         return 1;
     }
 
@@ -164,7 +163,7 @@ main(int argc, char** argv)
         bpf_prog_test_run(fd, 1, memory.data(), memory.size(), memory.data(), &out_size, &output_value, &duration);
     if (result != 0) {
         if (debug)
-            std::cerr << "Failed to run program: " << result << std::endl;
+            std::cout << "Failed to run program: " << result << std::endl;
         return 1;
     }
 
