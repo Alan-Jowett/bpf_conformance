@@ -252,6 +252,19 @@ set_tests_properties(
 )
 
 add_test(
+  NAME invalid_lock2
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_lock2.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
+  )
+
+set_tests_properties(
+  invalid_lock2
+  PROPERTIES
+  WILL_FAIL true
+  FAIL_REGULAR_EXPRESSION "Invalid number of operands for lock"
+)
+
+
+add_test(
   NAME include_test
   COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/tests/lock_add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug" --include_regex lock
 )
@@ -310,7 +323,7 @@ set_tests_properties(
   missing_test_path
   PROPERTIES
   WILL_PASS true
-  PASS_REGULAR_EXPRESSION "test_file_path or test_file_directory is required"
+  PASS_REGULAR_EXPRESSION "test_file_path or test_file_directory"
 )
 
 add_test(
@@ -371,4 +384,26 @@ set_tests_properties(
   PROPERTIES
   WILL_FAIL true
   FAIL_REGULAR_EXPRESSION "Test file has no BPF instructions."
+)
+
+add_test(
+  NAME libbpf_program_bytes
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --program "b4  00  00  00  00  00  00  00 95  00  00  00  00  00  00  00"
+  )
+
+set_tests_properties(
+  libbpf_program_bytes
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "0"
+)
+
+add_test(
+  NAME invalid_option
+  COMMAND ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --not_an_option 2>&1
+  )
+
+set_tests_properties(
+  invalid_option
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "unrecognised option"
 )
