@@ -269,3 +269,14 @@ set_tests_properties(
   PROPERTIES
   PASS_REGULAR_EXPRESSION "SKIP"
 )
+
+add_test(
+  NAME negative_include_test
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/tests/lock_add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug" --include_regex clock
+  )
+
+set_tests_properties(
+  negative_include_test
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "SKIP"
+)
