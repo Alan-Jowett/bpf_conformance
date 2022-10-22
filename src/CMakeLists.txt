@@ -3,25 +3,28 @@
 
 set(CMAKE_CXX_STANDARD 20)
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
-    "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
+  "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   find_package(Boost REQUIRED COMPONENTS program_options filesystem)
   set(PLATFORM_LIB pthread "${Boost_LIBRARIES}")
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   find_program(NUGET nuget)
-  if ("${BOOST_VERSION}" STREQUAL "")
+
+  if("${BOOST_VERSION}" STREQUAL "")
     set(BOOST_VERSION "1.80.0")
   endif()
-  if (NOT NUGET)
+
+  if(NOT NUGET)
     message("ERROR: You must first install nuget.exe from https://www.nuget.org/downloads")
-  else ()
+  else()
     exec_program(${NUGET} ARGS install "Boost" -Version ${BOOST_VERSION} -ExcludeVersion -OutputDirectory ${CMAKE_BINARY_DIR}/packages)
     exec_program(${NUGET} ARGS install "boost_filesystem-vc142" -Version ${BOOST_VERSION} -ExcludeVersion -OutputDirectory ${CMAKE_BINARY_DIR}/packages)
     exec_program(${NUGET} ARGS install "boost_program_options-vc142" -Version ${BOOST_VERSION} -ExcludeVersion -OutputDirectory ${CMAKE_BINARY_DIR}/packages)
   endif()
+
   set(Boost_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/packages/boost/lib/native/include)
   set(Boost_LIBRARY_DIRS ${CMAKE_BINARY_DIR}/packages/boost_filesystem-vc142/lib/native ${CMAKE_BINARY_DIR}/packages/boost_program_options-vc142/lib/native)
-endif ()
+endif()
 
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIRS})
@@ -51,27 +54,28 @@ target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB})
 target_link_libraries(bpf_conformance_runner PRIVATE ${PLATFORM_LIB} "bpf_conformance")
 
 find_program(ECHO echo)
+find_program(EXIT exit)
 
 enable_testing()
 
 add_test(
-  NAME bpf_conformance_v1
+  NAME cpu_v1
   COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${CMAKE_BINARY_DIR}/tests --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --cpu_version v1
 )
 
 add_test(
-  NAME bpf_conformance_v2
+  NAME cpu_v2
   COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${CMAKE_BINARY_DIR}/tests --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --cpu_version v2
 )
 
 add_test(
-  NAME bpf_conformance_v3
+  NAME cpu_v3
   COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${CMAKE_BINARY_DIR}/tests --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --cpu_version v3 --debug true --list_opcodes true
 )
 
 add_test(
   NAME no_bpf_bytecode
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/empty.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/empty.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --debug true
 )
 
 set_tests_properties(
@@ -82,7 +86,7 @@ set_tests_properties(
 
 add_test(
   NAME invalid_return_value
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_BINARY_DIR}/tests/add.data --plugin_path ${ECHO} --plugin_options "Hello World"
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_BINARY_DIR}/tests/add.data --plugin_path ${ECHO} --plugin_options "Hello World" --debug true
 )
 
 set_tests_properties(
@@ -94,7 +98,7 @@ set_tests_properties(
 
 add_test(
   NAME wrong_output
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_BINARY_DIR}/tests/add.data --plugin_path ${ECHO} --plugin_options "1"
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_BINARY_DIR}/tests/add.data --plugin_path ${ECHO} --plugin_options "1" --debug true
 )
 
 set_tests_properties(
@@ -106,7 +110,7 @@ set_tests_properties(
 
 add_test(
   NAME invalid_plugin_name
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_BINARY_DIR}/tests/add.data --plugin_path unknown_command 2>log.txt || cat log.txt
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_BINARY_DIR}/tests/add.data --debug true --plugin_path unknown_command 2>log.txt || cat log.txt
 )
 
 set_tests_properties(
@@ -117,7 +121,7 @@ set_tests_properties(
 
 add_test(
   NAME plugin_failed
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_BINARY_DIR}/tests/add.data --plugin_path "$(which ls)" --plugin_options "unknown_file" 2>log.txt
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_BINARY_DIR}/tests/add.data --plugin_path "$(which ls)" --plugin_options "unknown_file" 2>log.txt
 )
 
 set_tests_properties(
@@ -129,7 +133,7 @@ set_tests_properties(
 
 add_test(
   NAME wrong_error
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/error.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/negative/error.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin
 )
 
 set_tests_properties(
@@ -141,7 +145,7 @@ set_tests_properties(
 
 add_test(
   NAME expect_failure
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/error.data --plugin_path ${CMAKE_SOURCE_DIR}/negative/invalid.sh
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/negative/error.data --plugin_path ${CMAKE_SOURCE_DIR}/negative/invalid.sh
 )
 
 set_tests_properties(
@@ -153,8 +157,8 @@ set_tests_properties(
 
 add_test(
   NAME verifier_failure
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/error.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
-  )
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/negative/error.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
+)
 
 set_tests_properties(
   verifier_failure
@@ -165,8 +169,8 @@ set_tests_properties(
 
 add_test(
   NAME invalid_register
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_register.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
-  )
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_register.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
+)
 
 set_tests_properties(
   invalid_register
@@ -177,8 +181,8 @@ set_tests_properties(
 
 add_test(
   NAME invalid_offset
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_offset.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
-  )
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_offset.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
+)
 
 set_tests_properties(
   invalid_offset
@@ -189,8 +193,8 @@ set_tests_properties(
 
 add_test(
   NAME invalid_operand_count
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_operand_count.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
-  )
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_operand_count.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
+)
 
 set_tests_properties(
   invalid_operand_count
@@ -201,8 +205,8 @@ set_tests_properties(
 
 add_test(
   NAME invalid_label
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_label.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
-  )
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_label.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
+)
 
 set_tests_properties(
   invalid_label
@@ -213,8 +217,8 @@ set_tests_properties(
 
 add_test(
   NAME invalid_mnemonic
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_mnemonic.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
-  )
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_mnemonic.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
+)
 
 set_tests_properties(
   invalid_mnemonic
@@ -223,11 +227,10 @@ set_tests_properties(
   FAIL_REGULAR_EXPRESSION "Invalid mnemonic: ldxq"
 )
 
-
 add_test(
   NAME libbpf_plugin_usage
   COMMAND sudo ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --help
-  )
+)
 
 set_tests_properties(
   libbpf_plugin_usage
@@ -238,8 +241,8 @@ set_tests_properties(
 
 add_test(
   NAME invalid_lock
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_lock.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
-  )
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_lock.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
+)
 
 set_tests_properties(
   invalid_lock
@@ -250,8 +253,8 @@ set_tests_properties(
 
 add_test(
   NAME include_test
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/tests/lock_add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug" --include_regex lock
-  )
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/tests/lock_add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug" --include_regex lock
+)
 
 set_tests_properties(
   include_test
@@ -261,8 +264,8 @@ set_tests_properties(
 
 add_test(
   NAME exclude_test
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/tests/lock_add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug" --exclude_regex lock
-  )
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/tests/lock_add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug" --exclude_regex lock
+)
 
 set_tests_properties(
   exclude_test
@@ -272,11 +275,100 @@ set_tests_properties(
 
 add_test(
   NAME negative_include_test
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/tests/lock_add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug" --include_regex clock
-  )
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/tests/lock_add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug" --include_regex clock
+)
 
 set_tests_properties(
   negative_include_test
   PROPERTIES
   PASS_REGULAR_EXPRESSION "SKIP"
+)
+
+add_test(
+  NAME negative_exclude_test
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/tests/lock_add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug" --exclude_regex clock
+)
+
+add_test(
+  NAME usage
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --help
+)
+
+set_tests_properties(
+  usage
+  PROPERTIES
+  WILL_PASS true
+  PASS_REGULAR_EXPRESSION "Options:"
+)
+
+add_test(
+  NAME missing_test_path
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner
+)
+
+set_tests_properties(
+  missing_test_path
+  PROPERTIES
+  WILL_PASS true
+  PASS_REGULAR_EXPRESSION "test_file_path or test_file_directory is required"
+)
+
+add_test(
+  NAME missing_plugin_path
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/tests/lock_add.data
+)
+
+set_tests_properties(
+  missing_plugin_path
+  PROPERTIES
+  WILL_PASS true
+  PASS_REGULAR_EXPRESSION "plugin_path is required"
+)
+
+add_test(
+  NAME invalid_cpu_version
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/tests/lock_add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --cpu_version not_a_version
+)
+
+set_tests_properties(
+  invalid_cpu_version
+  PROPERTIES
+  WILL_PASS true
+  PASS_REGULAR_EXPRESSION "Invalid CPU version"
+)
+
+add_test(
+  NAME invalid_test_directory
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory not_a_directory --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin
+)
+
+set_tests_properties(
+  invalid_test_directory
+  PROPERTIES
+  WILL_PASS true
+  PASS_REGULAR_EXPRESSION "No such file or directory"
+)
+
+add_test(
+  NAME fail_with_error
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/tests/add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--help" --debug true
+)
+
+set_tests_properties(
+  fail_with_error
+  PROPERTIES
+  WILL_PASS true
+  PASS_REGULAR_EXPRESSION "Plugin returned error code 1 and output"
+)
+
+add_test(
+  NAME unknown_directive
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_unknown_directive.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
+)
+
+set_tests_properties(
+  unknown_directive
+  PROPERTIES
+  WILL_FAIL true
+  FAIL_REGULAR_EXPRESSION "Test file has no BPF instructions."
 )

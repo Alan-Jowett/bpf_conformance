@@ -161,14 +161,10 @@ main(int argc, char** argv)
     uint32_t duration;
     int result =
         bpf_prog_test_run(fd, 1, memory.data(), memory.size(), memory.data(), &out_size, &output_value, &duration);
-    if (result != 0) {
-        if (debug)
-            std::cout << "Failed to run program: " << result << std::endl;
-        return 1;
+    if (result == 0) {
+        // Print output.
+        std::cout << std::hex << output_value << std::endl;
     }
-
-    // Print output.
-    std::cout << std::hex << output_value << std::endl;
 
     return 0;
 }
