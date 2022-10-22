@@ -247,3 +247,25 @@ set_tests_properties(
   WILL_FAIL true
   FAIL_REGULAR_EXPRESSION "Invalid number of operands for lock"
 )
+
+add_test(
+  NAME include_test
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/tests/lock_add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug" --include_regex lock
+  )
+
+set_tests_properties(
+  include_test
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "PASS"
+)
+
+add_test(
+  NAME exclude_test
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/tests/lock_add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug" --exclude_regex lock
+  )
+
+set_tests_properties(
+  exclude_test
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "SKIP"
+)

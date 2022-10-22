@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <map>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -29,7 +30,11 @@ typedef enum class _bpf_conformance_test_CPU_version
  * @param[in] test_files List of test files to run.
  * @param[in] plugin_path The path to the plugin to run the tests with.
  * @param[in] plugin_options The options to pass to the plugin.
+ * @param[in] include_test_regex A regex that matches the tests to include.
+ * @param[in] exclude_test_regex A regex that matches the tests to exclude.
+ * @param[in] CPU_version The CPU version to run the tests with.
  * @param[in] list_opcodes_tested Print the opcodes tested.
+ * @param[in] debug Print debug information.
  * @return The test results for each test file.
  */
 std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>>
@@ -37,6 +42,8 @@ bpf_conformance(
     const std::vector<std::filesystem::path>& test_files,
     const std::filesystem::path& plugin_path,
     const std::vector<std::string>& plugin_options,
+    std::optional<std::string> include_test_regex = std::nullopt,
+    std::optional<std::string> exclude_test_regex = std::nullopt,
     bpf_conformance_test_CPU_version_t CPU_version = bpf_conformance_test_CPU_version_t::v3,
     bool list_opcodes_tested = false,
     bool debug = false);

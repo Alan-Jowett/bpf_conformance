@@ -47,7 +47,9 @@ main(int argc, char** argv)
             "plugin_options", boost::program_options::value<std::string>(), "Options to pass to plugin")(
             "list_opcodes", boost::program_options::value<bool>(), "List opcodes used in tests")(
             "debug", boost::program_options::value<bool>(), "Print debug information")(
-            "cpu_version", boost::program_options::value<std::string>(), "CPU version");
+            "cpu_version", boost::program_options::value<std::string>(), "CPU version")(
+            "include_regex", boost::program_options::value<std::string>(), "Include regex")(
+            "exclude_regex", boost::program_options::value<std::string>(), "Exclude regex");
 
         boost::program_options::variables_map vm;
         boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
@@ -93,6 +95,9 @@ main(int argc, char** argv)
             }
         }
 
+        std::optional<std::string> include_regex = vm.count("include_regex") ? std::make_optional(vm["include_regex"].as<std::string>()) : std::nullopt;
+        std::optional<std::string> exclude_regex = vm.count("exclude_regex") ? std::make_optional(vm["exclude_regex"].as<std::string>()) : std::nullopt;
+
         std::vector<std::filesystem::path> tests;
         if (vm.count("test_file_path")) {
             tests.push_back(vm["test_file_path"].as<std::string>());
@@ -105,7 +110,7 @@ main(int argc, char** argv)
         size_t tests_run = 0;
         bool show_opcodes = vm.count("list_opcodes") ? vm["list_opcodes"].as<bool>() : false;
         bool debug = vm.count("debug") ? vm["debug"].as<bool>() : false;
-        auto test_results = bpf_conformance(tests, plugin_path, plugin_options, CPU_version, show_opcodes, debug);
+        auto test_results = bpf_conformance(tests, plugin_path, plugin_options, include_regex, exclude_regex, CPU_version, show_opcodes, debug);
 
         // At the end of all the tests, print a summary of the results.
         std::cout << "Test results:" << std::endl;

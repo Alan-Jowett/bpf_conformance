@@ -4,6 +4,7 @@
 #include <boost/process.hpp>
 
 #include <iostream>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <string>
@@ -76,6 +77,8 @@ bpf_conformance(
     const std::vector<std::filesystem::path>& test_files,
     const std::filesystem::path& plugin_path,
     const std::vector<std::string>& plugin_options,
+    std::optional<std::string> include_test_regex,
+    std::optional<std::string> exclude_test_regex,
     bpf_conformance_test_CPU_version_t CPU_version,
     bool list_opcodes_tested,
     bool debug)
@@ -91,6 +94,22 @@ bpf_conformance(
         // Expected error string - String returned by BPF runtime if the program fails.
         // BPF instructions - Instructions to pass to the BPF program.
         auto [input_memory, expected_return_value, expected_error_string, byte_code] = parse_test_file(test);
+
+        if (include_test_regex.has_value()) {
+            std::regex include_regex(include_test_regex.value_or(""));
+            if (!std::regex_search(test.filename().string(), include_regex)) {
+                test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_SKIP, "Skipped by include regex."};
+                continue;
+            }
+        }
+
+        if (exclude_test_regex.has_value()) {
+            std::regex exclude_regex(exclude_test_regex.value_or(""));
+            if (std::regex_search(test.filename().string(), exclude_regex)) {
+                test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_SKIP, "Skipped by exclude regex."};
+                continue;
+            }
+        }
 
         // It the test file has no BPF instructions, then skip it.
         if (byte_code.size() == 0) {
