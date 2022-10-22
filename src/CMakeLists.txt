@@ -360,3 +360,15 @@ set_tests_properties(
   WILL_PASS true
   PASS_REGULAR_EXPRESSION "Plugin returned error code 1 and output"
 )
+
+add_test(
+  NAME unknown_directive
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_unknown_directive.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
+)
+
+set_tests_properties(
+  unknown_directive
+  PROPERTIES
+  WILL_FAIL true
+  FAIL_REGULAR_EXPRESSION "Test file has no BPF instructions."
+)
