@@ -178,7 +178,7 @@ bpf_conformance(
 
             // Pass the BPF instructions to the plugin as stdin.
             input << _base_16_encode(_ebpf_inst_to_byte_vector(byte_code)) << std::endl;
-            input.close();
+            input.pipe().close();
             std::string line;
 
             // Read the return value from the plugin from stdout.
