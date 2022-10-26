@@ -124,7 +124,7 @@ bpf_conformance(
         // Determine the required CPU version for the test.
         for (auto& inst : byte_code) {
             // If this is an atomic store, then the test requires CPU version 3.
-            if (((inst.opcode & EBPF_CLS_STX) == EBPF_CLS_STX) &&
+            if (((inst.opcode & EBPF_CLS_MASK) == EBPF_CLS_STX) &&
                 (((inst.opcode & EBPF_MODE_ATOMIC) == EBPF_MODE_ATOMIC))) {
                 required_cpu_version = std::max(required_cpu_version, bpf_conformance_test_CPU_version_t::v3);
             }
