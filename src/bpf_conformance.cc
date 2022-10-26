@@ -122,9 +122,10 @@ bpf_conformance(
         bpf_conformance_test_CPU_version_t required_cpu_version = bpf_conformance_test_CPU_version_t::v1;
 
         // Determine the required CPU version for the test.
-        for (auto& inst : byte_code) {
+        for (size_t i = 0; i < byte_code.size(); i++) {
+            auto inst = byte_code[i];
             // If this is an atomic store, then the test requires CPU version 3.
-            if (((inst.opcode & EBPF_CLS_STX) == EBPF_CLS_STX) &&
+            if (((inst.opcode & EBPF_CLS_MASK) == EBPF_CLS_STX) &&
                 (((inst.opcode & EBPF_MODE_ATOMIC) == EBPF_MODE_ATOMIC))) {
                 required_cpu_version = std::max(required_cpu_version, bpf_conformance_test_CPU_version_t::v3);
             }
@@ -137,6 +138,10 @@ bpf_conformance(
                     // It his is a less than operation, then we know this is v2.
                     required_cpu_version = std::max(required_cpu_version, bpf_conformance_test_CPU_version_t::v2);
                 }
+            }
+            if (inst.opcode == EBPF_OP_LDDW) {
+                // Instruction has a 64-bit immediate and takes two instructions slots.
+                i++;
             }
         }
 
