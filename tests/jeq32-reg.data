@@ -3,7 +3,7 @@
 -- asm
 # Set r9 to 0x100000000
 mov r9, 1
-rsh r9, 32
+lsh r9, 32
 mov32 r0, 0
 mov32 r1, 0xa
 mov32 r2, 0xb

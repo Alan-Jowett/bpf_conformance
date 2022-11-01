@@ -1,10 +1,11 @@
 # Copyright (c) Big Switch Networks, Inc
 # SPDX-License-Identifier: Apache-2.0
 -- asm
+# Set r9 to 0x100000000
 mov r9, 1
-rsh r9, 32
+lsh r9, 32
 mov32 r0, 0
-mov r1, 0xfffffffe
+mov32 r1, 0xfffffffe
 # set r1 to 0x1fffffffe
 or r1, r9
 jsge32 r1, 0xffffffff, exit # Not taken
