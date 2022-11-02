@@ -173,11 +173,17 @@ bpf_conformance(
             boost::process::ipstream output;
             boost::process::ipstream error;
             boost::process::opstream input;
-            // Pass the input memory to the plugin as arg[1] and any plugin options as arg[2].
+            std::vector<std::string> args;
+            // Construct the command line arguments to pass to the plugin.
+            // First argument is any memory to pass to the BPF program.
+            // Remaining arguments are the options to pass to the plugin.
+            if (input_memory.size() > 0) {
+                args.insert(args.begin(), _base_16_encode(input_memory));
+            }
+            args.insert(args.end(), plugin_options.begin(), plugin_options.end());
             boost::process::child c(
                 plugin_path.string(),
-                _base_16_encode(input_memory),
-                boost::process::args(plugin_options),
+                boost::process::args(args),
                 boost::process::std_out > output,
                 boost::process::std_in<input, boost::process::std_err> error);
 

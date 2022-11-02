@@ -54,7 +54,6 @@ target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB})
 target_link_libraries(bpf_conformance_runner PRIVATE ${PLATFORM_LIB} "bpf_conformance")
 
 find_program(ECHO echo)
-find_program(EXIT exit)
 
 enable_testing()
 
@@ -92,7 +91,6 @@ add_test(
 set_tests_properties(
   invalid_return_value
   PROPERTIES
-  WILL_FAIL true
   PASS_REGULAR_EXPRESSION "Plugin returned invalid return value Hello World"
 )
 
@@ -104,7 +102,6 @@ add_test(
 set_tests_properties(
   wrong_output
   PROPERTIES
-  WILL_FAIL true
   PASS_REGULAR_EXPRESSION "Plugin returned incorrect return value 1 expected 3"
 )
 
@@ -121,13 +118,12 @@ set_tests_properties(
 
 add_test(
   NAME plugin_failed
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_BINARY_DIR}/tests/add.data --plugin_path "$(which ls)" --plugin_options "unknown_file" 2>log.txt
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_BINARY_DIR}/tests/add.data --plugin_path ${CMAKE_SOURCE_DIR}/negative/invalid.sh --plugin_options "2"
 )
 
 set_tests_properties(
   plugin_failed
   PROPERTIES
-  WILL_FAIL true
   PASS_REGULAR_EXPRESSION "Plugin returned error code 2"
 )
 
@@ -139,8 +135,7 @@ add_test(
 set_tests_properties(
   wrong_error
   PROPERTIES
-  WILL_FAIL true
-  PASS_REGULAR_EXPRESSION "Plugin returned error code and output but expected Invalid"
+  PASS_REGULAR_EXPRESSION "Plugin returned error code 1 and output  but expected Invalid"
 )
 
 add_test(
@@ -151,8 +146,7 @@ add_test(
 set_tests_properties(
   expect_failure
   PROPERTIES
-  WILL_FAIL true
-  PASS_REGULAR_EXPRESSION "Plugin returned error code 1 and output but expected Invalid"
+  PASS_REGULAR_EXPRESSION "Plugin returned invalid return value This is a negative test"
 )
 
 add_test(
@@ -163,8 +157,7 @@ add_test(
 set_tests_properties(
   verifier_failure
   PROPERTIES
-  WILL_FAIL true
-  FAIL_REGULAR_EXPRESSION "Plugin returned error code 1 and output Failed to load program"
+  PASS_REGULAR_EXPRESSION "Plugin returned error code 1 and output Failed to load program"
 )
 
 add_test(
@@ -175,8 +168,7 @@ add_test(
 set_tests_properties(
   invalid_register
   PROPERTIES
-  WILL_FAIL true
-  FAIL_REGULAR_EXPRESSION "Invalid register: r50"
+  PASS_REGULAR_EXPRESSION "Invalid register: r50"
 )
 
 add_test(
@@ -187,8 +179,7 @@ add_test(
 set_tests_properties(
   invalid_offset
   PROPERTIES
-  WILL_FAIL true
-  FAIL_REGULAR_EXPRESSION "Failed to decode register and offset: r1"
+  PASS_REGULAR_EXPRESSION "Failed to decode register and offset: r1"
 )
 
 add_test(
@@ -199,8 +190,7 @@ add_test(
 set_tests_properties(
   invalid_operand_count
   PROPERTIES
-  WILL_FAIL true
-  FAIL_REGULAR_EXPRESSION "Invalid number of operands for mnemonic: lddw"
+  PASS_REGULAR_EXPRESSION "Invalid number of operands for mnemonic: lddw"
 )
 
 add_test(
@@ -211,8 +201,7 @@ add_test(
 set_tests_properties(
   invalid_label
   PROPERTIES
-  WILL_FAIL true
-  FAIL_REGULAR_EXPRESSION "Invalid label: NOT_A_LABEL"
+  PASS_REGULAR_EXPRESSION "Invalid label: NOT_A_LABEL"
 )
 
 add_test(
@@ -223,32 +212,29 @@ add_test(
 set_tests_properties(
   invalid_mnemonic
   PROPERTIES
-  WILL_FAIL true
-  FAIL_REGULAR_EXPRESSION "Invalid mnemonic: ldxq"
+  PASS_REGULAR_EXPRESSION "Invalid mnemonic: ldxq"
 )
 
 add_test(
   NAME libbpf_plugin_usage
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --help
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --help 2>&1
 )
 
 set_tests_properties(
   libbpf_plugin_usage
   PROPERTIES
-  WILL_FAIL true
-  FAIL_REGULAR_EXPRESSION "usage: libbpf_plugin"
+  PASS_REGULAR_EXPRESSION "usage:"
 )
 
 add_test(
   NAME invalid_lock
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_lock.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug"
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_lock.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --plugin_options "--debug" 2>&1
 )
 
 set_tests_properties(
   invalid_lock
   PROPERTIES
-  WILL_FAIL true
-  FAIL_REGULAR_EXPRESSION "Invalid number of operands for lock"
+  PASS_REGULAR_EXPRESSION "Invalid number of operands"
 )
 
 add_test(
@@ -259,10 +245,8 @@ add_test(
 set_tests_properties(
   invalid_lock2
   PROPERTIES
-  WILL_FAIL true
-  FAIL_REGULAR_EXPRESSION "Invalid number of operands for lock"
+  PASS_REGULAR_EXPRESSION "Invalid number of operands for lock"
 )
-
 
 add_test(
   NAME include_test
@@ -310,7 +294,6 @@ add_test(
 set_tests_properties(
   usage
   PROPERTIES
-  WILL_PASS true
   PASS_REGULAR_EXPRESSION "Options:"
 )
 
@@ -322,7 +305,6 @@ add_test(
 set_tests_properties(
   missing_test_path
   PROPERTIES
-  WILL_PASS true
   PASS_REGULAR_EXPRESSION "test_file_path or test_file_directory"
 )
 
@@ -334,7 +316,6 @@ add_test(
 set_tests_properties(
   missing_plugin_path
   PROPERTIES
-  WILL_PASS true
   PASS_REGULAR_EXPRESSION "plugin_path is required"
 )
 
@@ -346,7 +327,6 @@ add_test(
 set_tests_properties(
   invalid_cpu_version
   PROPERTIES
-  WILL_PASS true
   PASS_REGULAR_EXPRESSION "Invalid CPU version"
 )
 
@@ -358,7 +338,6 @@ add_test(
 set_tests_properties(
   invalid_test_directory
   PROPERTIES
-  WILL_PASS true
   PASS_REGULAR_EXPRESSION "No such file or directory"
 )
 
@@ -370,7 +349,6 @@ add_test(
 set_tests_properties(
   fail_with_error
   PROPERTIES
-  WILL_PASS true
   PASS_REGULAR_EXPRESSION "Plugin returned error code 1 and output"
 )
 
@@ -382,8 +360,7 @@ add_test(
 set_tests_properties(
   unknown_directive
   PROPERTIES
-  WILL_FAIL true
-  FAIL_REGULAR_EXPRESSION "Test file has no BPF instructions."
+  PASS_REGULAR_EXPRESSION "Test file has no BPF instructions."
 )
 
 add_test(
