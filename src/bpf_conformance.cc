@@ -173,13 +173,25 @@ bpf_conformance(
             boost::process::ipstream output;
             boost::process::ipstream error;
             boost::process::opstream input;
-            // Pass the input memory to the plugin as arg[1] and any plugin options as arg[2].
-            boost::process::child c(
-                plugin_path.string(),
-                _base_16_encode(input_memory),
-                boost::process::args(plugin_options),
-                boost::process::std_out > output,
-                boost::process::std_in<input, boost::process::std_err> error);
+            std::optional<boost::process::child> child;
+
+            if (input_memory.size() > 0) {
+                 child = std::make_optional<boost::process::child>(
+                    plugin_path.string(),
+                    _base_16_encode(input_memory),
+                    boost::process::args(plugin_options),
+                    boost::process::std_out > output,
+                    boost::process::std_in<input, boost::process::std_err> error);
+            }
+            else {
+                 child = std::make_optional<boost::process::child>(
+                    plugin_path.string(),
+                    boost::process::args(plugin_options),
+                    boost::process::std_out > output,
+                    boost::process::std_in<input, boost::process::std_err> error);
+            }
+
+            auto& c = child.value();
 
             // Pass the BPF instructions to the plugin as stdin.
             input << _base_16_encode(_ebpf_inst_to_byte_vector(byte_code)) << std::endl;
