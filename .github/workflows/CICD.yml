@@ -10,6 +10,9 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  # Run on a daily schedule to perform the full set of tests.
+  schedule:
+    - cron: '00 21 * * *'
 
 permissions:
   contents: read
