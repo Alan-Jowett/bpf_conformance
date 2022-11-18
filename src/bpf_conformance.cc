@@ -83,8 +83,8 @@ bpf_conformance(
     bool list_opcodes_tested,
     bool debug)
 {
-    std::set<uint8_t> opcodes_used;
-    std::set<uint8_t> opcodes_not_used;
+    std::set<bpf_conformance_instruction_t, InstCmp> instructions_used;
+    std::set<bpf_conformance_instruction_t, InstCmp> instructions_not_used;
     std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>> test_results;
 
     for (auto& test : test_files) {
@@ -154,7 +154,7 @@ bpf_conformance(
         }
 
         for (const auto& inst : byte_code) {
-            opcodes_used.insert(inst.opcode);
+            instructions_used.insert(bpf_conformance_instruction_t(inst));
         }
 
         // If caller requested debug output, then print the test file name, input memory, and BPF instructions.
@@ -278,19 +278,19 @@ bpf_conformance(
     // If the caller asked for a list of opcodes used by the tests, then print the list.
     if (list_opcodes_tested) {
         // Compute list of opcodes not used in tests.
-        for (auto& opcode : opcodes_from_spec) {
-            if (opcodes_used.find(opcode) == opcodes_used.end()) {
-                opcodes_not_used.insert(opcode);
+        for (auto& instruction : instructions_from_spec) {
+            if (instructions_used.find(instruction) == instructions_used.end()) {
+                instructions_not_used.insert(instruction);
             }
         }
 
-        std::cout << "Opcodes used:" << std::endl;
-        for (auto opcode : opcodes_used) {
-            std::cout << opcode_to_name(opcode) << std::endl;
+        std::cout << "Instructions used:" << std::endl;
+        for (auto instruction : instructions_used) {
+            std::cout << instruction_to_name(instruction) << std::endl;
         }
-        std::cout << "Opcodes not used:" << std::endl;
-        for (auto opcode : opcodes_not_used) {
-            std::cout << opcode_to_name(opcode) << std::endl;
+        std::cout << "Instructions not used:" << std::endl;
+        for (auto instruction : instructions_not_used) {
+            std::cout << instruction_to_name(instruction) << std::endl;
         }
     }
     return test_results;
