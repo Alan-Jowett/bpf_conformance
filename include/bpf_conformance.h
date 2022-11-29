@@ -24,6 +24,14 @@ typedef enum class _bpf_conformance_test_CPU_version
     v3 = 3,
 } bpf_conformance_test_CPU_version_t;
 
+typedef enum class _bpf_conformance_list_instructions
+{
+    LIST_INSTRUCTIONS_NONE,   // Do not list instructions.
+    LIST_INSTRUCTIONS_USED,   // List instructions used by the test.
+    LIST_INSTRUCTIONS_UNUSED, // List instructions not used by the test.
+    LIST_INSTRUCTIONS_ALL,    // List all instructions.
+} bpf_conformance_list_instructions_t;
+
 /**
  * @brief Run the BPF conformance tests with the given plugin.
  *
@@ -45,5 +53,6 @@ bpf_conformance(
     std::optional<std::string> include_test_regex = std::nullopt,
     std::optional<std::string> exclude_test_regex = std::nullopt,
     bpf_conformance_test_CPU_version_t CPU_version = bpf_conformance_test_CPU_version_t::v3,
-    bool list_opcodes_tested = false,
+    bpf_conformance_list_instructions_t list_instructions_option =
+        bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_NONE,
     bool debug = false);
