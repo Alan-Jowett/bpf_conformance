@@ -36,16 +36,15 @@ int
 main(int argc, char** argv)
 {
     try {
-        std::set<uint8_t> opcodes_used;
-        std::set<uint8_t> opcodes_not_used;
-
         boost::program_options::options_description desc("Options");
         desc.add_options()("help", "Print help messages")(
             "test_file_path", boost::program_options::value<std::string>(), "Path to test file")(
             "test_file_directory", boost::program_options::value<std::string>(), "Path to test file directory")(
             "plugin_path", boost::program_options::value<std::string>(), "Path to plugin")(
             "plugin_options", boost::program_options::value<std::string>(), "Options to pass to plugin")(
-            "list_instructions", boost::program_options::value<bool>(), "List instructions used in tests")(
+            "list_instructions", boost::program_options::value<bool>(), "List instructions used and not used in tests")(
+            "list_used_instructions", boost::program_options::value<bool>(), "List instructions used in tests")(
+            "list_unused_instructions", boost::program_options::value<bool>(), "List instructions not used in tests")(
             "debug", boost::program_options::value<bool>(), "Print debug information")(
             "cpu_version", boost::program_options::value<std::string>(), "CPU version")(
             "include_regex", boost::program_options::value<std::string>(), "Include regex")(
@@ -110,7 +109,18 @@ main(int argc, char** argv)
         size_t tests_run = 0;
         bool show_instructions = vm.count("list_instructions") ? vm["list_instructions"].as<bool>() : false;
         bool debug = vm.count("debug") ? vm["debug"].as<bool>() : false;
-        auto test_results = bpf_conformance(tests, plugin_path, plugin_options, include_regex, exclude_regex, CPU_version, show_instructions, debug);
+        bool list_used_instructions = vm.count("list_used_instructions") ? vm["list_used_instructions"].as<bool>() : false;
+        bool list_unused_instructions = vm.count("list_unused_instructions") ? vm["list_unused_instructions"].as<bool>() : false;
+        bpf_conformance_list_instructions_t list_instructions = bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_NONE;
+        if (show_instructions) {
+            list_instructions = bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_ALL;
+        } else if (list_used_instructions) {
+            list_instructions = bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_USED;
+        } else if (list_unused_instructions) {
+            list_instructions = bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_UNUSED;
+        }
+
+        auto test_results = bpf_conformance(tests, plugin_path, plugin_options, include_regex, exclude_regex, CPU_version, list_instructions, debug);
 
         // At the end of all the tests, print a summary of the results.
         std::cout << "Test results:" << std::endl;

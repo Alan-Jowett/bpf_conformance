@@ -384,3 +384,25 @@ set_tests_properties(
   PROPERTIES
   PASS_REGULAR_EXPRESSION "unrecognised option"
 )
+
+add_test(
+  NAME list_used_instructions
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${CMAKE_BINARY_DIR}/tests --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --cpu_version v1 --list_used_instructions true
+)
+
+set_tests_properties(
+  list_used_instructions
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "Instructions used by tests"
+)
+
+add_test(
+  NAME list_unused_instructions
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${CMAKE_BINARY_DIR}/tests --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --cpu_version v1 --list_unused_instructions true
+)
+
+set_tests_properties(
+  list_unused_instructions
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "Instructions not used by tests"
+)
