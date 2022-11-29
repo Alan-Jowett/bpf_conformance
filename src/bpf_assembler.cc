@@ -281,7 +281,21 @@ typedef class _bpf_assembler
             inst.opcode = EBPF_OP_EXIT;
         } else if (mnemonic == "call") {
             inst.opcode = EBPF_OP_CALL;
-            inst.imm = _decode_imm32(operands[0]);
+            auto mode = operands[0];
+            auto target = operands[1];
+            // Mode determines if this is a helper function, a local call, or a call to a runtime function.
+            if (mode == "helper") {
+                inst.imm = _decode_imm32(target);
+                inst.src = 0;
+            } else if (mode == "local") {
+                inst.imm == _decode_jump_target(target);
+                inst.src = 1;
+            } else if (mode == "runtime") {
+                inst.imm = _decode_imm32(target);
+                inst.src = 2;
+            } else {
+                throw std::runtime_error("Invalid call mode");
+            }
         } else {
             mnemonic.ends_with("32") ? inst.opcode = EBPF_CLS_JMP32 : inst.opcode |= EBPF_CLS_JMP;
             auto iter =
@@ -408,7 +422,7 @@ typedef class _bpf_assembler
         {"and", {&_bpf_assembler::_encode_alu, 2}},   {"and32", {&_bpf_assembler::_encode_alu, 2}},
         {"arsh", {&_bpf_assembler::_encode_alu, 2}},  {"arsh32", {&_bpf_assembler::_encode_alu, 2}},
         {"be16", {&_bpf_assembler::_encode_alu, 1}},  {"be32", {&_bpf_assembler::_encode_alu, 1}},
-        {"be64", {&_bpf_assembler::_encode_alu, 1}},  {"call", {&_bpf_assembler::_encode_jmp, 1}},
+        {"be64", {&_bpf_assembler::_encode_alu, 1}},  {"call", {&_bpf_assembler::_encode_jmp, 2}},
         {"div", {&_bpf_assembler::_encode_alu, 2}},   {"div32", {&_bpf_assembler::_encode_alu, 2}},
         {"exit", {&_bpf_assembler::_encode_jmp, 0}},  {"ja", {&_bpf_assembler::_encode_jmp, 1}},
         {"jeq", {&_bpf_assembler::_encode_jmp, 3}},   {"jeq32", {&_bpf_assembler::_encode_jmp, 3}},
@@ -506,6 +520,14 @@ typedef class _bpf_assembler
 
             bpf_encode_t encode = nullptr;
             size_t operand_count = 0;
+
+            // If this is a call instruction and it doesn't specify a mode, add the default mode (helper).
+            if (mnemonic == "call") {
+                if (operands.size() == 1) {
+                    operands.insert(operands.begin(), "helper");
+                }
+            }
+
             if (mnemonic == "lock") {
                 // Find the handler for this atomic operation.
                 if (operands.size() == 0) {
@@ -557,7 +579,11 @@ typedef class _bpf_assembler
             if (iter == _labels.end()) {
                 throw std::runtime_error(std::string("Invalid label: ") + _jump_instructions[i].value());
             }
-            output[i].offset = static_cast<uint16_t>(iter->second - i - 1);
+            if (output[i].opcode == EBPF_OP_CALL) {
+                output[i].imm = static_cast<uint16_t>(iter->second - i - 1);
+            } else {
+                output[i].offset = static_cast<uint16_t>(iter->second - i - 1);
+            }
         }
         return output;
     }
