@@ -287,8 +287,7 @@ typedef class _bpf_assembler
             if (mode == "helper") {
                 inst.imm = _decode_imm32(target);
                 inst.src = 0;
-            }
-            else if (mode == "local") {
+            } else if (mode == "local") {
                 inst.imm == _decode_jump_target(target);
                 inst.src = 1;
             } else if (mode == "runtime") {
@@ -582,8 +581,7 @@ typedef class _bpf_assembler
             }
             if (output[i].opcode == EBPF_OP_CALL) {
                 output[i].imm = static_cast<uint16_t>(iter->second - i - 1);
-            }
-            else {
+            } else {
                 output[i].offset = static_cast<uint16_t>(iter->second - i - 1);
             }
         }
