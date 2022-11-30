@@ -324,11 +324,15 @@ typedef class _bpf_assembler
         } else {
             inst.opcode = EBPF_OP_ATOMIC_STORE;
         }
-        auto [dst, offset] = _decode_register_and_offset(operands[0]);
+        auto [dst, offset] = _decode_register_and_offset(operands[1]);
         inst.dst = dst;
         inst.offset = offset;
-        inst.src = _decode_register(operands[1]);
+        inst.src = _decode_register(operands[2]);
         inst.imm = EBPF_ALU_OP_ADD;
+        // Set fetch bit if fetch is the first operand.
+        if (operands[0] == "fetch") {
+            inst.imm |= EBPF_ATOMIC_OP_FETCH;
+        }
         return inst;
     }
 
@@ -341,11 +345,15 @@ typedef class _bpf_assembler
         } else {
             inst.opcode = EBPF_OP_ATOMIC_STORE;
         }
-        auto [dst, offset] = _decode_register_and_offset(operands[0]);
+        auto [dst, offset] = _decode_register_and_offset(operands[1]);
         inst.dst = dst;
         inst.offset = offset;
-        inst.src = _decode_register(operands[1]);
+        inst.src = _decode_register(operands[2]);
         inst.imm = EBPF_ALU_OP_AND;
+        // Set fetch bit if fetch is the first operand.
+        if (operands[0] == "fetch") {
+            inst.imm |= EBPF_ATOMIC_OP_FETCH;
+        }
         return inst;
     }
 
@@ -358,11 +366,15 @@ typedef class _bpf_assembler
         } else {
             inst.opcode = EBPF_OP_ATOMIC_STORE;
         }
-        auto [dst, offset] = _decode_register_and_offset(operands[0]);
+        auto [dst, offset] = _decode_register_and_offset(operands[1]);
         inst.dst = dst;
         inst.offset = offset;
-        inst.src = _decode_register(operands[1]);
+        inst.src = _decode_register(operands[2]);
         inst.imm = EBPF_ALU_OP_OR;
+        // Set fetch bit if fetch is the first operand.
+        if (operands[0] == "fetch") {
+            inst.imm |= EBPF_ATOMIC_OP_FETCH;
+        }
         return inst;
     }
 
@@ -375,11 +387,15 @@ typedef class _bpf_assembler
         } else {
             inst.opcode = EBPF_OP_ATOMIC_STORE;
         }
-        auto [dst, offset] = _decode_register_and_offset(operands[0]);
+        auto [dst, offset] = _decode_register_and_offset(operands[1]);
         inst.dst = dst;
         inst.offset = offset;
-        inst.src = _decode_register(operands[1]);
+        inst.src = _decode_register(operands[2]);
         inst.imm = EBPF_ALU_OP_XOR;
+        // Set fetch bit if fetch is the first operand.
+        if (operands[0] == "fetch") {
+            inst.imm |= EBPF_ATOMIC_OP_FETCH;
+        }
         return inst;
     }
 
@@ -392,10 +408,11 @@ typedef class _bpf_assembler
         } else {
             inst.opcode = EBPF_OP_ATOMIC_STORE;
         }
-        auto [dst, offset] = _decode_register_and_offset(operands[0]);
+        auto [dst, offset] = _decode_register_and_offset(operands[1]);
         inst.dst = dst;
         inst.offset = offset;
-        inst.src = _decode_register(operands[1]);
+        inst.src = _decode_register(operands[2]);
+        // EPBF_ATOMIC_OP_XCHG always has the fetch bit set.
         inst.imm = EPBF_ATOMIC_OP_XCHG;
         return inst;
     }
@@ -409,10 +426,11 @@ typedef class _bpf_assembler
         } else {
             inst.opcode = EBPF_OP_ATOMIC_STORE;
         }
-        auto [dst, offset] = _decode_register_and_offset(operands[0]);
+        auto [dst, offset] = _decode_register_and_offset(operands[1]);
         inst.dst = dst;
         inst.offset = offset;
-        inst.src = _decode_register(operands[1]);
+        inst.src = _decode_register(operands[2]);
+        // EBPF_ATOMIC_OP_CMPXCHG always has the fetch bit set.
         inst.imm = EBPF_ATOMIC_OP_CMPXCHG;
         return inst;
     }
@@ -456,18 +474,18 @@ typedef class _bpf_assembler
     };
 
     const std::unordered_map<std::string, std::tuple<bpf_encode_t, size_t>> _bpf_encode_atomic_ops{
-        {"add", {&_bpf_assembler::_encode_atomic_add, 2}},
-        {"add32", {&_bpf_assembler::_encode_atomic_add, 2}},
-        {"and", {&_bpf_assembler::_encode_atomic_and, 2}},
-        {"and32", {&_bpf_assembler::_encode_atomic_and, 2}},
-        {"or", {&_bpf_assembler::_encode_atomic_or, 2}},
-        {"or32", {&_bpf_assembler::_encode_atomic_or, 2}},
-        {"xor", {&_bpf_assembler::_encode_atomic_xor, 2}},
-        {"xor32", {&_bpf_assembler::_encode_atomic_xor, 2}},
-        {"xchg", {&_bpf_assembler::_encode_atomic_xchg, 2}},
-        {"xchg32", {&_bpf_assembler::_encode_atomic_xchg, 2}},
-        {"cmpxchg", {&_bpf_assembler::_encode_atomic_cmpxchg, 2}},
-        {"cmpxchg32", {&_bpf_assembler::_encode_atomic_cmpxchg, 2}},
+        {"add", {&_bpf_assembler::_encode_atomic_add, 3}},
+        {"add32", {&_bpf_assembler::_encode_atomic_add, 3}},
+        {"and", {&_bpf_assembler::_encode_atomic_and, 3}},
+        {"and32", {&_bpf_assembler::_encode_atomic_and, 3}},
+        {"or", {&_bpf_assembler::_encode_atomic_or, 3}},
+        {"or32", {&_bpf_assembler::_encode_atomic_or, 3}},
+        {"xor", {&_bpf_assembler::_encode_atomic_xor, 3}},
+        {"xor32", {&_bpf_assembler::_encode_atomic_xor, 3}},
+        {"xchg", {&_bpf_assembler::_encode_atomic_xchg, 3}},
+        {"xchg32", {&_bpf_assembler::_encode_atomic_xchg, 3}},
+        {"cmpxchg", {&_bpf_assembler::_encode_atomic_cmpxchg, 3}},
+        {"cmpxchg32", {&_bpf_assembler::_encode_atomic_cmpxchg, 3}},
     };
 
   public:
@@ -533,6 +551,22 @@ typedef class _bpf_assembler
                 if (operands.size() == 0) {
                     throw std::runtime_error("Invalid number of operands for lock");
                 }
+
+                // Format of interlocked operations is:
+                // lock [fetch] <op> <dst>, <src>
+                // where fetch is optional.
+
+                // For simpler processing, insert a "no_fetch" operand if it is missing.
+                if (operands.size() > 1 && operands[0] != "fetch") {
+                    operands.insert(operands.begin(), "no_fetch");
+                }
+
+                // Swap fetch and op.
+                std::swap(operands[0], operands[1]);
+
+                // Format of interlocked operations is now:
+                // lock <op> <fetch/no_fetch> <dst>, <src>
+
                 auto iter = _bpf_encode_atomic_ops.find(operands[0]);
                 if (iter != _bpf_encode_atomic_ops.end()) {
                     mnemonic = operands[0];
