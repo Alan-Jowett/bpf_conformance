@@ -139,6 +139,13 @@ bpf_conformance(
                     required_cpu_version = std::max(required_cpu_version, bpf_conformance_test_CPU_version_t::v2);
                 }
             }
+            // If the program uses local or runtime calls then this is v3 of the ABI.
+            // inst.src == 0 means helper function call.
+            // inst.src == 1 means local function call.
+            // inst.src == 2 means runtime function call.
+            if (inst.opcode == EBPF_OP_CALL && inst.src != 0) {
+                required_cpu_version = std::max(required_cpu_version, bpf_conformance_test_CPU_version_t::v3);
+            }
             if (inst.opcode == EBPF_OP_LDDW) {
                 // Instruction has a 64-bit immediate and takes two instructions slots.
                 i++;
