@@ -139,8 +139,10 @@ main(int argc, char** argv)
     }
 
     // Load program into kernel.
+    constexpr uint32_t log_size = 1024;
     std::string log;
-    log.resize(1024);
+    log.resize(log_size);
+#ifdef USE_DEPRECATED_LOAD_PROGRAM
     int fd = bpf_load_program(
         BPF_PROG_TYPE_XDP,
         reinterpret_cast<const bpf_insn*>(program.data()),
@@ -148,7 +150,23 @@ main(int argc, char** argv)
         "MIT",
         0,
         &log[0],
-        log.size());
+        log_size);
+#else
+    bpf_prog_load_opts opts{
+        .sz = sizeof(opts),
+        .attempts = 1,
+        .expected_attach_type = BPF_XDP,
+        .log_size = log_size,
+        .log_buf = &log[0],
+    };
+    int fd = bpf_prog_load(
+        BPF_PROG_TYPE_XDP,
+        "conformance_test",
+        "MIT",
+        reinterpret_cast<const bpf_insn*>(program.data()),
+        program.size(),
+        &opts);
+#endif
     if (fd < 0) {
         if (debug)
             std::cout << "Failed to load program: " << log << std::endl;
@@ -156,14 +174,18 @@ main(int argc, char** argv)
     }
 
     // Run program.
-    uint32_t output_value = 0;
-    unsigned int out_size = memory.size();
-    uint32_t duration;
-    int result =
-        bpf_prog_test_run(fd, 1, memory.data(), memory.size(), memory.data(), &out_size, &output_value, &duration);
+    bpf_test_run_opts test_run{
+        .sz = sizeof(bpf_test_run_opts),
+        .data_in = memory.data(),
+        .data_out = memory.data(),
+        .data_size_in = static_cast<uint32_t>(memory.size()),
+        .data_size_out = static_cast<uint32_t>(memory.size()),
+        .repeat = 1,
+    };
+    int result = bpf_prog_test_run_opts(fd, &test_run);
     if (result == 0) {
         // Print output.
-        std::cout << std::hex << output_value << std::endl;
+        std::cout << std::hex << test_run.retval << std::endl;
     }
 
     return 0;
