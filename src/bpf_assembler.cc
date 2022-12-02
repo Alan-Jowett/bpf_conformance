@@ -288,7 +288,7 @@ typedef class _bpf_assembler
                 inst.imm = _decode_imm32(target);
                 inst.src = 0;
             } else if (mode == "local") {
-                inst.imm == _decode_jump_target(target);
+                inst.imm = _decode_jump_target(target);
                 inst.src = 1;
             } else if (mode == "runtime") {
                 inst.imm = _decode_imm32(target);
