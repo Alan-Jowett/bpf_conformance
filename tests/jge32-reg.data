@@ -11,8 +11,8 @@ jge32 r1, r2, exit # Not taken
 
 mov32 r0, 1
 # set r1 to 0x10000000c
-or r1, r9
 mov32 r1, 0xc
+or r1, r9
 jge32 r1, r2, exit # Taken
 
 mov32 r0, 2 # Skipped
