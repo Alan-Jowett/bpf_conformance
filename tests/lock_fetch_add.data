@@ -5,7 +5,7 @@ lddw r0, 0x123456789abcdef0
 stxdw [r10-8], r0
 mov r1, 1
 lock fetch add [r10-8], r1
-jne r1, r0
+jne r1, r0, exit
 ldxdw r1, [r10-8]
 lddw r0, 0x123456789abcdef1
 jne r0, r1, exit
