@@ -614,7 +614,7 @@ typedef class _bpf_assembler
                 throw std::runtime_error(std::string("Invalid label: ") + _jump_instructions[i].value());
             }
             if (output[i].opcode == EBPF_OP_CALL) {
-                output[i].imm = static_cast<uint16_t>(iter->second - i - 1);
+                output[i].imm = static_cast<uint32_t>(iter->second - i - 1);
             } else {
                 output[i].offset = static_cast<uint16_t>(iter->second - i - 1);
             }
