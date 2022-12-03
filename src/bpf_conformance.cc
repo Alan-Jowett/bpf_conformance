@@ -43,7 +43,7 @@ _ebpf_inst_to_byte_vector(const std::vector<ebpf_inst>& instructions)
     std::vector<uint8_t> result;
     for (auto instruction : instructions) {
         uint8_t* instruction_bytes = reinterpret_cast<uint8_t*>(&instruction);
-        for (int i = 0; i < sizeof(ebpf_inst); i++) {
+        for (size_t i = 0; i < sizeof(ebpf_inst); i++) {
             result.push_back(instruction_bytes[i]);
         }
     }
@@ -68,6 +68,9 @@ log_debug_result(
         break;
     case bpf_conformance_test_result_t::TEST_RESULT_ERROR:
         std::cout << "Test " << test << " error: " << message << std::endl;
+        break;
+    case bpf_conformance_test_result_t::TEST_RESULT_UNKNOWN:
+        std::cout << "Test " << test << " result unknown: " << message << std::endl;
         break;
     }
 }

@@ -153,7 +153,7 @@ typedef class _bpf_assembler
     }
 
     bpf_encode_result_t
-    _encode_ld(const std::string& mnemonic, const std::vector<std::string>& operands)
+    _encode_ld([[maybe_unused]] const std::string& mnemonic, const std::vector<std::string>& operands)
     {
         std::array<ebpf_inst, 2> inst{};
         inst[0].opcode = EBPF_OP_LDDW;
