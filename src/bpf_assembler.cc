@@ -153,7 +153,7 @@ typedef class _bpf_assembler
     }
 
     bpf_encode_result_t
-    _encode_ld(const std::string& mnemonic, const std::vector<std::string>& operands)
+    _encode_ld([[maybe_unused]] const std::string& mnemonic, const std::vector<std::string>& operands)
     {
         std::array<ebpf_inst, 2> inst{};
         inst[0].opcode = EBPF_OP_LDDW;
@@ -288,7 +288,7 @@ typedef class _bpf_assembler
                 inst.imm = _decode_imm32(target);
                 inst.src = 0;
             } else if (mode == "local") {
-                inst.imm == _decode_jump_target(target);
+                inst.imm = _decode_jump_target(target);
                 inst.src = 1;
             } else if (mode == "runtime") {
                 inst.imm = _decode_imm32(target);
@@ -614,7 +614,7 @@ typedef class _bpf_assembler
                 throw std::runtime_error(std::string("Invalid label: ") + _jump_instructions[i].value());
             }
             if (output[i].opcode == EBPF_OP_CALL) {
-                output[i].imm = static_cast<uint16_t>(iter->second - i - 1);
+                output[i].imm = static_cast<uint32_t>(iter->second - i - 1);
             } else {
                 output[i].offset = static_cast<uint16_t>(iter->second - i - 1);
             }

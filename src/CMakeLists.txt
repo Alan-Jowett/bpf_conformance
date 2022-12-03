@@ -53,6 +53,14 @@ target_include_directories("bpf_conformance_runner" PRIVATE
 target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB})
 target_link_libraries(bpf_conformance_runner PRIVATE ${PLATFORM_LIB} "bpf_conformance")
 
+if(MSVC)
+  target_compile_options(bpf_conformance PRIVATE /W4)
+  target_compile_options(bpf_conformance_runner PRIVATE /W4)
+else()
+  target_compile_options(bpf_conformance PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(bpf_conformance_runner PRIVATE -Wall -Wextra -pedantic)
+endif()
+
 find_program(ECHO echo)
 
 enable_testing()
