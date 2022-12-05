@@ -8,6 +8,34 @@
 
 #include "../include/bpf_conformance.h"
 
+#if defined(__linux__)
+#include <signal.h>
+
+static void
+sig_handler(int signo)
+{
+    if (signo != SIGPIPE) {
+        std::cerr << "Received signal " << signo << std::endl;
+        exit(1);
+    }
+}
+
+static void
+install_sigpipe_handler()
+{
+    struct sigaction sa;
+    sa.sa_handler = sig_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGPIPE, &sa, NULL);
+}
+#else
+static void
+install_sigpipe_handler()
+{
+}
+#endif
+
 // This program reads a collection of BPF test programs from the test folder,
 // assembles the BPF programs to byte code, calls the plugin to execute the
 // BPF programs, and compares the results with the expected results.
@@ -35,6 +63,9 @@ get_test_files(const std::filesystem::path& test_file_directory)
 int
 main(int argc, char** argv)
 {
+    // Handle sigpipe handler to avoid crashing when writing to a closed pipe.
+    install_sigpipe_handler();
+
     try {
         boost::program_options::options_description desc("Options");
         desc.add_options()("help", "Print help messages")(
