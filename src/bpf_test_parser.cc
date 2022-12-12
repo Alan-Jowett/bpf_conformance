@@ -8,7 +8,13 @@
 
 #include "bpf_assembler.h"
 
-std::tuple<std::vector<uint8_t>, uint64_t, std::string, std::vector<ebpf_inst>>
+std::tuple<
+    std::vector<uint8_t>,
+    uint64_t,
+    std::string,
+    std::vector<ebpf_inst>,
+    std::map<size_t, std::string>,
+    std::vector<std::tuple<std::string, ebpf_map_definition_in_file_t>>>
 parse_test_file(const std::filesystem::path& data_file)
 {
     enum class _state
@@ -19,6 +25,7 @@ parse_test_file(const std::filesystem::path& data_file)
         state_result,
         state_memory,
         state_error,
+        state_map,
     } state = _state::state_ignore;
 
     std::stringstream data_out;
@@ -29,6 +36,7 @@ parse_test_file(const std::filesystem::path& data_file)
     std::string line;
     std::string expected_error;
     std::string raw;
+    std::vector<std::tuple<std::string, ebpf_map_definition_in_file_t>> maps;
 
     while (std::getline(data_in, line)) {
         // Strip trailing carriage return
@@ -60,6 +68,9 @@ parse_test_file(const std::filesystem::path& data_file)
             } else if (line.find("error") != std::string::npos) {
                 state = _state::state_error;
                 continue;
+            } else if (line.find("map") != std::string::npos) {
+                state = _state::state_map;
+                continue;
             } else {
                 std::cout << "Skipping: Unknown directive " << line << " in file " << data_file << std::endl;
                 return {};
@@ -89,6 +100,21 @@ parse_test_file(const std::filesystem::path& data_file)
         case _state::state_raw:
             raw += std::string(" ") + line;
             break;
+        case _state::state_map: {
+            std::stringstream ss(line);
+            std::string name;
+            ss >> name;
+            if (name.empty() || (name[0] == '#')) {
+                continue;
+            }
+            ebpf_map_definition_in_file_t map_definition = {};
+            ss >> map_definition.type;
+            ss >> map_definition.key_size;
+            ss >> map_definition.value_size;
+            ss >> map_definition.max_entries;
+            maps.push_back({name, map_definition});
+            break;
+        }
         default:
             continue;
         }
@@ -109,6 +135,7 @@ parse_test_file(const std::filesystem::path& data_file)
     }
 
     std::vector<ebpf_inst> instructions;
+    std::map<size_t, std::string> relocations;
     if (!raw.empty()) {
         std::stringstream raw_stream(raw);
 
@@ -126,7 +153,9 @@ parse_test_file(const std::filesystem::path& data_file)
         }
     } else {
         data_out.seekg(0);
-        instructions = bpf_assembler(data_out);
+        auto assembler_output = bpf_assembler_with_relocations(data_out);
+        instructions = std::get<0>(assembler_output);
+        relocations = std::get<1>(assembler_output);
     }
 
     if (instructions.empty()) {
@@ -144,5 +173,5 @@ parse_test_file(const std::filesystem::path& data_file)
         }
     }
 
-    return {input_buffer, result_value, expected_error, instructions};
+    return {input_buffer, result_value, expected_error, instructions, relocations, maps};
 }

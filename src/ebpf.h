@@ -229,6 +229,17 @@ typedef struct _ebpf_map_definition_in_file
     uint32_t value_size;    ///< Size in bytes of a map value.
     uint32_t max_entries;   ///< Maximum number of entries allowed in the map.
     uint32_t inner_map_idx; ///< Index of inner map if this is a nested map.
+    // Platform specific fields.
+#if defined(_WIN32)
+    // Windows specific fields.
+    uint32_t pinning;      ///< Map pinning behavior.
+    uint32_t id;           ///< Map ID.
+    uint32_t inner_map_id; ///< Inner map ID.
+#elif defined(__linux__)
+    // Linux specific fields.
+#elif defined(__APPLE__)
+    // MacOS specific fields.
+#endif
 } ebpf_map_definition_in_file_t;
 
 #endif

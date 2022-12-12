@@ -38,13 +38,15 @@ typedef enum class _bpf_conformance_list_instructions
 
 typedef struct _bpf_conformance_options
 {
-    std::optional<std::string> include_test_regex;
-    std::optional<std::string> exclude_test_regex;
-    bpf_conformance_test_cpu_version_t cpu_version;
-    bpf_conformance_list_instructions_t list_instructions_option;
-    bool debug;
-    bool xdp_prolog;
-    bool elf_format;
+    std::optional<std::string> include_test_regex;                ///< A regex that matches the tests to include.
+    std::optional<std::string> exclude_test_regex;                ///< A regex that matches the tests to exclude.
+    bpf_conformance_test_cpu_version_t cpu_version;               ///< The CPU version to run the tests with.
+    bpf_conformance_list_instructions_t list_instructions_option; ///< Option controlling which instructions to list.
+    bool debug;                                                   ///< Print debug information.
+    bool xdp_prolog;                                              ///< Add an XDP prolog to the byte code.
+    bool elf_format;                                              ///< Compose the byte code as an ELF file.
+    std::string platform;                                         ///< The platform to run the tests on.
+    bool save_elf_files;                                          ///< Save the ELF files to disk.
 } bpf_conformance_options_t;
 
 /**

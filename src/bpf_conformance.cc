@@ -4,6 +4,7 @@
 #include "../include/bpf_conformance.h"
 
 #include <boost/process.hpp>
+#include <fstream>
 #include <iostream>
 #include <regex>
 #include <set>
@@ -14,6 +15,8 @@
 #include "bpf_test_parser.h"
 #include "bpf_writer.h"
 #include "opcode_names.h"
+#include "linux_helpers.h"
+#include "windows_helpers.h"
 
 /**
  * @brief Convert a vector of bytes to a string of hex bytes.
@@ -52,8 +55,7 @@ _ebpf_inst_to_byte_vector(const std::vector<ebpf_inst>& instructions)
 }
 
 /**
- * @brief Convert a vector of ebpf instructions to an ELF file.
- * In the future this will include map definitions and relocation information.
+ * @brief Convert a vector of ebpf instructions, map definitions, and relocation information to an ELF file.
  *
  * @param[in] instructions Instructions to convert.
  * @return Vector of bytes that represents the ELF file.
@@ -142,6 +144,9 @@ get_instruction_cpu_version(ebpf_inst inst)
     return instruction->cpu_version;
 }
 
+std::map<std::string, std::map<std::string, uint32_t>> _platform_helper_function_mappings = {
+    {"linux", linux_helper_functions}, {"windows", windows_helper_functions}};
+
 std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>>
 bpf_conformance_options(
     const std::vector<std::filesystem::path>& test_files,
@@ -159,7 +164,44 @@ bpf_conformance_options(
         // Expected return value - Expected return value from the BPF program.
         // Expected error string - String returned by BPF runtime if the program fails.
         // BPF instructions - Instructions to pass to the BPF program.
-        auto [input_memory, expected_return_value, expected_error_string, byte_code] = parse_test_file(test);
+        // Relocations - Relocations to pass to the BPF program.
+        // Maps - Maps to pass to the BPF program.
+        auto [input_memory, expected_return_value, expected_error_string, byte_code, relocations, maps] =
+            parse_test_file(test);
+
+        if (!options.elf_format && (maps.size() > 0 || relocations.size() > 0)) {
+            test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_SKIP, "Test requires ELF format."};
+            continue;
+        }
+
+        std::map<size_t, std::string> map_relocations;
+        bool relocation_error = false;
+
+        // Perform relocations on call instructions and replace with platform specific helper functions ids.
+        if (relocations.size() > 0) {
+            for (auto& relocation : relocations) {
+                if (byte_code[relocation.first].opcode == EBPF_OP_CALL) {
+                    auto mapping = _platform_helper_function_mappings.find(options.platform);
+                    if ((mapping == _platform_helper_function_mappings.end()) ||
+                        (mapping->second.find(relocation.second) == mapping->second.end())) {
+                        test_results[test] = {
+                            bpf_conformance_test_result_t::TEST_RESULT_SKIP,
+                            std::string("Test requires helper function ") + relocation.second +
+                                std::string(" that is not supported on this platform.")};
+                        relocation_error = true;
+                        break;
+                    }
+
+                    byte_code[relocation.first].imm = mapping->second[relocation.second];
+                } else {
+                    map_relocations[relocation.first] = relocation.second;
+                }
+            }
+        }
+
+        if (relocation_error) {
+            continue;
+        }
 
         if (options.include_test_regex.has_value()) {
             std::regex include_regex(options.include_test_regex.value_or(""));
@@ -253,16 +295,12 @@ bpf_conformance_options(
 
             // Pass the BPF instructions to the plugin as stdin.
             if (options.elf_format) {
-                // Encode the instructions as an ELF file.
-                // Issue: https://github.com/Alan-Jowett/bpf_conformance/issues/68
-                // Add support for parsing map definitions from the test file and
-                // passing them to the plugin.
                 auto elf_bytes = _base_16_encode(_ebpf_inst_to_elf_file(
                     options.xdp_prolog ? bpf_conformance_xdp_section_name : bpf_conformance_default_section_name,
                     bpf_conformance_default_function_name,
                     byte_code,
-                    {},
-                    {}));
+                    maps,
+                    map_relocations));
                 input << elf_bytes << std::endl;
                 if (options.debug) {
                     std::cerr << "ELF-encoded bytes: " << elf_bytes

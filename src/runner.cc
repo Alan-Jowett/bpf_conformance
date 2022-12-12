@@ -79,6 +79,7 @@ main(int argc, char** argv)
             "debug", boost::program_options::value<bool>(), "Print debug information")(
             "xdp_prolog", boost::program_options::value<bool>(), "XDP prolog")(
             "elf", boost::program_options::value<bool>(), "ELF format")(
+            "save_elf", boost::program_options::value<bool>(), "Save a copy of the ELF file")(
             "cpu_version", boost::program_options::value<std::string>(), "CPU version")(
             "include_regex", boost::program_options::value<std::string>(), "Include regex")(
             "exclude_regex", boost::program_options::value<std::string>(), "Exclude regex");
@@ -148,6 +149,7 @@ main(int argc, char** argv)
         bool list_unused_instructions = vm.count("list_unused_instructions") ? vm["list_unused_instructions"].as<bool>() : false;
         bool xdp_prolog = vm.count("xdp_prolog") ? vm["xdp_prolog"].as<bool>() : false;
         bool elf_format = vm.count("elf") ? vm["elf"].as<bool>() : false;
+        bool save_elf_files = vm.count("save_elf") ? vm["save_elf"].as<bool>() : false;
         bpf_conformance_list_instructions_t list_instructions = bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_NONE;
         if (show_instructions) {
             list_instructions = bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_ALL;
@@ -165,6 +167,15 @@ main(int argc, char** argv)
         options.debug = debug;
         options.xdp_prolog = xdp_prolog;
         options.elf_format = elf_format;
+        options.save_elf_files = save_elf_files;
+
+#if defined(__linux__)
+        options.platform = "linux";
+#elif defined(__APPLE__)
+        options.platform = "macos";
+#elif defined(_WIN32)
+        options.platform = "windows";
+#endif
 
         std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>> test_results;
         if (options.elf_format == false && options.xdp_prolog == false) {
