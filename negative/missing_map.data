@@ -1,0 +1,12 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- map
+# map_name  type key_size value_size max_entries
+array_map_2 2 4 4 10
+-- asm
+# Referred to map doesn't exist.
+lddw r1, map_by_fd(array_map)
+mov r0, 1
+exit
+-- result
+1

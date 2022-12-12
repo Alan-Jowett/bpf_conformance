@@ -92,7 +92,7 @@ add_test(
 
 add_test(
   NAME elf_format
-  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${CMAKE_BINARY_DIR}/tests --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --debug true --list_instructions true --elf true --exclude_regex "call_local*"
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${CMAKE_BINARY_DIR}/tests --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --debug true --list_instructions true --elf true --exclude_regex "call_local*" --save_elf true
 )
 
 add_test(
@@ -428,4 +428,48 @@ set_tests_properties(
   list_unused_instructions
   PROPERTIES
   PASS_REGULAR_EXPRESSION "Instructions not used by tests"
+)
+
+add_test(
+  NAME missing_map
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/missing_map.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --elf true
+)
+
+set_tests_properties(
+  missing_map
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "Map not found"
+)
+
+add_test(
+  NAME invalid_call_mode
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_call_mode.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --elf true
+)
+
+set_tests_properties(
+  invalid_call_mode
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "Invalid call mode"
+)
+
+add_test(
+  NAME invalid_lddw_operand
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_lddw_operand.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --elf true
+)
+
+set_tests_properties(
+  invalid_lddw_operand
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "Invalid lddw operand"
+)
+
+add_test(
+  NAME invalid_helper
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_SOURCE_DIR}/negative/invalid_helper.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --elf true
+)
+
+set_tests_properties(
+  invalid_helper
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "Test requires helper function bpf_not_a_real_helper that is not supported on this platform."
 )

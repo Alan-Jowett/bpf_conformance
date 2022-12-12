@@ -6,6 +6,7 @@
 #include <optional>
 #include <unordered_map>
 #include <variant>
+#include <regex>
 #include <sstream>
 
 #include "bpf_assembler.h"
@@ -19,6 +20,9 @@ typedef class _bpf_assembler
 
     typedef bpf_encode_result_t (_bpf_assembler::*bpf_encode_t)(
         const std::string& mnemonic, const std::vector<std::string>& operands);
+
+    typedef std::vector<std::string> (_bpf_assembler::*bpf_process_relocations_t)(
+        size_t index, const std::vector<std::string>& operands);
 
     const std::unordered_map<std::string, int> _bpf_encode_register_map{
         {"r0", 0},
@@ -160,7 +164,12 @@ typedef class _bpf_assembler
         // Add support for other 64-bit immediate values.
         inst[0].opcode = EBPF_OP_LDDW;
         inst[0].dst = _decode_register(operands[0]);
-        uint64_t immediate = _decode_imm64(operands[1]);
+        auto immediate_string = operands[1];
+        if (std::regex_match(immediate_string, _immediate_value_pseudo_functions)) {
+            immediate_string = "0";
+        }
+
+        uint64_t immediate = _decode_imm64(immediate_string);
         inst[0].imm = static_cast<uint32_t>(immediate);
         inst[1].imm = static_cast<uint32_t>(immediate >> 32);
 
@@ -437,6 +446,63 @@ typedef class _bpf_assembler
         return inst;
     }
 
+    std::vector<std::string>
+    _process_relocations_call(size_t index, const std::vector<std::string>& operands)
+    {
+        std::vector<std::string> new_operands = operands;
+        if (new_operands.size() == 1) {
+            new_operands.insert(new_operands.begin(), "helper");
+        }
+
+        // Don't perform any processing if this is not a call to a helper function.
+        if (new_operands[0] != "helper") {
+            return new_operands;
+        }
+
+        // If this is a call to a helper function, then the second operand is the helper function name or index.
+        // If it is a call to a helper function name, then we need to add a relocation to replace the name with
+        // the index.
+        if (!_is_literal_value(new_operands[1])) {
+            _relocations.insert({index, new_operands[1]});
+            new_operands[1] = "0";
+        }
+        return new_operands;
+    }
+
+    std::vector<std::string>
+    _process_relocations_lddw(size_t index, const std::vector<std::string>& operands)
+    {
+        std::vector<std::string> new_operands = operands;
+        if (new_operands.size() != 2) {
+            throw std::runtime_error("Invalid number of operands for mnemonic: lddw");
+        }
+
+        // All referenced to maps and variables are wrapped pseudo functions.  If the second operand is a pseudo
+        // function, then it is a reference to a map.  We need to add a relocation to replace the map name with the map
+        // index.
+
+        // Check for immediate value pseudo functions.
+        if (std::regex_match(new_operands[1], _immediate_value_pseudo_functions)) {
+
+            // Extract value from innermost parenthesis.
+            std::smatch match;
+            std::regex_search(new_operands[1], match, _innermost_parenthesis);
+            if (match.size() != 1) {
+                throw std::runtime_error("Invalid lddw operand");
+            }
+
+            // Strip parenthesis.
+            auto symbol = match[0].str().substr(1, match[0].str().length() - 2);
+
+            // Insert symbol into relocations.
+            _relocations.insert({index, symbol});
+
+            // Replace innermost parenthesis with a 0.
+            new_operands[1] = std::regex_replace(new_operands[1], _innermost_parenthesis, "(0)");
+        }
+        return new_operands;
+    }
+
     const std::unordered_map<std::string, std::tuple<bpf_encode_t, size_t>> _bpf_mnemonic_map{
         {"add", {&_bpf_assembler::_encode_alu, 2}},   {"add32", {&_bpf_assembler::_encode_alu, 2}},
         {"and", {&_bpf_assembler::_encode_alu, 2}},   {"and32", {&_bpf_assembler::_encode_alu, 2}},
@@ -490,6 +556,23 @@ typedef class _bpf_assembler
         {"cmpxchg32", {&_bpf_assembler::_encode_atomic_cmpxchg, 3}},
     };
 
+    const std::unordered_map<std::string, bpf_process_relocations_t> _bpf_process_relocations{
+        {"call", &_bpf_assembler::_process_relocations_call},
+        {"lddw", &_bpf_assembler::_process_relocations_lddw},
+    };
+
+    bool
+    _is_literal_value(const std::string& operand)
+    {
+        return std::regex_match(operand, _hexadecimal_regex) || std::regex_match(operand, _decimal_regex);
+    }
+
+    std::map<size_t, std::string> _relocations;
+    std::regex _hexadecimal_regex{"0x[0-9a-fA-F]+"};
+    std::regex _decimal_regex{"[0-9]+"};
+    std::regex _immediate_value_pseudo_functions{"(map_by_fd|mva|variable_addr|map_by_idx).*"};
+    std::regex _innermost_parenthesis{"\\([^()]*\\)"};
+
   public:
     _bpf_assembler() = default;
     ~_bpf_assembler() = default;
@@ -529,6 +612,8 @@ typedef class _bpf_assembler
                 continue;
             }
 
+            // Preprocess the operands.
+
             // Add a default exit label for the first exit statement.
             if (mnemonic == "exit" && exit_count == 0) {
                 _labels[mnemonic] = output.size();
@@ -541,13 +626,13 @@ typedef class _bpf_assembler
             bpf_encode_t encode = nullptr;
             size_t operand_count = 0;
 
-            // If this is a call instruction and it doesn't specify a mode, add the default mode (helper).
-            if (mnemonic == "call") {
-                if (operands.size() == 1) {
-                    operands.insert(operands.begin(), "helper");
-                }
+            // Perform any relocations for this mnemonic.
+            auto iter = _bpf_process_relocations.find(mnemonic);
+            if (iter != _bpf_process_relocations.end()) {
+                operands = (this->*(iter->second))(output.size(), operands);
             }
 
+            // Perform any special processing for interlocked operations.
             if (mnemonic == "lock") {
                 // Find the handler for this atomic operation.
                 if (operands.size() == 0) {
@@ -623,11 +708,17 @@ typedef class _bpf_assembler
         }
         return output;
     }
+
+    std::map<size_t, std::string>
+    get_relocations() const
+    {
+        return _relocations;
+    }
 } bpf_assembler_t;
 
-std::vector<ebpf_inst>
-bpf_assembler(std::istream& input)
+std::tuple<std::vector<ebpf_inst>, std::map<size_t, std::string>>
+bpf_assembler_with_relocations(std::istream& input)
 {
     bpf_assembler_t assembler;
-    return assembler.assemble(input);
+    return {assembler.assemble(input), assembler.get_relocations()};
 }
