@@ -41,7 +41,7 @@ typedef enum class _bpf_conformance_list_instructions
  * @param[in] include_test_regex A regex that matches the tests to include.
  * @param[in] exclude_test_regex A regex that matches the tests to exclude.
  * @param[in] CPU_version The CPU version to run the tests with.
- * @param[in] list_opcodes_tested Print the opcodes tested.
+ * @param[in] list_instructions_option Option controlling which instructions to list.
  * @param[in] debug Print debug information.
  * @return The test results for each test file.
  */
