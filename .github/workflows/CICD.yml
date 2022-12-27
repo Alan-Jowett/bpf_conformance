@@ -41,6 +41,22 @@ jobs:
       enable_sanitizers: false
       enable_coverage: false
 
+  windows_release_2022:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: windows-2022
+      configuration: RelWithDebInfo
+      enable_sanitizers: false
+      enable_coverage: false
+
+  windows_debug_2022:
+    uses: ./.github/workflows/Build.yml
+    with:
+      platform: windows-2022
+      configuration: Debug
+      enable_sanitizers: false
+      enable_coverage: false
+
   ubuntu_release:
     uses: ./.github/workflows/Build.yml
     with:
