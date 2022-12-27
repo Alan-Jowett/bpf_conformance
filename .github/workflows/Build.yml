@@ -59,16 +59,16 @@ jobs:
           boost
 
     - name: Cache nuget packages
-      if: inputs.platform == 'windows-2019'
+      if: inputs.platform == 'windows-2019' || inputs.platform == 'windows-2022'
       uses: actions/cache@c1a5de879eb890d062a85ee0252d6036480b1fe2
       env:
         cache-name: cache-nuget-modules
       with:
         path: build\packages
-        key: ${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
+        key: ${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}-${{inputs.platform}}
 
     - name: Configure CMake
-      if: inputs.platform == 'windows-2019'
+      if: inputs.platform == 'windows-2019' || inputs.platform == 'windows-2022'
       run: |
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
