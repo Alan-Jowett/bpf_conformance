@@ -18,6 +18,7 @@
 #define bpf_stats_type bpf_stats_type_fake
 enum bpf_stats_type_fake {};
 #include <bpf/bpf.h>
+#include <bpf/libbpf.h>
 #undef bpf_stats_type_fake
 
 /**
@@ -56,91 +57,12 @@ bytes_to_ebpf_inst(std::vector<uint8_t> bytes)
     return instructions;
 }
 
-/**
- * @brief Create a prolog that loads the packet memory into R1 and the lenght into R2.
- *
- * @param[in] size Expected size of the packet.
- * @return Vector of bpf_insn that represents the prolog.
- */
-std::vector<bpf_insn>
-generate_xdp_prolog(int size)
-{
-    // Create a prolog that converts the BPF program to one that can be loaded
-    // at the XDP attach point.
-    // This involves:
-    // 1. Copying the ctx->data into r1.
-    // 2. Copying the ctx->data_end - ctx->data into r2.
-    // 3. Satisfying the verifier that r2 is the length of the packet.
-    return {
-        {0xb7, 0x0, 0x0, 0x0, -1},   // mov64 r0, -1
-        {0xbf, 0x6, 0x1, 0x0, 0x0},  // mov r6, r1
-        {0x61, 0x1, 0x6, 0x0, 0x0},  // ldxw r1, [r6+0]
-        {0x61, 0x2, 0x6, 0x4, 0x0},  // ldxw r2, [r6+4]
-        {0xbf, 0x3, 0x1, 0x0, 0x0},  // mov r3, r1
-        {0x7, 0x3, 0x0, 0x0, size},  // add r3, size
-        {0xbd, 0x3, 0x2, 0x1, 0x0},  //  jle r3, r2, +1
-        {0x95, 0x0, 0x0, 0x0, 0x0},  // exit
-        {0xb7, 0x2, 0x0, 0x0, size}, // mov r2, size
-    };
-}
-
-/**
- * @brief This program reads BPF instructions from stdin and memory contents from
- * the first agument. It then executes the BPF program and prints the
- * value of r0 at the end of execution.
- */
-int
-main(int argc, char** argv)
-{
-    bool debug = false;
-    std::vector<std::string> args(argv, argv + argc);
-    if (args.size() > 0) {
-        args.erase(args.begin());
-    }
-    std::string program_string;
-    std::string memory_string;
-
-    if (args.size() > 0 && args[0] == "--help") {
-        std::cout << "usage: " << argv[0] << " [--program <base16 program bytes>] [<base16 memory bytes>] [--debug]" << std::endl;
-        return 1;
-    }
-
-    if (args.size() > 1 && args[0] == "--program") {
-        args.erase(args.begin());
-        program_string = args[0];
-        args.erase(args.begin());
-    } else {
-        std::getline(std::cin, program_string);
-    }
-
-    // Next parameter is optional memory contents.
-    if (args.size() > 0 && args[0] != "--debug") {
-        memory_string = args[0];
-        args.erase(args.begin());
-    }
-
-    if (args.size() > 0 && args[0] == "--debug") {
-        debug = true;
-        args.erase(args.begin());
-    }
-
-    if (args.size() > 0 && args[0].size() > 0) {
-        std::cerr << "Unexpected arguments: " << args[0] << std::endl;
-        return 1;
-    }
-
+// Decode BPF instructions from program string and load them into the kernel.
+int load_bpf_instructions(const std::string& program_string, size_t memory_length, std::string& log) {
     std::vector<bpf_insn> program = bytes_to_ebpf_inst(base16_decode(program_string));
-    std::vector<uint8_t> memory = base16_decode(memory_string);
-
-    // Add prolog if program accesses memory.
-    if (memory.size() > 0) {
-        auto prolog_instructions = generate_xdp_prolog(memory.size());
-        program.insert(program.begin(), prolog_instructions.begin(), prolog_instructions.end());
-    }
 
     // Load program into kernel.
     constexpr uint32_t log_size = 1024;
-    std::string log;
     log.resize(log_size);
 #ifdef USE_DEPRECATED_LOAD_PROGRAM
     int fd = bpf_load_program(
@@ -167,6 +89,106 @@ main(int argc, char** argv)
         program.size(),
         &opts);
 #endif
+    return fd;
+}
+
+int load_elf_file(const std::string& file_contents, std::string& log)
+{
+    std::vector<uint8_t> bytes = base16_decode(file_contents);
+    struct bpf_object* object = nullptr;
+    struct bpf_program* program = nullptr;
+    struct bpf_map* map = nullptr;
+    int fd = -1;
+    int error = 0;
+    bool result = false;
+    bpf_object_open_opts opts = {};
+    opts.sz = sizeof(opts);
+    opts.relaxed_maps = true;
+
+    // Load ELF file from memory
+    object = bpf_object__open_mem(bytes.data(), bytes.size(), &opts);
+    if (!object) {
+        log = "Failed to load ELF file";
+        return -1;
+    }
+
+    if (bpf_object__load(object) < 0) {
+        log = "Failed to load ELF file";
+        return -1;
+    }
+
+    // Find the first XDP program.
+    bpf_object__for_each_program(program, object) {
+        if (bpf_program__get_type(program) == BPF_PROG_TYPE_XDP) {
+            fd = bpf_program__fd(program);
+            break;
+        }
+    }
+
+    return fd;
+}
+
+/**
+ * @brief This program reads BPF instructions from stdin and memory contents from
+ * the first argument. It then executes the BPF program and prints the
+ * value of r0 at the end of execution.
+ */
+int
+main(int argc, char** argv)
+{
+    bool debug = false;
+    bool elf = false;
+    std::vector<std::string> args(argv, argv + argc);
+    if (args.size() > 0) {
+        args.erase(args.begin());
+    }
+    std::string program_string;
+    std::string memory_string;
+
+    if (args.size() > 0 && args[0] == "--help") {
+        std::cout << "usage: " << argv[0] << " [--program <base16 program bytes>] [<base16 memory bytes>] [--debug] [--elf]" << std::endl;
+        return 1;
+    }
+
+    if (args.size() > 1 && args[0] == "--program") {
+        args.erase(args.begin());
+        program_string = args[0];
+        args.erase(args.begin());
+    } else {
+        std::getline(std::cin, program_string);
+    }
+
+    // Next parameter is optional memory contents.
+    if (args.size() > 0 && !args[0].starts_with("--")) {
+        memory_string = args[0];
+        args.erase(args.begin());
+    }
+
+    if (args.size() > 0 && args[0] == "--debug") {
+        debug = true;
+        args.erase(args.begin());
+    }
+
+    if (args.size() > 0 && args[0] == "--elf") {
+        elf = true;
+        args.erase(args.begin());
+    }
+
+    if (args.size() > 0 && args[0].size() > 0) {
+        std::cerr << "Unexpected arguments: " << args[0] << std::endl;
+        return 1;
+    }
+
+    std::vector<uint8_t> memory = base16_decode(memory_string);
+    std::string log;
+    int fd = -1;
+    if (!elf) {
+        fd = load_bpf_instructions(program_string, memory.size(), log);
+    }
+    else {
+        fd = load_elf_file(program_string, log);
+    }
+
     if (fd < 0) {
         if (debug)
             std::cout << "Failed to load program: " << log << std::endl;

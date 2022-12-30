@@ -48,8 +48,8 @@ install_sigpipe_handler()
  * @param[in] test_file_directory Path to the collection of test files.
  * @return Vector of test files names.
  */
-std::vector<std::filesystem::path>
-get_test_files(const std::filesystem::path& test_file_directory)
+static std::vector<std::filesystem::path>
+_get_test_files(const std::filesystem::path& test_file_directory)
 {
     std::vector<std::filesystem::path> result;
     for (auto& p : std::filesystem::directory_iterator(test_file_directory)) {
@@ -77,6 +77,8 @@ main(int argc, char** argv)
             "list_used_instructions", boost::program_options::value<bool>(), "List instructions used in tests")(
             "list_unused_instructions", boost::program_options::value<bool>(), "List instructions not used in tests")(
             "debug", boost::program_options::value<bool>(), "Print debug information")(
+            "xdp_prolog", boost::program_options::value<bool>(), "XDP prolog")(
+            "elf", boost::program_options::value<bool>(), "ELF format")(
             "cpu_version", boost::program_options::value<std::string>(), "CPU version")(
             "include_regex", boost::program_options::value<std::string>(), "Include regex")(
             "exclude_regex", boost::program_options::value<std::string>(), "Exclude regex");
@@ -110,15 +112,15 @@ main(int argc, char** argv)
         }
 
         // Assume latest version if not specified.
-        bpf_conformance_test_CPU_version_t CPU_version = bpf_conformance_test_CPU_version_t::v3;
+        bpf_conformance_test_cpu_version_t cpu_version = bpf_conformance_test_cpu_version_t::v3;
         if (vm.count("cpu_version")) {
-            std::string cpu_version = vm["cpu_version"].as<std::string>();
-            if (cpu_version == "v1") {
-                CPU_version = bpf_conformance_test_CPU_version_t::v1;
-            } else if (cpu_version == "v2") {
-                CPU_version = bpf_conformance_test_CPU_version_t::v2;
-            } else if (cpu_version == "v3") {
-                CPU_version = bpf_conformance_test_CPU_version_t::v3;
+            std::string cpu_version_string = vm["cpu_version"].as<std::string>();
+            if (cpu_version_string == "v1") {
+                cpu_version = bpf_conformance_test_cpu_version_t::v1;
+            } else if (cpu_version_string == "v2") {
+                cpu_version = bpf_conformance_test_cpu_version_t::v2;
+            } else if (cpu_version_string == "v3") {
+                cpu_version = bpf_conformance_test_cpu_version_t::v3;
             } else {
                 std::cout << "Invalid CPU version" << std::endl;
                 return 1;
@@ -132,7 +134,7 @@ main(int argc, char** argv)
         if (vm.count("test_file_path")) {
             tests.push_back(vm["test_file_path"].as<std::string>());
         } else if (vm.count("test_file_directory")) {
-            tests = get_test_files(vm["test_file_directory"].as<std::string>());
+            tests = _get_test_files(vm["test_file_directory"].as<std::string>());
         }
         std::sort(tests.begin(), tests.end());
 
@@ -142,6 +144,8 @@ main(int argc, char** argv)
         bool debug = vm.count("debug") ? vm["debug"].as<bool>() : false;
         bool list_used_instructions = vm.count("list_used_instructions") ? vm["list_used_instructions"].as<bool>() : false;
         bool list_unused_instructions = vm.count("list_unused_instructions") ? vm["list_unused_instructions"].as<bool>() : false;
+        bool xdp_prolog = vm.count("xdp_prolog") ? vm["xdp_prolog"].as<bool>() : false;
+        bool elf_format = vm.count("elf") ? vm["elf"].as<bool>() : false;
         bpf_conformance_list_instructions_t list_instructions = bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_NONE;
         if (show_instructions) {
             list_instructions = bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_ALL;
@@ -151,7 +155,16 @@ main(int argc, char** argv)
             list_instructions = bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_UNUSED;
         }
 
-        auto test_results = bpf_conformance(tests, plugin_path, plugin_options, include_regex, exclude_regex, CPU_version, list_instructions, debug);
+        bpf_conformance_options_t options;
+        options.include_test_regex = include_regex;
+        options.exclude_test_regex = exclude_regex;
+        options.cpu_version = cpu_version;
+        options.list_instructions_option = list_instructions;
+        options.debug = debug;
+        options.xdp_prolog = xdp_prolog;
+        options.elf_format = elf_format;
+
+        auto test_results = bpf_conformance_options(tests, plugin_path, plugin_options, options);
 
         // At the end of all the tests, print a summary of the results.
         std::cout << "Test results:" << std::endl;

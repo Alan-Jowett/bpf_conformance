@@ -24,14 +24,14 @@
 
 /* eBPF definitions */
 
-struct ebpf_inst
+typedef struct ebpf_inst
 {
     uint8_t opcode;
     uint8_t dst : 4;
     uint8_t src : 4;
     int16_t offset;
     int32_t imm;
-};
+} ebpf_inst_t;
 
 #define EBPF_CLS_MASK 0x07
 #define EBPF_ALU_OP_MASK 0xf0
@@ -216,5 +216,17 @@ struct ebpf_inst
 
 #define EBPF_OP_ATOMIC32_STORE (EBPF_CLS_STX | EBPF_MODE_ATOMIC | EBPF_SIZE_W)
 #define EBPF_OP_ATOMIC_STORE (EBPF_CLS_STX | EBPF_MODE_ATOMIC | EBPF_SIZE_DW)
+
+/**
+ * @brief eBPF Map Definition as it appears in the maps section of an ELF file.
+ */
+typedef struct _ebpf_map_definition_in_file
+{
+    uint32_t type;          ///< Type of map.
+    uint32_t key_size;      ///< Size in bytes of a map key.
+    uint32_t value_size;    ///< Size in bytes of a map value.
+    uint32_t max_entries;   ///< Maximum number of entries allowed in the map.
+    uint32_t inner_map_idx; ///< Index of inner map if this is a nested map.
+} ebpf_map_definition_in_file_t;
 
 #endif

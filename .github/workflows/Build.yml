@@ -39,6 +39,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
 
     - name: Install prerequisites - Ubuntu-22.04
       if: inputs.platform == 'ubuntu-22.04'
@@ -126,7 +128,7 @@ jobs:
       if: inputs.enable_coverage == true
       run: |
         mkdir -p coverage
-        lcov --capture --directory build --include '${{github.workspace}}/*' --output-file coverage/lcov.info
+        lcov --capture --directory build --include '${{github.workspace}}/*' --output-file coverage/lcov.info --exclude '${{github.workspace}}/external/*'
 
     - name: Coveralls Parallel
       if: inputs.enable_coverage == true
