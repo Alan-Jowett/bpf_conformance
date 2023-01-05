@@ -156,6 +156,8 @@ typedef class _bpf_assembler
     _encode_ld([[maybe_unused]] const std::string& mnemonic, const std::vector<std::string>& operands)
     {
         std::array<ebpf_inst, 2> inst{};
+        // Issue: https://github.com/Alan-Jowett/bpf_conformance/issues/59
+        // Add support for other 64-bit immediate values.
         inst[0].opcode = EBPF_OP_LDDW;
         inst[0].dst = _decode_register(operands[0]);
         uint64_t immediate = _decode_imm64(operands[1]);
