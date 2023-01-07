@@ -24,6 +24,9 @@ typedef enum class _bpf_conformance_test_cpu_version
     v3 = 3,
 } bpf_conformance_test_cpu_version_t;
 
+// Add typedef for backwards compatibility.
+typedef bpf_conformance_test_cpu_version_t bpf_conformance_test_CPU_version_t;
+
 typedef enum class _bpf_conformance_list_instructions
 {
     LIST_INSTRUCTIONS_NONE,   // Do not list instructions.
