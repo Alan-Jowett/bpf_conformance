@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation
 // SPDX-License-Identifier: MIT
 
-#include "bpf_conformance.h"
+#include "../include/bpf_conformance.h"
 
 #include <boost/process.hpp>
 #include <iostream>
