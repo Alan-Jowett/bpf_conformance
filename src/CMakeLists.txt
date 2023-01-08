@@ -429,3 +429,8 @@ set_tests_properties(
   PROPERTIES
   PASS_REGULAR_EXPRESSION "Instructions not used by tests"
 )
+
+add_test(
+  NAME back_compat
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_BINARY_DIR}/tests/add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin
+)
