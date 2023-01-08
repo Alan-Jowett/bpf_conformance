@@ -24,6 +24,9 @@ typedef enum class _bpf_conformance_test_cpu_version
     v3 = 3,
 } bpf_conformance_test_cpu_version_t;
 
+// Add typedef for backwards compatibility.
+typedef bpf_conformance_test_cpu_version_t bpf_conformance_test_CPU_version_t;
+
 typedef enum class _bpf_conformance_list_instructions
 {
     LIST_INSTRUCTIONS_NONE,   // Do not list instructions.
@@ -75,7 +78,7 @@ bpf_conformance_options(
  * @param[in] debug Print debug information.
  * @return The test results for each test file.
  */
-[[deprecated]] inline std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>>
+inline std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>>
 bpf_conformance(
     const std::vector<std::filesystem::path>& test_files,
     const std::filesystem::path& plugin_path,
@@ -87,7 +90,7 @@ bpf_conformance(
         bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_NONE,
     bool debug = false)
 {
-    bpf_conformance_options_t options;
+    bpf_conformance_options_t options = {};
     options.include_test_regex = include_test_regex;
     options.exclude_test_regex = exclude_test_regex;
     options.cpu_version = cpu_version;

@@ -473,3 +473,8 @@ set_tests_properties(
   PROPERTIES
   PASS_REGULAR_EXPRESSION "Test requires helper function bpf_not_a_real_helper that is not supported on this platform."
 )
+
+add_test(
+  NAME back_compat
+  COMMAND sudo ${CMAKE_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${CMAKE_BINARY_DIR}/tests/add.data --plugin_path ${CMAKE_BINARY_DIR}/bin/libbpf_plugin
+)
