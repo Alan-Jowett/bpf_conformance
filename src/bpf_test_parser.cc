@@ -31,6 +31,10 @@ parse_test_file(const std::filesystem::path& data_file)
     std::string raw;
 
     while (std::getline(data_in, line)) {
+        // Strip trailing carriage return
+        if (line.back() == '\r') {
+            line.pop_back();
+        }
         if (line.find("--") != std::string::npos) {
             if (line.find("asm") != std::string::npos) {
                 state = _state::state_assembly;
