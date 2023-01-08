@@ -164,7 +164,13 @@ main(int argc, char** argv)
         options.xdp_prolog = xdp_prolog;
         options.elf_format = elf_format;
 
-        auto test_results = bpf_conformance_options(tests, plugin_path, plugin_options, options);
+        std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>> test_results;
+        if (options.elf_format == false && options.xdp_prolog == false) {
+            test_results = bpf_conformance(tests, plugin_path, plugin_options, include_regex, exclude_regex, cpu_version, list_instructions, debug);
+        }
+        else {
+            test_results = bpf_conformance_options(tests, plugin_path, plugin_options, options);
+        }
 
         // At the end of all the tests, print a summary of the results.
         std::cout << "Test results:" << std::endl;
