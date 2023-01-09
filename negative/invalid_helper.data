@@ -1,0 +1,7 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+call bpf_not_a_real_helper
+exit
+-- result
+0x11

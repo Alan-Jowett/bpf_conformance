@@ -1,0 +1,7 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+call not_a_valid_mode 1
+exit
+-- result
+0x11
