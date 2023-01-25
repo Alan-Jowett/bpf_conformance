@@ -1,0 +1,28 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+
+name: Codeball
+on: [pull_request]
+
+permissions:
+  contents: read
+  pull-requests: write # Required to create issues.
+
+concurrency:
+  # Cancel any workflow currently in progress for the same PR.
+  # Allow running concurrently with any other commits.
+  group: cicd-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  codeball_job:
+    runs-on: ubuntu-latest
+    name: Codeball
+    steps:
+      - name: Codeball
+        uses: sturdy-dev/codeball-action@v2
+        with:
+          approvePullRequests: "false"
+          labelPullRequestsWhenApproved: "true"
+          labelPullRequestsWhenReviewNeeded: "true"
+          failJobsWhenReviewNeeded: "false"
