@@ -110,8 +110,11 @@ _log_debug_result(
  * @return Vector of bpf_insn that represents the prolog.
  */
 static std::vector<ebpf_inst>
-_generate_xdp_prolog(int size)
+_generate_xdp_prolog(size_t size)
 {
+    if (size > INT32_MAX) {
+        throw std::runtime_error("Packet size too large");
+    }
     // Create a prolog that converts the BPF program to one that can be loaded
     // at the XDP attach point.
     // This involves:
@@ -124,10 +127,10 @@ _generate_xdp_prolog(int size)
         {0x61, 0x1, 0x6, 0x0, 0x0},  // ldxw r1, [r6+0]
         {0x61, 0x2, 0x6, 0x4, 0x0},  // ldxw r2, [r6+4]
         {0xbf, 0x3, 0x1, 0x0, 0x0},  // mov r3, r1
-        {0x7, 0x3, 0x0, 0x0, size},  // add r3, size
+        {0x7, 0x3, 0x0, 0x0, static_cast<int>(size)},  // add r3, size
         {0xbd, 0x3, 0x2, 0x1, 0x0},  //  jle r3, r2, +1
         {0x95, 0x0, 0x0, 0x0, 0x0},  // exit
-        {0xb7, 0x2, 0x0, 0x0, size}, // mov r2, size
+        {0xb7, 0x2, 0x0, 0x0, static_cast<int>(size)}, // mov r2, size
     };
 }
 
