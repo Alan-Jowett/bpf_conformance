@@ -60,6 +60,11 @@ jobs:
           ccache \
           boost
 
+    - name: Dump BCDEDIT settings
+      if: inputs.platform == 'windows-2019' || inputs.platform == 'windows-2022'
+      run: |
+        bcdedit
+
     - name: Cache nuget packages
       if: inputs.platform == 'windows-2019' || inputs.platform == 'windows-2022'
       uses: actions/cache@69d9d449aced6a2ede0bc19182fadc3a0a42d2b0
