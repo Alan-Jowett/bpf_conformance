@@ -7,6 +7,16 @@ This project measures the conformance of a BPF runtime to the ISA. To measure co
 2) Execute the byte code.
 3) Return the value in r0 at the end of the execution.
 
+## eBPF runtime implementations that are currently measured using this project
+1) [Linux Kernel via libbpf](https://github.com/Alan-Jowett/bpf_conformance/tree/main/libbpf_plugin)
+2) [uBPF](https://github.com/iovisor/ubpf/tree/main/ubpf_plugin)
+3) [eBPF for Windows / bpf2c](https://github.com/microsoft/ebpf-for-windows/tree/main/tests/bpf2c_plugin)
+4) [rbpf](https://github.com/qmonnet/rbpf/blob/master/examples/rbpf_plugin.rs)
+5) [Prevail Verifier](https://github.com/vbpf/ebpf-verifier/blob/main/src/test/test_conformance.cpp)
+
+Note:
+Linux Kernel is treated as the authorative eBPF implementation.
+
 ## Building
 
 Run ```cmake -S . -B build``` to configure the project, then run ```cmake --build build``` to build the project.

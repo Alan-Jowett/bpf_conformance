@@ -62,7 +62,7 @@ jobs:
 
     - name: Cache nuget packages
       if: inputs.platform == 'windows-2019' || inputs.platform == 'windows-2022'
-      uses: actions/cache@69d9d449aced6a2ede0bc19182fadc3a0a42d2b0
+      uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
       env:
         cache-name: cache-nuget-modules
       with:
@@ -132,7 +132,7 @@ jobs:
 
     - name: Coveralls Parallel
       if: inputs.enable_coverage == true
-      uses: coverallsapp/github-action@v1.2.4
+      uses: coverallsapp/github-action@v2.1.2
       with:
         github-token: ${{ secrets.github_token }}
         flag-name: run-${{inputs.build_type}}-${{inputs.platform}}-${{inputs.arch}}
