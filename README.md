@@ -5,7 +5,7 @@
 This project measures the conformance of a BPF runtime to the ISA. To measure conformance the BPF runtime under test is built into a plugin process that does:
 1) Accept both BPF byte code an initial memory.
 2) Execute the byte code.
-3) Return the value in r0 at the end of the execution.
+3) Return the value in %r0 at the end of the execution.
 
 ## eBPF runtime implementations that are currently measured using this project
 1) [Linux Kernel via libbpf](https://github.com/Alan-Jowett/bpf_conformance/tree/main/libbpf_plugin)

@@ -21,23 +21,23 @@ typedef class _bpf_assembler
         const std::string& mnemonic, const std::vector<std::string>& operands);
 
     const std::unordered_map<std::string, int> _bpf_encode_register_map{
-        {"r0", 0},
-        {"r1", 1},
-        {"r2", 2},
-        {"r3", 3},
-        {"r4", 4},
-        {"r5", 5},
-        {"r6", 6},
-        {"r7", 7},
-        {"r8", 8},
-        {"r9", 9},
-        {"r10", 10},
+        {"%r0", 0},
+        {"%r1", 1},
+        {"%r2", 2},
+        {"%r3", 3},
+        {"%r4", 4},
+        {"%r5", 5},
+        {"%r6", 6},
+        {"%r7", 7},
+        {"%r8", 8},
+        {"%r9", 9},
+        {"%r10", 10},
         // Add fake registers to support negative tests.
-        {"r11", 11},
-        {"r12", 12},
-        {"r13", 13},
-        {"r14", 14},
-        {"r15", 15},
+        {"%r11", 11},
+        {"%r12", 12},
+        {"%r13", 13},
+        {"%r14", 14},
+        {"%r15", 15},
     };
 
     const std::unordered_map<std::string, int> _bpf_encode_alu_ops{
@@ -260,7 +260,7 @@ typedef class _bpf_assembler
         inst.dst = _decode_register(operands[0]);
 
         if (operands.size() == 2) {
-            if (operands[1].starts_with('r')) {
+            if (operands[1].starts_with('%')) {
                 inst.opcode |= EBPF_SRC_REG;
                 inst.src = _decode_register(operands[1]);
             } else {
@@ -305,7 +305,7 @@ typedef class _bpf_assembler
             // It is not possible to reach here with no match.
             inst.opcode |= iter->second << 4;
             inst.dst = _decode_register(operands[0]);
-            if (operands[1].starts_with('r')) {
+            if (operands[1].starts_with('%')) {
                 inst.opcode |= EBPF_SRC_REG;
                 inst.src = _decode_register(operands[1]);
             } else {

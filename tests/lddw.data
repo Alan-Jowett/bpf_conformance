@@ -1,7 +1,7 @@
 # Copyright (c) Big Switch Networks, Inc
 # SPDX-License-Identifier: Apache-2.0
 -- asm
-lddw r0, 0x1122334455667788
+lddw %r0, 0x1122334455667788
 exit
 -- raw
 0x5566778800000018

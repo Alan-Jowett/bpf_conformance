@@ -1,9 +1,9 @@
 # Copyright (c) Big Switch Networks, Inc
 # SPDX-License-Identifier: Apache-2.0
 -- asm
-mov r1, -1
+mov %r1, -1
 call 5
-mov r0, 2
+mov %r0, 2
 exit
 -- result
 0x2

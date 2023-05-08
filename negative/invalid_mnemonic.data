@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 -- asm
 # Invalid mnemonic
-ldxq r0, r1
+ldxq %r0, %r1
 exit
 -- result
 0x11
