@@ -3,8 +3,7 @@
 -- asm
 mov32 %r0, 1
 lsh %r0, 63
-arsh %r0, 55
-mov32 %r1, 5
+mov32 %r1, -4
 arsh %r0, %r1
 exit
 -- result
