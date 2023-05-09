@@ -104,7 +104,7 @@ _log_debug_result(
 }
 
 /**
- * @brief Create a prolog that loads the packet memory into R1 and the length into R2.
+ * @brief Create a prolog that loads the packet memory into %R1 and the length into %R2.
  *
  * @param[in] size Expected size of the packet.
  * @return Vector of bpf_insn that represents the prolog.
@@ -118,19 +118,19 @@ _generate_xdp_prolog(size_t size)
     // Create a prolog that converts the BPF program to one that can be loaded
     // at the XDP attach point.
     // This involves:
-    // 1. Copying the ctx->data into r1.
-    // 2. Copying the ctx->data_end - ctx->data into r2.
-    // 3. Satisfying the verifier that r2 is the length of the packet.
+    // 1. Copying the ctx->data into %r1.
+    // 2. Copying the ctx->data_end - ctx->data into %r2.
+    // 3. Satisfying the verifier that %r2 is the length of the packet.
     return {
-        {0xb7, 0x0, 0x0, 0x0, -1},   // mov64 r0, -1
-        {0xbf, 0x6, 0x1, 0x0, 0x0},  // mov r6, r1
-        {0x61, 0x1, 0x6, 0x0, 0x0},  // ldxw r1, [r6+0]
-        {0x61, 0x2, 0x6, 0x4, 0x0},  // ldxw r2, [r6+4]
-        {0xbf, 0x3, 0x1, 0x0, 0x0},  // mov r3, r1
-        {0x7, 0x3, 0x0, 0x0, static_cast<int>(size)},  // add r3, size
-        {0xbd, 0x3, 0x2, 0x1, 0x0},  //  jle r3, r2, +1
+        {0xb7, 0x0, 0x0, 0x0, -1},   // mov64 %r0, -1
+        {0xbf, 0x6, 0x1, 0x0, 0x0},  // mov %r6, %r1
+        {0x61, 0x1, 0x6, 0x0, 0x0},  // ldxw %r1, [%r6+0]
+        {0x61, 0x2, 0x6, 0x4, 0x0},  // ldxw %r2, [%r6+4]
+        {0xbf, 0x3, 0x1, 0x0, 0x0},  // mov %r3, %r1
+        {0x7, 0x3, 0x0, 0x0, static_cast<int>(size)},  // add %r3, size
+        {0xbd, 0x3, 0x2, 0x1, 0x0},  //  jle %r3, %r2, +1
         {0x95, 0x0, 0x0, 0x0, 0x0},  // exit
-        {0xb7, 0x2, 0x0, 0x0, static_cast<int>(size)}, // mov r2, size
+        {0xb7, 0x2, 0x0, 0x0, static_cast<int>(size)}, // mov %r2, size
     };
 }
 

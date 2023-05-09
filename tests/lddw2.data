@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 -- asm
 # Test decimal 64bit immediate value.
-lddw r0, 2147483648
+lddw %r0, 2147483648
 exit
 -- result
 0x0000000080000000

@@ -191,7 +191,7 @@ add_test(
 set_tests_properties(
   invalid_register
   PROPERTIES
-  PASS_REGULAR_EXPRESSION "Invalid register: r50"
+  PASS_REGULAR_EXPRESSION "Invalid register: %r50"
 )
 
 add_test(
@@ -202,7 +202,7 @@ add_test(
 set_tests_properties(
   invalid_offset
   PROPERTIES
-  PASS_REGULAR_EXPRESSION "Failed to decode register and offset: r1"
+  PASS_REGULAR_EXPRESSION "Failed to decode register and offset: %r1"
 )
 
 add_test(

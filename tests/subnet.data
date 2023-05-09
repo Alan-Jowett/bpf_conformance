@@ -57,21 +57,21 @@ uint64_t entry(void *mem)
     return 0;
 }
 -- asm
-mov r2, 0xe
-ldxh r3, [r1+12]
-jne r3, 0x81, L1
-mov r2, 0x12
-ldxh r3, [r1+16]
-and r3, 0xffff
+mov %r2, 0xe
+ldxh %r3, [%r1+12]
+jne %r3, 0x81, L1
+mov %r2, 0x12
+ldxh %r3, [%r1+16]
+and %r3, 0xffff
 L1:
-jne r3, 0x8, L2
-add r1, r2
-mov r0, 0x1
-ldxw r1, [r1+16]
-and r1, 0xffffff
-jeq r1, 0x1a8c0, exit
+jne %r3, 0x8, L2
+add %r1, %r2
+mov %r0, 0x1
+ldxw %r1, [%r1+16]
+and %r1, 0xffffff
+jeq %r1, 0x1a8c0, exit
 L2:
-mov r0, 0x0
+mov %r0, 0x0
 exit
 -- mem
 00 00 c0 9f a0 97 00 a0
