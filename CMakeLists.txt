@@ -4,20 +4,22 @@
 project("bpf_conformance")
 cmake_minimum_required(VERSION 3.16)
 
-if (IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
+if(IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
   # Install Git pre-commit hook
   file(COPY scripts/pre-commit scripts/commit-msg
-       DESTINATION "${PROJECT_SOURCE_DIR}/.git/hooks")
-endif ()
+    DESTINATION "${PROJECT_SOURCE_DIR}/.git/hooks")
+endif()
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   add_compile_options(/ZH:SHA_256 /guard:cf /Qspectre /sdl)
   add_link_options(/guard:cf /CETCOMPAT)
 endif()
+
+option(BPF_CONFORMANCE_ENABLE_TESTS "Enable tests")
 
 include("cmake/FindLibBpf.cmake")
 include(CTest)
@@ -34,7 +36,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   file(COPY Docker/Linux/Dockerfile DESTINATION .)
 endif()
 
-
-if (LIBBPF_FOUND)
+if(BPF_CONFORMANCE_ENABLE_TESTS)
+  if(LIBBPF_FOUND)
     add_subdirectory("libbpf_plugin")
+  endif()
 endif()

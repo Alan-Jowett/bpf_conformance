@@ -88,7 +88,8 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
           -DCMAKE_CXX_FLAGS="${SANITIZER_FLAGS}" \
           -DCMAKE_C_FLAGS="${SANITIZER_FLAGS}" \
-          ${COVERAGE_FLAGS}
+          ${COVERAGE_FLAGS} \
+          -DBPF_CONFORMANCE_ENABLE_TESTS=ON
 
     - name: Build
       # Build your program with the given configuration
