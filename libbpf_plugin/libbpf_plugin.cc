@@ -196,14 +196,14 @@ main(int argc, char** argv)
     }
 
     // Run program.
-    bpf_test_run_opts test_run{
-        .sz = sizeof(bpf_test_run_opts),
-        .data_in = memory.data(),
-        .data_out = memory.data(),
-        .data_size_in = static_cast<uint32_t>(memory.size()),
-        .data_size_out = static_cast<uint32_t>(memory.size()),
-        .repeat = 1,
-    };
+    bpf_test_run_opts test_run;
+    memset(&test_run, 0, sizeof(test_run));
+    test_run.sz = sizeof(bpf_test_run_opts);
+    test_run.data_in = memory.data();
+    test_run.data_out = memory.data();
+    test_run.data_size_in = static_cast<uint32_t>(memory.size());
+    test_run.data_size_out = static_cast<uint32_t>(memory.size());
+    test_run.repeat = 1;
     int result = bpf_prog_test_run_opts(fd, &test_run);
     if (result == 0) {
         // Print output.
