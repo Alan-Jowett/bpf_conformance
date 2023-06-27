@@ -72,7 +72,7 @@ typedef class _bpf_assembler
         {"jsle", 0xd},
     };
 
-    // Labels discoverd while parsing the assembly code.
+    // Labels discovered while parsing the assembly code.
     std::unordered_map<std::string, size_t> _labels{};
 
     // Vector of the same size as the assembly code, containing the label to
@@ -525,7 +525,13 @@ typedef class _bpf_assembler
 
             // Check for labels.
             if (mnemonic.ends_with(':')) {
-                _labels[mnemonic.substr(0, mnemonic.length() - 1)] = output.size();
+                auto label =  mnemonic.substr(0, mnemonic.length() - 1);
+                if (_labels.contains(label)) {
+                    std::stringstream ss{};
+                    ss << "Duplicate label (" + label + ") detected at line " << output.size() << " (previous declaration at line " << _labels[label] << ")";
+                    throw std::runtime_error(ss.str());
+                }
+                _labels[label] = output.size();
                 continue;
             }
 
