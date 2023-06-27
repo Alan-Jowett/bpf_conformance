@@ -34,7 +34,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   set(Boost_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/packages/boost_filesystem-vc${MSVC_PLATFORM}/lib/native ${PROJECT_BINARY_DIR}/packages/boost_program_options-vc${MSVC_PLATFORM}/lib/native)
 endif()
 
-include_directories(${Boost_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/external/elfio)
+include_directories(${Boost_INCLUDE_DIR})
 
 link_directories(${Boost_LIBRARY_DIRS})
 
@@ -50,9 +50,12 @@ add_executable(
   runner.cc
 )
 
+add_dependencies(bpf_conformance elfio)
+
 target_include_directories("bpf_conformance" PRIVATE
   "${Boost_INCLUDE_DIRS}"
   "${PROJECT_SOURCE_DIR}/include"
+  elfio
 )
 
 target_include_directories("bpf_conformance_runner" PRIVATE
@@ -60,7 +63,8 @@ target_include_directories("bpf_conformance_runner" PRIVATE
   "${PROJECT_SOURCE_DIR}/include"
 )
 
-target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB})
+target_link_directories(bpf_conformance PRIVATE elfio)
+target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB} elfio)
 target_link_libraries(bpf_conformance_runner PRIVATE ${PLATFORM_LIB} "bpf_conformance")
 
 if(MSVC)
