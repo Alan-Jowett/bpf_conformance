@@ -1,8 +1,8 @@
 # Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: MIT
 
-project("bpf_conformance")
 cmake_minimum_required(VERSION 3.16)
+project("bpf_conformance")
 
 if (IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
   # Install Git pre-commit hook
@@ -23,6 +23,11 @@ include("cmake/FindLibBpf.cmake")
 include(CTest)
 
 add_subdirectory("src")
+if (EXISTS "${PROJECT_SOURCE_DIR}/external/elfio")
+add_subdirectory("external/elfio")
+else()
+message(FATAL_ERROR "Missing elfio -- initialize submodules recursively, please.")
+endif()
 
 file(COPY tests DESTINATION .)
 
