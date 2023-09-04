@@ -118,7 +118,7 @@ add_test(
 set_tests_properties(
   invalid_return_value
   PROPERTIES
-  PASS_REGULAR_EXPRESSION "Plugin returned invalid return value Hello World"
+  PASS_REGULAR_EXPRESSION "Plugin return value could not be parsed.*(.*Hello World.*)"
 )
 
 add_test(
@@ -173,7 +173,7 @@ add_test(
 set_tests_properties(
   expect_failure
   PROPERTIES
-  PASS_REGULAR_EXPRESSION "Plugin returned invalid return value This is a negative test"
+  PASS_REGULAR_EXPRESSION "Plugin return value could not be parsed.*(.*This is a negative test.*)"
 )
 
 add_test(
@@ -437,4 +437,15 @@ set_tests_properties(
 add_test(
   NAME back_compat
   COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${PROJECT_BINARY_DIR}/tests/add.data --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin
+)
+
+add_test(
+  NAME incorrect_return_value_high_bits
+	COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_path ${PROJECT_SOURCE_DIR}/negative/incorrect_return_value_high_bits.data  --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --cpu_version v1 --xdp_prolog true --plugin_options "--debug"
+)
+
+set_tests_properties(
+  incorrect_return_value_high_bits
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "incorrect return value.*9905498421827150353"
 )
