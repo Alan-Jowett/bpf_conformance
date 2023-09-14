@@ -15,10 +15,6 @@
 #include "bpf_writer.h"
 #include "opcode_names.h"
 
-const std::string xdp_section_name = "xdp";
-const std::string default_section_name = ".text";
-const std::string default_function_name = "main";
-
 /**
  * @brief Convert a vector of bytes to a string of hex bytes.
  *
@@ -269,13 +265,17 @@ bpf_conformance_options(
                 // Issue: https://github.com/Alan-Jowett/bpf_conformance/issues/68
                 // Add support for parsing map definitions from the test file and
                 // passing them to the plugin.
-                input << _base_16_encode(_ebpf_inst_to_elf_file(
-                             options.xdp_prolog ? xdp_section_name : default_section_name,
-                             default_function_name,
-                             byte_code,
-                             {},
-                             {}))
-                      << std::endl;
+                auto elf_bytes = _base_16_encode(_ebpf_inst_to_elf_file(
+                    options.xdp_prolog ? bpf_conformance_xdp_section_name : bpf_conformance_default_section_name,
+                    bpf_conformance_default_function_name,
+                    byte_code,
+                    {},
+                    {}));
+                input << elf_bytes << std::endl;
+                if (options.debug) {
+                    std::cerr << "ELF-encoded bytes: " << elf_bytes
+                              << std::endl;
+                }
             } else {
                 // Encode the instructions as a byte array.
                 input << _base_16_encode(_ebpf_inst_to_byte_vector(byte_code)) << std::endl;
@@ -345,17 +345,17 @@ bpf_conformance_options(
         }
 
         // Parse the return value from the plugin and compare it with the expected return value.
-        uint32_t return_value = 0;
+        uint64_t return_value = 0;
         try {
-            return_value = static_cast<uint32_t>(std::stoull(return_value_string, nullptr, 16));
+            return_value = static_cast<uint64_t>(std::stoull(return_value_string, nullptr, 16));
         } catch (const std::exception&) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_ERROR,
-                "Plugin returned invalid return value " + return_value_string};
+                "Plugin return value could not be parsed into a valid number (" + return_value_string + ")"};
             continue;
         }
 
-        if (return_value != (uint32_t)expected_return_value) {
+        if (return_value != expected_return_value) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_FAIL,
                 "Plugin returned incorrect return value " + return_value_string + " expected " +

@@ -96,3 +96,7 @@ bpf_conformance(
     options.debug = debug;
     return bpf_conformance_options(test_files, plugin_path, plugin_options, options);
 }
+
+const std::string bpf_conformance_xdp_section_name = "xdp";
+const std::string bpf_conformance_default_section_name = ".text";
+const std::string bpf_conformance_default_function_name = "main";

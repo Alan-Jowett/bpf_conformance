@@ -42,13 +42,13 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: Install prerequisites - Ubuntu-22.04
-      if: inputs.platform == 'ubuntu-22.04'
+    - name: Install prerequisites - Ubuntu-latest
+      if: inputs.platform == 'ubuntu-latest'
       run: |
         sudo apt-get install -y libboost-dev \
          libboost-filesystem-dev \
          libboost-program-options-dev \
-         libbpf-dev \
+         libelf-dev \
          lcov
 
     - name: Install prerequisites - macos-11
@@ -59,6 +59,11 @@ jobs:
           ninja \
           ccache \
           boost
+
+    - name: Build/install libbpf From Source
+      if: inputs.platform == 'ubuntu-latest'
+      run: ./.github/scripts/build-libbpf.sh
+      shell: bash
 
     - name: Cache nuget packages
       if: inputs.platform == 'windows-2019' || inputs.platform == 'windows-2022'
@@ -75,7 +80,7 @@ jobs:
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Configure CMake
-      if: inputs.platform == 'ubuntu-22.04' || inputs.platform == 'macos-11'
+      if: inputs.platform == 'ubuntu-latest' || inputs.platform == 'macos-11'
       run: |
         if [ "${{inputs.enable_sanitizers}}" = "true" ]; then
           export SANITIZER_FLAGS="-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all"
@@ -119,7 +124,7 @@ jobs:
           ${{github.workspace}}/build/upload
 
     - name: Tests
-      if: inputs.platform == 'ubuntu-22.04'
+      if: inputs.platform == 'ubuntu-latest'
       working-directory: ${{github.workspace}}
       run: |
         cmake --build build --target test --

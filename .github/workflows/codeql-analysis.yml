@@ -65,7 +65,11 @@ jobs:
 
     - name: Install prerequisites
       run: |
-        sudo apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libbpf-dev
+        sudo apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libelf-dev
+
+    - name: Build/install libbpf From Source
+      run: ./.github/scripts/build-libbpf.sh
+      shell: bash
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
