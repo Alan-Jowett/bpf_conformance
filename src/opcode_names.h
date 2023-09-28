@@ -21,24 +21,33 @@ needs_imm(uint8_t opcode)
     return opcode == 0xc3 || opcode == 0xd4 || opcode == 0xdb || opcode == 0xdc;
 }
 
+inline bool
+needs_offset(uint8_t opcode)
+{
+    return opcode == 0x34 || opcode == 0x37 || opcode == 0x3c || opcode == 0x3f;
+}
+
 class bpf_conformance_instruction_t
 {
   public:
-    bpf_conformance_instruction_t(uint8_t opcode, uint8_t src = 0, uint32_t imm = 0)
+    bpf_conformance_instruction_t(uint8_t opcode, uint8_t src = 0, uint32_t imm = 0, int16_t offset = 0)
     {
         this->opcode = opcode;
         this->src = src;
         this->imm = imm;
+	this->offset = offset;
     }
     bpf_conformance_instruction_t(ebpf_inst inst)
     {
         opcode = inst.opcode;
         src = needs_src(opcode) ? inst.src : 0;
         imm = needs_imm(opcode) ? inst.imm : 0;
+	offset = needs_offset(opcode) ? inst.offset : 0;
     }
     uint8_t opcode;
     uint8_t src = {};
     uint32_t imm = {};
+    int16_t offset = {};
 };
 
 struct InstCmp
@@ -207,14 +216,18 @@ static const std::set<bpf_conformance_instruction_t, InstCmp> instructions_from_
     0x2d,
     0x2e,
     0x2f,
-    0x34,
+    {0x34, 0x00, 0x00, 0x00},
+    {0x34, 0x00, 0x00, 0x01},
     0x35,
     0x36,
-    0x37,
-    0x3c,
+    {0x37, 0x00, 0x00, 0x00},
+    {0x37, 0x00, 0x00, 0x01},
+    {0x3c, 0x00, 0x00, 0x00},
+    {0x3c, 0x00, 0x00, 0x01},
     0x3d,
     0x3e,
-    0x3f,
+    {0x3f, 0x00, 0x00, 0x00},
+    {0x3f, 0x00, 0x00, 0x01},
     0x44,
     0x45,
     0x46,
