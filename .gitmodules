@@ -1,3 +1,3 @@
-[submodule "external/elfio"]
-	path = external/elfio
+[submodule "src/external/ELFIO"]
+	path = src/external/ELFIO
 	url = https://github.com/serge1/ELFIO.git

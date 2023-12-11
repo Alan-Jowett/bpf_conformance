@@ -45,6 +45,13 @@ add_library("bpf_conformance"
   bpf_writer.cc
 )
 
+if (EXISTS "${PROJECT_SOURCE_DIR}/src/external/elfio")
+add_subdirectory("external/elfio")
+else()
+message(FATAL_ERROR "Missing elfio -- initialize submodules recursively, please.")
+endif()
+
+
 add_executable(
   bpf_conformance_runner
   runner.cc
