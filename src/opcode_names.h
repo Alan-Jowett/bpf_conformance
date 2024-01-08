@@ -69,6 +69,9 @@ struct InstCmp
         if (a.src != b.src) {
             return a.src < b.src;
         }
+        if (a.offset != b.offset) {
+            return a.offset < b.offset;
+        }
         return a.imm < b.imm;
     }
 };
