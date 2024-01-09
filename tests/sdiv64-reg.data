@@ -7,4 +7,4 @@ mov %r1, -4
 sdiv %r0, %r1
 exit
 -- result
-0xffffffffd00000000
+0xfffffffd00000000
