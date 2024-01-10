@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: MIT
 
-git clone https://github.com/libbpf/libbpf.git
+git clone --branch v1.3.0 https://github.com/libbpf/libbpf.git
 if [ $? -ne 0 ]; then
 	echo "Could not clone the libbpf repository."
 	exit 1
