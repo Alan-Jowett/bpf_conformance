@@ -3,7 +3,7 @@
 -- asm
 lddw %r0, 0x10000000c
 mov %r1, -4
-div32 %r0, %r1
+sdiv32 %r0, %r1
 exit
 -- result
 0xfffffffd
