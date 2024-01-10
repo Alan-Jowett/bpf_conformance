@@ -17,9 +17,45 @@ This project measures the conformance of a BPF runtime to the ISA. To measure co
 Note:
 Linux Kernel is treated as the authorative eBPF implementation.
 
+## Prerequisites
+
+### Ubuntu
+
+```
+sudo apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libelf-dev lcov
+```
+
+### MacOS
+
+```
+brew install cmake ninja ccache boost
+```
+
 ## Building
 
 Run ```cmake -S . -B build``` to configure the project, then run ```cmake --build build``` to build the project.
+
+## Usage
+
+```
+Options:
+  --help                         Print help messages
+  --test_file_path arg           Path to test file
+  --test_file_directory arg      Path to test file directory
+  --plugin_path arg              Path to plugin
+  --plugin_options arg           Options to pass to plugin
+  --list_instructions arg        List instructions used and not used in tests
+  --list_used_instructions arg   List instructions used in tests
+  --list_unused_instructions arg List instructions not used in tests
+  --debug arg                    Print debug information
+  --xdp_prolog arg               XDP prolog
+  --elf arg                      ELF format
+  --cpu_version arg              CPU version
+  --include_regex arg            Include regex
+  --exclude_regex arg            Exclude regex
+```
+
+The `--xdp_prolog` argument should *only* be used with the `libbpf_plugin`.
 
 ## Using a published package
 Select the desired version from [bpf_conformance](https://github.com/Alan-Jowett/bpf_conformance/pkgs/container/bpf_conformance)
@@ -47,8 +83,7 @@ The BPF Conformance tests can also be used as a static library as part of anothe
 On completion of the test the bpf_conformance tools prints the list of tests that passes/failed and a summary count.
 
 ```
-sudo build/src/bpf_conformance --test_file_directory tests --plugin_path bui
-ld/libbpf_plugin/libbpf_plugin
+sudo build/src/bpf_conformance --test_file_directory tests --plugin_path build/libbpf_plugin/libbpf_plugin
 Test results:
 PASS: "tests/add.data"
 PASS: "tests/add64.data"
