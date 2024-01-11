@@ -22,7 +22,7 @@ Linux Kernel is treated as the authorative eBPF implementation.
 ### Ubuntu
 
 ```
-sudo apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libelf-dev lcov
+sudo apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libelf-dev lcov libbpf-dev
 ```
 
 ### MacOS

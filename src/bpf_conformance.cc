@@ -294,7 +294,7 @@ bpf_conformance_options(
                 }
                 if (expected_error_string.empty()) {
                     test_results[test] = {
-                        bpf_conformance_test_result_t::TEST_RESULT_FAIL,
+                        bpf_conformance_test_result_t::TEST_RESULT_ERROR,
                         "Plugin returned error code " + std::to_string(c.exit_code()) + " and output " +
                             return_value_string};
                 } else {
