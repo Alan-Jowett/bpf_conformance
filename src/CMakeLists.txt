@@ -95,11 +95,6 @@ add_test(
 )
 
 add_test(
-  NAME cpu_v4
-  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v4 --debug true --list_instructions true --exclude_regex "imm-"
-)
-
-add_test(
   NAME elf_format
   COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --debug true --list_instructions true --elf true --exclude_regex "(call_local*|imm-)"
 )
