@@ -111,7 +111,7 @@ main(int argc, char** argv)
             plugin_options.push_back(option);
         }
 
-        // Assume latest version if not specified.
+        // Assume version 3 if not specified.
         bpf_conformance_test_cpu_version_t cpu_version = bpf_conformance_test_cpu_version_t::v3;
         if (vm.count("cpu_version")) {
             std::string cpu_version_string = vm["cpu_version"].as<std::string>();
@@ -121,6 +121,8 @@ main(int argc, char** argv)
                 cpu_version = bpf_conformance_test_cpu_version_t::v2;
             } else if (cpu_version_string == "v3") {
                 cpu_version = bpf_conformance_test_cpu_version_t::v3;
+            } else if (cpu_version_string == "v4") {
+                cpu_version = bpf_conformance_test_cpu_version_t::v4;
             } else {
                 std::cout << "Invalid CPU version" << std::endl;
                 return 1;

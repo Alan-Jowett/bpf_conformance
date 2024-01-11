@@ -130,6 +130,18 @@ _generate_xdp_prolog(size_t size)
     };
 }
 
+bpf_conformance_test_cpu_version_t
+get_instruction_cpu_version(ebpf_inst inst)
+{
+    auto instruction = std::find_if(instructions_from_spec.begin(), instructions_from_spec.end(), [&](const auto &instruction) {
+        return (instruction.opcode == inst.opcode) &&
+               (!needs_src(inst.opcode) || instruction.src == inst.src) &&
+               (!needs_imm(inst.opcode) || instruction.imm == inst.imm) &&
+               (!needs_offset(inst.opcode) || instruction.offset == inst.offset);
+         });
+    return instruction->cpu_version;
+}
+
 std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>>
 bpf_conformance_options(
     const std::vector<std::filesystem::path>& test_files,
@@ -178,28 +190,8 @@ bpf_conformance_options(
         // Determine the required CPU version for the test.
         for (size_t i = 0; i < byte_code.size(); i++) {
             auto inst = byte_code[i];
-            // If this is an atomic store, then the test requires CPU version 3.
-            if (((inst.opcode & EBPF_CLS_MASK) == EBPF_CLS_STX) &&
-                (((inst.opcode & EBPF_MODE_ATOMIC) == EBPF_MODE_ATOMIC))) {
-                required_cpu_version = std::max(required_cpu_version, bpf_conformance_test_cpu_version_t::v3);
-            }
-            // If this is a EBPF_CLS_JMP32, then we know this is v3.
-            else if ((inst.opcode & EBPF_CLS_MASK) == EBPF_CLS_JMP32) {
-                required_cpu_version = std::max(required_cpu_version, bpf_conformance_test_cpu_version_t::v3);
-            } else if ((inst.opcode & EBPF_CLS_MASK) == EBPF_CLS_JMP) {
-                // If this is a EBPF_CLS_JMP, then check if it is a less than operation.
-                if ((inst.opcode & EBPF_ALU_OP_MASK) >= (EBPF_OP_JLT_IMM & EBPF_ALU_OP_MASK)) {
-                    // It his is a less than operation, then we know this is v2.
-                    required_cpu_version = std::max(required_cpu_version, bpf_conformance_test_cpu_version_t::v2);
-                }
-            }
-            // If the program uses local or runtime calls then this is v3 of the ABI.
-            // inst.src == 0 means helper function call.
-            // inst.src == 1 means local function call.
-            // inst.src == 2 means runtime function call.
-            if (inst.opcode == EBPF_OP_CALL && inst.src != 0) {
-                required_cpu_version = std::max(required_cpu_version, bpf_conformance_test_cpu_version_t::v3);
-            }
+            bpf_conformance_test_cpu_version_t cpu_version = get_instruction_cpu_version(inst);
+	    required_cpu_version = std::max(required_cpu_version, cpu_version);
             if (inst.opcode == EBPF_OP_LDDW) {
                 // Instruction has a 64-bit immediate and takes two instructions slots.
                 i++;
@@ -215,7 +207,7 @@ bpf_conformance_options(
         }
 
         for (const auto& inst : byte_code) {
-            instructions_used.insert(bpf_conformance_instruction_t(inst));
+            instructions_used.insert(bpf_conformance_instruction_t(required_cpu_version, inst));
         }
 
         // If the caller requires this as a XDP program, then add the prolog instructions.
@@ -302,7 +294,7 @@ bpf_conformance_options(
                 }
                 if (expected_error_string.empty()) {
                     test_results[test] = {
-                        bpf_conformance_test_result_t::TEST_RESULT_FAIL,
+                        bpf_conformance_test_result_t::TEST_RESULT_ERROR,
                         "Plugin returned error code " + std::to_string(c.exit_code()) + " and output " +
                             return_value_string};
                 } else {

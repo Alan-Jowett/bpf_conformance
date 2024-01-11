@@ -45,6 +45,7 @@ typedef class _bpf_assembler
         {"sub", 0x1},
         {"mul", 0x2},
         {"div", 0x3},
+        {"sdiv", 0x3},
         {"or", 0x4},
         {"and", 0x5},
         {"lsh", 0x6},
@@ -245,6 +246,9 @@ typedef class _bpf_assembler
             inst.imm = _decode_imm32(mnemonic.substr(2));
             return inst;
         }
+        if (mnemonic.starts_with("sdiv")) {
+            inst.offset = 1;
+        }
 
         if (mnemonic.ends_with("32")) {
             inst.opcode |= EBPF_CLS_ALU;
@@ -444,6 +448,7 @@ typedef class _bpf_assembler
         {"be16", {&_bpf_assembler::_encode_alu, 1}},  {"be32", {&_bpf_assembler::_encode_alu, 1}},
         {"be64", {&_bpf_assembler::_encode_alu, 1}},  {"call", {&_bpf_assembler::_encode_jmp, 2}},
         {"div", {&_bpf_assembler::_encode_alu, 2}},   {"div32", {&_bpf_assembler::_encode_alu, 2}},
+        {"sdiv", {&_bpf_assembler::_encode_alu, 2}},  {"sdiv32", {&_bpf_assembler::_encode_alu, 2}},
         {"exit", {&_bpf_assembler::_encode_jmp, 0}},  {"ja", {&_bpf_assembler::_encode_jmp, 1}},
         {"jeq", {&_bpf_assembler::_encode_jmp, 3}},   {"jeq32", {&_bpf_assembler::_encode_jmp, 3}},
         {"jge", {&_bpf_assembler::_encode_jmp, 3}},   {"jge32", {&_bpf_assembler::_encode_jmp, 3}},

@@ -22,6 +22,7 @@ typedef enum class _bpf_conformance_test_cpu_version
     v1 = 1,
     v2 = 2,
     v3 = 3,
+    v4 = 4,
 } bpf_conformance_test_cpu_version_t;
 
 // Add typedef for backwards compatibility.
