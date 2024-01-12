@@ -52,6 +52,7 @@ typedef class _bpf_assembler
         {"rsh", 0x7},
         {"neg", 0x8},
         {"mod", 0x9},
+        {"smod", 0x9},
         {"xor", 0xa},
         {"mov", 0xb},
         {"arsh", 0xc},
@@ -246,7 +247,7 @@ typedef class _bpf_assembler
             inst.imm = _decode_imm32(mnemonic.substr(2));
             return inst;
         }
-        if (mnemonic.starts_with("sdiv")) {
+        if (mnemonic.starts_with("sdiv") || mnemonic.starts_with("smod")) {
             inst.offset = 1;
         }
 
@@ -448,7 +449,6 @@ typedef class _bpf_assembler
         {"be16", {&_bpf_assembler::_encode_alu, 1}},  {"be32", {&_bpf_assembler::_encode_alu, 1}},
         {"be64", {&_bpf_assembler::_encode_alu, 1}},  {"call", {&_bpf_assembler::_encode_jmp, 2}},
         {"div", {&_bpf_assembler::_encode_alu, 2}},   {"div32", {&_bpf_assembler::_encode_alu, 2}},
-        {"sdiv", {&_bpf_assembler::_encode_alu, 2}},  {"sdiv32", {&_bpf_assembler::_encode_alu, 2}},
         {"exit", {&_bpf_assembler::_encode_jmp, 0}},  {"ja", {&_bpf_assembler::_encode_jmp, 1}},
         {"jeq", {&_bpf_assembler::_encode_jmp, 3}},   {"jeq32", {&_bpf_assembler::_encode_jmp, 3}},
         {"jge", {&_bpf_assembler::_encode_jmp, 3}},   {"jge32", {&_bpf_assembler::_encode_jmp, 3}},
@@ -472,6 +472,8 @@ typedef class _bpf_assembler
         {"neg", {&_bpf_assembler::_encode_alu, 1}},   {"neg32", {&_bpf_assembler::_encode_alu, 1}},
         {"or", {&_bpf_assembler::_encode_alu, 2}},    {"or32", {&_bpf_assembler::_encode_alu, 2}},
         {"rsh", {&_bpf_assembler::_encode_alu, 2}},   {"rsh32", {&_bpf_assembler::_encode_alu, 2}},
+        {"sdiv", {&_bpf_assembler::_encode_alu, 2}},  {"sdiv32", {&_bpf_assembler::_encode_alu, 2}},
+        {"smod", {&_bpf_assembler::_encode_alu, 2}},  {"smod32", {&_bpf_assembler::_encode_alu, 2}},
         {"stb", {&_bpf_assembler::_encode_st, 2}},    {"stdw", {&_bpf_assembler::_encode_st, 2}},
         {"sth", {&_bpf_assembler::_encode_st, 2}},    {"stw", {&_bpf_assembler::_encode_st, 2}},
         {"stxb", {&_bpf_assembler::_encode_stx, 2}},  {"stxdw", {&_bpf_assembler::_encode_stx, 2}},
