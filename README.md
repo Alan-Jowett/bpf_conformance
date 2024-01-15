@@ -47,15 +47,15 @@ Options:
   --list_instructions arg        List instructions used and not used in tests
   --list_used_instructions arg   List instructions used in tests
   --list_unused_instructions arg List instructions not used in tests
-  --debug arg                    Print debug information
-  --xdp_prolog arg               XDP prolog
-  --elf arg                      ELF format
+  --debug (true|false)           Print debug information
+  --xdp_prolog (true|false)      XDP prolog
+  --elf (true|false)             ELF format
   --cpu_version arg              CPU version
   --include_regex arg            Include regex
   --exclude_regex arg            Exclude regex
 ```
 
-The `--xdp_prolog` argument should *only* be used with the `libbpf_plugin`.
+`--xdp_prolog true` should *only* be used with the `libbpf_plugin`.
 
 ## Using a published package
 Select the desired version from [bpf_conformance](https://github.com/Alan-Jowett/bpf_conformance/pkgs/container/bpf_conformance)
@@ -179,3 +179,25 @@ PASS: "tests/subnet.data"
 Passed 91 out of 91 tests.
 ```
 
+## bpf_conformance_runner plugins
+
+bpf_conformance_runner invokes plugins using command-line execution, and uses stdin, stdout, and stderr to
+exchange additional information as follows:
+
+```
+<plugin name> [<base16 memory bytes>] [<plugin options>] [--elf]
+```
+
+where:
+* `<plugin name>`: the plugin executable name
+* `<base16 memory bytes>`: if present, the contents of the `mem` section of a test data file
+* `<plugin options>`: any additional options to pass to the plugin
+* `--elf`: if present, indicates that the data passed to stdin will be in ELF format
+
+The program is then passed to the plugin via stdin, either as raw bytecode or (if `--elf` is specified) in ELF format.
+The plugin must then either:
+* compute a successful result and output the final contents of `r0` in hex (either with or without a leading "0x")
+  to stdout and exit with a status of 0, OR
+* output an error message to stderr and exit with a non-zero status.
+
+Additional plugins can be created based on the above specification.
