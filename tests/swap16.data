@@ -1,0 +1,10 @@
+# Copyright (c) Big Switch Networks, Inc
+# SPDX-License-Identifier: Apache-2.0
+-- asm
+mov %r0, 0x88776655
+lsh %r0, 32
+or %r0, 0x44332211
+swap16 %r0
+exit
+-- result
+0x1122
