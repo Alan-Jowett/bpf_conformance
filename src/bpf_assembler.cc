@@ -287,9 +287,12 @@ typedef class _bpf_assembler
     _encode_jmp(const std::string& mnemonic, const std::vector<std::string>& operands)
     {
         ebpf_inst inst{};
-        inst.opcode |= EBPF_CLS_JMP;
         if (mnemonic == "ja") {
+            inst.opcode = EBPF_CLS_JMP;
             inst.offset = _decode_jump_target(operands[0]);
+        } else if (mnemonic == "ja32") {
+            inst.opcode = EBPF_CLS_JMP32;
+            inst.imm = _decode_jump_target(operands[0]);
         } else if (mnemonic == "exit") {
             inst.opcode = EBPF_OP_EXIT;
         } else if (mnemonic == "call") {
@@ -310,7 +313,7 @@ typedef class _bpf_assembler
                 throw std::runtime_error("Invalid call mode");
             }
         } else {
-            mnemonic.ends_with("32") ? inst.opcode = EBPF_CLS_JMP32 : inst.opcode |= EBPF_CLS_JMP;
+            mnemonic.ends_with("32") ? inst.opcode = EBPF_CLS_JMP32 : inst.opcode = EBPF_CLS_JMP;
             auto iter =
                 _bpf_encode_jmp_ops.find(mnemonic.ends_with("32") ? mnemonic.substr(0, mnemonic.size() - 2) : mnemonic);
             // It is not possible to reach here with no match.
@@ -456,6 +459,7 @@ typedef class _bpf_assembler
         {"be64", {&_bpf_assembler::_encode_alu, 1}},  {"call", {&_bpf_assembler::_encode_jmp, 2}},
         {"div", {&_bpf_assembler::_encode_alu, 2}},   {"div32", {&_bpf_assembler::_encode_alu, 2}},
         {"exit", {&_bpf_assembler::_encode_jmp, 0}},  {"ja", {&_bpf_assembler::_encode_jmp, 1}},
+        {"ja32", {&_bpf_assembler::_encode_jmp, 1}},
         {"jeq", {&_bpf_assembler::_encode_jmp, 3}},   {"jeq32", {&_bpf_assembler::_encode_jmp, 3}},
         {"jge", {&_bpf_assembler::_encode_jmp, 3}},   {"jge32", {&_bpf_assembler::_encode_jmp, 3}},
         {"jgt", {&_bpf_assembler::_encode_jmp, 3}},   {"jgt32", {&_bpf_assembler::_encode_jmp, 3}},
@@ -636,7 +640,7 @@ typedef class _bpf_assembler
             if (iter == _labels.end()) {
                 throw std::runtime_error(std::string("Invalid label: ") + _jump_instructions[i].value());
             }
-            if (output[i].opcode == EBPF_OP_CALL) {
+            if (output[i].opcode == EBPF_OP_CALL || output[i].opcode == EBPF_OP_JA32) {
                 output[i].imm = static_cast<uint32_t>(iter->second - i - 1);
             } else {
                 output[i].offset = static_cast<uint16_t>(iter->second - i - 1);
