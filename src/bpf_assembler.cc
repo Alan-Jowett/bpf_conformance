@@ -55,6 +55,7 @@ typedef class _bpf_assembler
         {"smod", 0x9},
         {"xor", 0xa},
         {"mov", 0xb},
+        {"movsx", 0xb},
         {"arsh", 0xc},
         {"le", 0xd},
         {"be", 0xd},
@@ -260,9 +261,16 @@ typedef class _bpf_assembler
         if (mnemonic.ends_with("32")) {
             inst.opcode |= EBPF_CLS_ALU;
             alu_op = mnemonic.substr(0, mnemonic.size() - 2);
+        } else if (mnemonic.ends_with("64")) {
+            inst.opcode |= EBPF_CLS_ALU64;
+            alu_op = mnemonic.substr(0, mnemonic.size() - 2);
         } else {
             inst.opcode |= EBPF_CLS_ALU64;
             alu_op = mnemonic;
+        }
+        if (alu_op.starts_with("movsx")) {
+            inst.offset = _decode_offset(alu_op.substr(5));
+            alu_op = "movsx";
         }
         auto iter = _bpf_encode_alu_ops.find(alu_op);
         // It is not possible to reach here with no match.
@@ -478,6 +486,9 @@ typedef class _bpf_assembler
         {"lsh", {&_bpf_assembler::_encode_alu, 2}},   {"lsh32", {&_bpf_assembler::_encode_alu, 2}},
         {"mod", {&_bpf_assembler::_encode_alu, 2}},   {"mod32", {&_bpf_assembler::_encode_alu, 2}},
         {"mov", {&_bpf_assembler::_encode_alu, 2}},   {"mov32", {&_bpf_assembler::_encode_alu, 2}},
+        {"movsx864", {&_bpf_assembler::_encode_alu, 2}}, {"movsx832", {&_bpf_assembler::_encode_alu, 2}},
+        {"movsx1664", {&_bpf_assembler::_encode_alu, 2}}, {"movsx1632", {&_bpf_assembler::_encode_alu, 2}},
+        {"movsx3264", {&_bpf_assembler::_encode_alu, 2}},
         {"mul", {&_bpf_assembler::_encode_alu, 2}},   {"mul32", {&_bpf_assembler::_encode_alu, 2}},
         {"neg", {&_bpf_assembler::_encode_alu, 1}},   {"neg32", {&_bpf_assembler::_encode_alu, 1}},
         {"or", {&_bpf_assembler::_encode_alu, 2}},    {"or32", {&_bpf_assembler::_encode_alu, 2}},
