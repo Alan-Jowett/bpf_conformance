@@ -58,6 +58,7 @@ typedef class _bpf_assembler
         {"arsh", 0xc},
         {"le", 0xd},
         {"be", 0xd},
+        {"swap", 0xd},
     };
 
     const std::unordered_map<std::string, int> _bpf_encode_jmp_ops{
@@ -245,6 +246,11 @@ typedef class _bpf_assembler
             inst.opcode = EBPF_OP_LE;
             inst.dst = _decode_register(operands[0]);
             inst.imm = _decode_imm32(mnemonic.substr(2));
+            return inst;
+        } else if (mnemonic.starts_with("swap")) {
+            inst.opcode = EBPF_OP_SWAP;
+            inst.dst = _decode_register(operands[0]);
+            inst.imm = _decode_imm32(mnemonic.substr(4));
             return inst;
         }
         if (mnemonic.starts_with("sdiv") || mnemonic.starts_with("smod")) {
@@ -483,7 +489,9 @@ typedef class _bpf_assembler
         {"stxb", {&_bpf_assembler::_encode_stx, 2}},  {"stxdw", {&_bpf_assembler::_encode_stx, 2}},
         {"stxh", {&_bpf_assembler::_encode_stx, 2}},  {"stxw", {&_bpf_assembler::_encode_stx, 2}},
         {"sub", {&_bpf_assembler::_encode_alu, 2}},   {"sub32", {&_bpf_assembler::_encode_alu, 2}},
-        {"xor", {&_bpf_assembler::_encode_alu, 2}},   {"xor32", {&_bpf_assembler::_encode_alu, 2}},
+        {"swap16", {&_bpf_assembler::_encode_alu, 1}},{"swap32", {&_bpf_assembler::_encode_alu, 1}},
+        {"swap64", {&_bpf_assembler::_encode_alu, 1}},{"xor", {&_bpf_assembler::_encode_alu, 2}},
+        {"xor32", {&_bpf_assembler::_encode_alu, 2}},
     };
 
     const std::unordered_map<std::string, std::tuple<bpf_encode_t, size_t>> _bpf_encode_atomic_ops{
