@@ -24,7 +24,8 @@ needs_imm(uint8_t opcode)
 inline bool
 needs_offset(uint8_t opcode)
 {
-    return opcode == 0x34 || opcode == 0x37 || opcode == 0x3c || opcode == 0x3f;
+    return opcode == 0x34 || opcode == 0x37 || opcode == 0x3c || opcode == 0x3f || opcode == 0x94 || opcode == 0x97 ||
+           opcode == 0x9c || opcode == 0x9f || opcode == 0xb4 || opcode == 0xb7 || opcode == 0xbc || opcode == 0xbf;
 }
 
 class bpf_conformance_instruction_t
@@ -289,11 +290,15 @@ static const std::set<bpf_conformance_instruction_t, InstCmp> instructions_from_
     {bpf_conformance_test_cpu_version_t::v3, 0x85, 0x01},
     {bpf_conformance_test_cpu_version_t::v3, 0x85, 0x02},
     {bpf_conformance_test_cpu_version_t::v1, 0x87},
-    {bpf_conformance_test_cpu_version_t::v1, 0x94},
+    {bpf_conformance_test_cpu_version_t::v1, 0x94, 0x00, 0x00, 0x00},
+    {bpf_conformance_test_cpu_version_t::v4, 0x94, 0x00, 0x00, 0x01},
     {bpf_conformance_test_cpu_version_t::v1, 0x95},
-    {bpf_conformance_test_cpu_version_t::v1, 0x97},
-    {bpf_conformance_test_cpu_version_t::v1, 0x9c},
-    {bpf_conformance_test_cpu_version_t::v1, 0x9f},
+    {bpf_conformance_test_cpu_version_t::v1, 0x97, 0x00, 0x00, 0x00},
+    {bpf_conformance_test_cpu_version_t::v4, 0x97, 0x00, 0x00, 0x01},
+    {bpf_conformance_test_cpu_version_t::v1, 0x9c, 0x00, 0x00, 0x00},
+    {bpf_conformance_test_cpu_version_t::v4, 0x9c, 0x00, 0x00, 0x01},
+    {bpf_conformance_test_cpu_version_t::v1, 0x9f, 0x00, 0x00, 0x00},
+    {bpf_conformance_test_cpu_version_t::v4, 0x9f, 0x00, 0x00, 0x01},
     {bpf_conformance_test_cpu_version_t::v1, 0xa4},
     {bpf_conformance_test_cpu_version_t::v2, 0xa5},
     {bpf_conformance_test_cpu_version_t::v3, 0xa6},

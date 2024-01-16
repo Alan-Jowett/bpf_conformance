@@ -1,0 +1,9 @@
+# Copyright (c) Dave Thaler
+# SPDX-License-Identifier: MIT
+-- asm
+mov32 %r0, -10
+mov32 %r1, 0
+smod32 %r0, %r1
+exit
+-- result
+0xFFFFFFF6
