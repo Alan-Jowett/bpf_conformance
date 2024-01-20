@@ -5,7 +5,7 @@ mov32 %r0, 0
 mov32 %r1, 0x7
 mov32 %r2, 0x8
 jset %r1, %r2, exit # Not taken
-jset $r1, %r1, +1 # Taken
+jset %r1, %r1, +1 # Taken
 exit
 
 mov32 %r0, 1
