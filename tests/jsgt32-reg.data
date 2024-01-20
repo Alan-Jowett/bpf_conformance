@@ -10,6 +10,7 @@ mov32 %r1, 0xfffffffe
 or %r1, %r9
 mov %r2, 0xffffffff
 jsgt32 %r1, %r2, exit # Not taken
+jsgt32 %r1, %r1, exit # Not taken
 
 mov32 %r0, 1
 mov32 %r1, 0
