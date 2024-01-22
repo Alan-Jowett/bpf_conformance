@@ -139,6 +139,9 @@ get_instruction_cpu_version(ebpf_inst inst)
                (!needs_imm(inst.opcode) || instruction.imm == inst.imm) &&
                (!needs_offset(inst.opcode) || instruction.offset == inst.offset);
          });
+    if (instruction == instructions_from_spec.end()) {
+        return bpf_conformance_test_cpu_version_t::unknown;
+    }
     return instruction->cpu_version;
 }
 
