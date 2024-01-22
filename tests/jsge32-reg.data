@@ -12,6 +12,8 @@ mov %r2, 0xffffffff
 mov32 %r3, 0
 jsge32 %r1, %r2, exit # Not taken
 jsge32 %r1, %r3, exit # Not taken
+jsge32 %r1, %r1, +1 # Taken
+exit
 
 mov32 %r0, 1
 mov %r1, %r2
