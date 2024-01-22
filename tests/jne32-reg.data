@@ -9,7 +9,8 @@ mov32 %r1, 0xb
 # set %r1 to 0x10000000b
 or %r1, %r9
 mov32 %r2, 0xb
-jne32 %r1, %r2, +4 # Not taken
+jne32 %r1, %r2, +5 # Not taken
+jne32 %r1, %r1, +4 # Not taken
 
 mov32 %r0, 1
 mov32 %r1, 0xa

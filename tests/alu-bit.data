@@ -15,12 +15,14 @@ jne %r0, 0, exit
 
 or32 %r0, %r5
 or32 %r0, 0xa0
+or32 %r0, %r0
 # %r0 == 0xa5
 jne %r0, 0xa5, exit
 
 and32 %r0, 0xa3
 mov32 %r9, 0x91
 and32 %r0, %r9
+and32 %r0, %r0
 # %r0 == 0x81
 jne %r0, 0x81, exit
 
