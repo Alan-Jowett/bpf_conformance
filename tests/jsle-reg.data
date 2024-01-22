@@ -8,6 +8,9 @@ mov32 %r3, 0
 jsle %r1, %r2, exit # Not taken
 jsle %r1, %r3, +1 # Taken
 exit
+jsle %r1, %r1, +1 # Taken
+exit
+
 mov32 %r0, 1
 mov %r1, %r2
 jsle %r1, %r2, +1 # Taken
