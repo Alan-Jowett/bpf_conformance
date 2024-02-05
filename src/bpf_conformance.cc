@@ -213,7 +213,7 @@ bpf_conformance_options(
             instructions_used.insert(bpf_conformance_instruction_t(required_cpu_version, inst));
         }
 
-        // If the caller requires this as a XDP program, then add the prolog instructions.
+        // If the caller requires this as an XDP program, then add the prolog instructions.
         if (options.xdp_prolog && input_memory.size() > 0) {
             auto prolog_instructions = _generate_xdp_prolog(input_memory.size());
             byte_code.insert(byte_code.begin(), prolog_instructions.begin(), prolog_instructions.end());

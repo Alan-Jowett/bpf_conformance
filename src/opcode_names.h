@@ -291,6 +291,7 @@ static const std::set<bpf_conformance_instruction_t, InstCmp> instructions_from_
     {bpf_conformance_test_cpu_version_t::v3, 0x85, 0x01},
     {bpf_conformance_test_cpu_version_t::v3, 0x85, 0x02},
     {bpf_conformance_test_cpu_version_t::v1, 0x87},
+    {bpf_conformance_test_cpu_version_t::vnext, 0x8d, 0x00},
     {bpf_conformance_test_cpu_version_t::v1, 0x94, 0x00, 0x00, 0x00},
     {bpf_conformance_test_cpu_version_t::v4, 0x94, 0x00, 0x00, 0x01},
     {bpf_conformance_test_cpu_version_t::v1, 0x95},
