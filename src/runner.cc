@@ -123,8 +123,6 @@ main(int argc, char** argv)
                 cpu_version = bpf_conformance_test_cpu_version_t::v3;
             } else if (cpu_version_string == "v4") {
                 cpu_version = bpf_conformance_test_cpu_version_t::v4;
-            } else if (cpu_version_string == "vnext") {
-                cpu_version = bpf_conformance_test_cpu_version_t::vnext;
             } else {
                 std::cout << "Invalid CPU version" << std::endl;
                 return 1;
