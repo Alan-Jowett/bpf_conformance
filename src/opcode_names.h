@@ -36,7 +36,7 @@ class bpf_conformance_instruction_t
         bpf_conformance_groups_t groups,
         uint8_t opcode,
         uint8_t src = 0,
-        uint32_t imm = 0,
+        int32_t imm = 0,
         int16_t offset = 0)
     {
         this->cpu_version = cpu_version;
@@ -60,7 +60,7 @@ class bpf_conformance_instruction_t
     bpf_conformance_groups_t groups;
     uint8_t opcode;
     uint8_t src = {};
-    uint32_t imm = {};
+    int32_t imm = {};
     int16_t offset = {};
 };
 
