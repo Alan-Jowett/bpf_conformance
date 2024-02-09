@@ -130,8 +130,8 @@ _generate_xdp_prolog(size_t size)
     };
 }
 
-bpf_conformance_test_cpu_version_t
-get_instruction_cpu_version(ebpf_inst inst)
+std::optional<bpf_conformance_instruction_t>
+get_instruction_conformance_info(ebpf_inst inst)
 {
     auto instruction = std::find_if(instructions_from_spec.begin(), instructions_from_spec.end(), [&](const auto &instruction) {
         return (instruction.opcode == inst.opcode) &&
@@ -140,9 +140,9 @@ get_instruction_cpu_version(ebpf_inst inst)
                (!needs_offset(inst.opcode) || instruction.offset == inst.offset);
          });
     if (instruction == instructions_from_spec.end()) {
-        return bpf_conformance_test_cpu_version_t::unknown;
+        return {};
     }
-    return instruction->cpu_version;
+    return *instruction;
 }
 
 std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>>
@@ -189,20 +189,25 @@ bpf_conformance_options(
         }
 
         bpf_conformance_test_cpu_version_t required_cpu_version = bpf_conformance_test_cpu_version_t::v1;
+        bpf_conformance_groups_t required_conformance_groups{};
 
         // Determine the required CPU version for the test.
         for (size_t i = 0; i < byte_code.size(); i++) {
             auto inst = byte_code[i];
-            bpf_conformance_test_cpu_version_t cpu_version = get_instruction_cpu_version(inst);
-	    required_cpu_version = std::max(required_cpu_version, cpu_version);
+            if (auto instruction = get_instruction_conformance_info(inst)) {
+                bpf_conformance_test_cpu_version_t cpu_version = instruction->cpu_version;
+                required_cpu_version = std::max(required_cpu_version, cpu_version);
+                required_conformance_groups |= instruction->groups;
+            }
             if (inst.opcode == EBPF_OP_LDDW) {
                 // Instruction has a 64-bit immediate and takes two instructions slots.
                 i++;
             }
         }
 
-        // If the test requires a CPU version that is not supported by the current CPU version, then skip the test.
-        if (required_cpu_version > options.cpu_version) {
+        // If the test requires a CPU version that is not supported by the current CPU version,
+        // or an unsupported conformance group, then skip the test.
+        if (required_cpu_version > options.cpu_version || (required_conformance_groups & ~options.groups) != bpf_conformance_groups_t::none) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_SKIP, "Test file contains unsupported instructions."};
             _log_debug_result(test_results, test);
@@ -210,7 +215,8 @@ bpf_conformance_options(
         }
 
         for (const auto& inst : byte_code) {
-            instructions_used.insert(bpf_conformance_instruction_t(required_cpu_version, inst));
+            instructions_used.insert(
+                bpf_conformance_instruction_t(required_cpu_version, required_conformance_groups, inst));
         }
 
         // If the caller requires this as an XDP program, then add the prolog instructions.
