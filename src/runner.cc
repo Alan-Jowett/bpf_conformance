@@ -62,12 +62,12 @@ _get_test_files(const std::filesystem::path& test_file_directory)
 
 static const std::map<std::string, bpf_conformance_groups_t> _conformance_groups = {
     {"atomic32", bpf_conformance_groups_t::atomic32},
-    {"atomic64", bpf_conformance_groups_t::atomic64},
+    {"atomic64", bpf_conformance_groups_t::atomic32 | bpf_conformance_groups_t::atomic64},
     {"base32", bpf_conformance_groups_t::base32},
-    {"base64", bpf_conformance_groups_t::base64},
+    {"base64", bpf_conformance_groups_t::base32 | bpf_conformance_groups_t::base64},
     {"callx", bpf_conformance_groups_t::callx},
     {"divmul32", bpf_conformance_groups_t::divmul32},
-    {"divmul64", bpf_conformance_groups_t::divmul64},
+    {"divmul64", bpf_conformance_groups_t::divmul32 | bpf_conformance_groups_t::divmul64},
     {"packet", bpf_conformance_groups_t::packet}};
 
 static std::optional<bpf_conformance_groups_t>
@@ -77,6 +77,19 @@ _get_conformance_group_by_name(std::string group)
         return {};
     }
     return _conformance_groups.find(group)->second;
+}
+
+static std::string
+_get_conformance_group_names()
+{
+    std::string result;
+    for (const auto& entry : _conformance_groups) {
+        if (!result.empty()) {
+            result += ", ";
+        }
+        result += entry.first;
+    }
+    return result;
 }
 
 int
@@ -98,13 +111,13 @@ main(int argc, char** argv)
             "debug", boost::program_options::value<bool>(), "Print debug information")(
             "xdp_prolog", boost::program_options::value<bool>(), "XDP prolog")(
             "elf", boost::program_options::value<bool>(), "ELF format")(
-            "cpu_version", boost::program_options::value<std::string>(), "CPU version")(
+            "cpu_version", boost::program_options::value<std::string>(), "CPU version (valid values: v1, v2, v3, v4), default is v3")(
             "include_groups",
             boost::program_options::value<std::vector<std::string>>()->multitoken(),
-            "Include conformance groups")(
+            ("Include conformance groups (valid group names: " + _get_conformance_group_names() + ")").c_str())(
             "exclude_groups",
             boost::program_options::value<std::vector<std::string>>()->multitoken(),
-            "Exclude conformance groups")(
+            "Exclude conformance groups, where callx and packet are excluded by default")(
             "include_regex", boost::program_options::value<std::string>(), "Include regex")(
             "exclude_regex", boost::program_options::value<std::string>(), "Exclude regex");
 
@@ -113,7 +126,24 @@ main(int argc, char** argv)
         boost::program_options::notify(vm);
 
         if (vm.count("help")) {
-            std::cout << desc << std::endl;
+            std::cout << "Usage: bpf_conformance_runner [options]" << std::endl;
+            std::cout << std::endl << desc;
+            std::cout << R"(
+Examples:
+  bpf_conformance_runner --test_file_directory ./tests --plugin_path ./my_plugin --exclude_groups atomic64
+    Run all tests in the ./tests directory, allowing instructions in cpu version 3
+    but without the atomic64 (or atomic32 which is a subset of atomic64), callx, or packet
+    conformance groups.
+
+  bpf_conformance_runner --test_file_directory ./tests --plugin_path ./my_plugin --cpu_version v2 --include_groups callx atomic64 --exclude_groups atomic32
+    Run all tests in the ./tests directory, allowing instructions in cpu version 2
+    plus the callx and atomic64 conformance groups, except for those in atomic32 or packet.
+
+  bpf_conformance_runner --test_file_directory ./tests --plugin_path ./my_plugin --exclude_regex "lock+"
+    Run all tests in the ./tests directory, allowing instructions in cpu version 3
+    but without the callx or packet conformance group, skipping any tests whose
+    filenames contain "loc" followed by one or more "k"s.
+)";
             return 1;
         }
 
