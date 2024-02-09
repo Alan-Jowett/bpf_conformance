@@ -60,6 +60,25 @@ _get_test_files(const std::filesystem::path& test_file_directory)
     return result;
 }
 
+static const std::map<std::string, bpf_conformance_groups_t> _conformance_groups = {
+    {"atomic32", bpf_conformance_groups_t::atomic32},
+    {"atomic64", bpf_conformance_groups_t::atomic64},
+    {"base32", bpf_conformance_groups_t::base32},
+    {"base64", bpf_conformance_groups_t::base64},
+    {"callx", bpf_conformance_groups_t::callx},
+    {"divmul32", bpf_conformance_groups_t::divmul32},
+    {"divmul64", bpf_conformance_groups_t::divmul64},
+    {"packet", bpf_conformance_groups_t::packet}};
+
+static std::optional<bpf_conformance_groups_t>
+_get_conformance_group_by_name(std::string group)
+{
+    if (!_conformance_groups.contains(group)) {
+        return {};
+    }
+    return _conformance_groups.find(group)->second;
+}
+
 int
 main(int argc, char** argv)
 {
@@ -80,6 +99,12 @@ main(int argc, char** argv)
             "xdp_prolog", boost::program_options::value<bool>(), "XDP prolog")(
             "elf", boost::program_options::value<bool>(), "ELF format")(
             "cpu_version", boost::program_options::value<std::string>(), "CPU version")(
+            "include_groups",
+            boost::program_options::value<std::vector<std::string>>()->multitoken(),
+            "Include conformance groups")(
+            "exclude_groups",
+            boost::program_options::value<std::vector<std::string>>()->multitoken(),
+            "Exclude conformance groups")(
             "include_regex", boost::program_options::value<std::string>(), "Include regex")(
             "exclude_regex", boost::program_options::value<std::string>(), "Exclude regex");
 
@@ -103,7 +128,8 @@ main(int argc, char** argv)
         }
 
         std::string plugin_path = vm["plugin_path"].as<std::string>();
-        std::stringstream plugin_options_stream(vm.count("plugin_options") ? vm["plugin_options"].as<std::string>() : "");
+        std::stringstream plugin_options_stream(
+            vm.count("plugin_options") ? vm["plugin_options"].as<std::string>() : "");
 
         std::vector<std::string> plugin_options;
         std::string option;
@@ -126,6 +152,35 @@ main(int argc, char** argv)
             } else {
                 std::cout << "Invalid CPU version" << std::endl;
                 return 1;
+            }
+        }
+
+        // Enable default conformance groups, which don't include callx or packet.
+        bpf_conformance_groups_t groups = bpf_conformance_groups_t::base32 | bpf_conformance_groups_t::base64 |
+                                          bpf_conformance_groups_t::divmul32 | bpf_conformance_groups_t::divmul64;
+        if (cpu_version >= bpf_conformance_test_cpu_version_t::v3) {
+            groups |= bpf_conformance_groups_t::atomic32 | bpf_conformance_groups_t::atomic64;
+        }
+        if (vm.count("include_groups")) {
+            auto include_groups = vm["include_groups"].as<std::vector<std::string>>();
+            for (std::string group_name : include_groups) {
+                if (auto group = _get_conformance_group_by_name(group_name)) {
+                    groups |= *group;
+                } else {
+                    std::cout << "Invalid group: " << group_name << std::endl;
+                    return 1;
+                }
+            }
+        }
+        if (vm.count("exclude_groups")) {
+            auto exclude_groups = vm["exclude_groups"].as<std::vector<std::string>>();
+            for (std::string group_name : exclude_groups) {
+                if (auto group = _get_conformance_group_by_name(group_name)) {
+                    groups &= ~(*group);
+                } else {
+                    std::cout << "Invalid group: " << group_name << std::endl;
+                    return 1;
+                }
             }
         }
 
@@ -161,18 +216,14 @@ main(int argc, char** argv)
         options.include_test_regex = include_regex;
         options.exclude_test_regex = exclude_regex;
         options.cpu_version = cpu_version;
+        options.groups = groups;
         options.list_instructions_option = list_instructions;
         options.debug = debug;
         options.xdp_prolog = xdp_prolog;
         options.elf_format = elf_format;
 
         std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>> test_results;
-        if (options.elf_format == false && options.xdp_prolog == false) {
-            test_results = bpf_conformance(tests, plugin_path, plugin_options, include_regex, exclude_regex, cpu_version, list_instructions, debug);
-        }
-        else {
-            test_results = bpf_conformance_options(tests, plugin_path, plugin_options, options);
-        }
+        test_results = bpf_conformance_options(tests, plugin_path, plugin_options, options);
 
         // At the end of all the tests, print a summary of the results.
         std::cout << "Test results:" << std::endl;

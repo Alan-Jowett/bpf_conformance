@@ -309,8 +309,15 @@ typedef class _bpf_assembler
             auto target = operands[1];
             // Mode determines if this is a helper function, a local call, or a call to a runtime function.
             if (mode == "helper") {
-                inst.imm = _decode_imm32(target);
-                inst.src = 0;
+                if (target.starts_with('%')) {
+                    inst.opcode |= EBPF_SRC_REG;
+                    inst.imm = 0;
+                    inst.src = _decode_register(target);
+                } else {
+                    inst.opcode |= EBPF_SRC_IMM;
+                    inst.imm = _decode_imm32(target);
+                    inst.src = 0;
+                }
             } else if (mode == "local") {
                 inst.imm = _decode_jump_target(target);
                 inst.src = 1;

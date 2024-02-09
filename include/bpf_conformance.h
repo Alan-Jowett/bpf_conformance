@@ -26,6 +26,49 @@ typedef enum class _bpf_conformance_test_cpu_version
     unknown = -1,
 } bpf_conformance_test_cpu_version_t;
 
+typedef enum class _bpf_conformance_groups
+{
+    none = 0x00000000,
+    base32 = 0x00000001,
+    base64 = 0x00000002,
+    atomic32 = 0x00000004,
+    atomic64 = 0x00000008,
+    divmul32 = 0x00000010,
+    divmul64 = 0x00000020,
+    packet = 0x00000040,
+    callx = 0x00000080,
+} bpf_conformance_groups_t;
+
+inline bpf_conformance_groups_t
+operator~(bpf_conformance_groups_t a)
+{
+    return static_cast<bpf_conformance_groups_t>(~static_cast<int>(a));
+}
+
+inline bpf_conformance_groups_t
+operator|(bpf_conformance_groups_t a, bpf_conformance_groups_t b)
+{
+    return static_cast<bpf_conformance_groups_t>(static_cast<int>(a) | static_cast<int>(b));
+}
+
+inline bpf_conformance_groups_t&
+operator|=(bpf_conformance_groups_t& a, bpf_conformance_groups_t b)
+{
+    return a = a | b;
+}
+
+inline bpf_conformance_groups_t
+operator&(bpf_conformance_groups_t a, bpf_conformance_groups_t b)
+{
+    return static_cast<bpf_conformance_groups_t>(static_cast<int>(a) & static_cast<int>(b));
+}
+
+inline bpf_conformance_groups_t&
+operator&=(bpf_conformance_groups_t& a, bpf_conformance_groups_t b)
+{
+    return a = a & b;
+}
+
 // Add typedef for backwards compatibility.
 typedef bpf_conformance_test_cpu_version_t bpf_conformance_test_CPU_version_t;
 
@@ -42,6 +85,7 @@ typedef struct _bpf_conformance_options
     std::optional<std::string> include_test_regex;
     std::optional<std::string> exclude_test_regex;
     bpf_conformance_test_cpu_version_t cpu_version;
+    bpf_conformance_groups_t groups;
     bpf_conformance_list_instructions_t list_instructions_option;
     bool debug;
     bool xdp_prolog;
