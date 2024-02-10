@@ -311,13 +311,12 @@ typedef class _bpf_assembler
             if (mode == "helper") {
                 if (target.starts_with('%')) {
                     inst.opcode |= EBPF_SRC_REG;
-                    inst.imm = 0;
-                    inst.src = _decode_register(target);
+                    inst.imm = _decode_register(target);
                 } else {
                     inst.opcode |= EBPF_SRC_IMM;
                     inst.imm = _decode_imm32(target);
-                    inst.src = 0;
                 }
+                inst.src = 0;
             } else if (mode == "local") {
                 inst.imm = _decode_jump_target(target);
                 inst.src = 1;
