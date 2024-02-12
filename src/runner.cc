@@ -186,11 +186,7 @@ Examples:
         }
 
         // Enable default conformance groups, which don't include callx or packet.
-        bpf_conformance_groups_t groups = bpf_conformance_groups_t::base32 | bpf_conformance_groups_t::base64 |
-                                          bpf_conformance_groups_t::divmul32 | bpf_conformance_groups_t::divmul64;
-        if (cpu_version >= bpf_conformance_test_cpu_version_t::v3) {
-            groups |= bpf_conformance_groups_t::atomic32 | bpf_conformance_groups_t::atomic64;
-        }
+        bpf_conformance_groups_t groups = bpf_conformance_groups_t::default_groups;
         if (vm.count("include_groups")) {
             auto include_groups = vm["include_groups"].as<std::vector<std::string>>();
             for (std::string group_name : include_groups) {
