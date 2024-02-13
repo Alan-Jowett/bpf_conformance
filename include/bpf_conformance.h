@@ -37,6 +37,7 @@ typedef enum class _bpf_conformance_groups
     divmul64 = 0x00000020,
     packet = 0x00000040,
     callx = 0x00000080,
+    default_groups = base32 | base64 | atomic32 | atomic64 | divmul32 | divmul64, // not callx or packet
 } bpf_conformance_groups_t;
 
 inline bpf_conformance_groups_t
@@ -118,6 +119,7 @@ bpf_conformance_options(
  * @param[in] include_test_regex A regex that matches the tests to include.
  * @param[in] exclude_test_regex A regex that matches the tests to exclude.
  * @param[in] cpu_version The CPU version to run the tests with.
+ * @param[in] groups The conformance groups to run the tests with.
  * @param[in] list_instructions_option Option controlling which instructions to list.
  * @param[in] debug Print debug information.
  * @return The test results for each test file.
@@ -130,6 +132,7 @@ bpf_conformance(
     std::optional<std::string> include_test_regex = std::nullopt,
     std::optional<std::string> exclude_test_regex = std::nullopt,
     bpf_conformance_test_cpu_version_t cpu_version = bpf_conformance_test_cpu_version_t::v3,
+    bpf_conformance_groups_t groups = bpf_conformance_groups_t::default_groups,
     bpf_conformance_list_instructions_t list_instructions_option =
         bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_NONE,
     bool debug = false)
@@ -138,6 +141,7 @@ bpf_conformance(
     options.include_test_regex = include_test_regex;
     options.exclude_test_regex = exclude_test_regex;
     options.cpu_version = cpu_version;
+    options.groups = groups,
     options.list_instructions_option = list_instructions_option;
     options.debug = debug;
     return bpf_conformance_options(test_files, plugin_path, plugin_options, options);
