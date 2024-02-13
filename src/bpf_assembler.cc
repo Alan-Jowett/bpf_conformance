@@ -311,7 +311,7 @@ typedef class _bpf_assembler
             if (mode == "helper") {
                 if (target.starts_with('%')) {
                     inst.opcode |= EBPF_SRC_REG;
-                    inst.imm = _decode_register(target);
+                    inst.dst = _decode_register(target);
                 } else {
                     inst.opcode |= EBPF_SRC_IMM;
                     inst.imm = _decode_imm32(target);
