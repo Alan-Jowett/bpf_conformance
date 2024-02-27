@@ -38,3 +38,13 @@ updates:
     schedule:
       interval: "weekly"
       day: "saturday"
+
+  - package-ecosystem: docker
+    directory: /Docker/Linux
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /Docker/Windows
+    schedule:
+      interval: daily
