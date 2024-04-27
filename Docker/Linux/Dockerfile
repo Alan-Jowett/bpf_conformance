@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: MIT
 
-FROM ubuntu:22.04@sha256:77906da86b60585ce12215807090eb327e7386c8fafb5402369e421f44eff17e
+FROM ubuntu:24.04@sha256:b55df21cae27ec779aaa7085cf8619e6510d293614d11a7c7cf2c5c105c374f8
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
