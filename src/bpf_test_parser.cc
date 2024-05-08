@@ -35,6 +35,9 @@ parse_test_file(const std::filesystem::path& data_file)
         if (!line.empty() && line.back() == '\r') {
             line.pop_back();
         }
+        if (line.find("#") != std::string::npos) {
+            line = line.substr(0, line.find("#"));
+        }
         if (line.find("--") != std::string::npos) {
             if (line.find("asm") != std::string::npos) {
                 state = _state::state_assembly;
@@ -72,9 +75,6 @@ parse_test_file(const std::filesystem::path& data_file)
 
         switch (state) {
         case _state::state_assembly:
-            if (line.find("#") != std::string::npos) {
-                line = line.substr(0, line.find("#"));
-            }
             data_out << line << std::endl;
             break;
         case _state::state_result:

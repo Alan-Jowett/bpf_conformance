@@ -1,0 +1,32 @@
+# Copyright (c) Alan Jowett
+# SPDX-License-Identifier: MIT
+# This test checks if the immediate value is sign extended when performing
+# unsigned jump operations.
+
+-- asm
+mov32 %r0, 2
+
+lddw %r1, 0xFFFFFFFF80000000
+jeq %r1, 0x80000000, +1 # Taken, sign extended
+exit
+
+lddw %r1, 0xFFFFFFFF80000000
+jlt %r1, 0x80000001, +1 # Taken, sign extended
+exit
+
+lddw %r1, 0xFFFFFFFF80000001
+jgt %r1, 0x80000000, +1 # Taken, sign extended
+exit
+
+lddw %r1, 0x80000000
+jne %r1, 0x80000000, +1 # Taken, sign extended
+exit
+
+lddw %r1, 0xFFFFFFFF00000000
+jset %r1, 0x80000000, +1 # Taken, sign extended
+exit
+
+mov32 %r0, 1
+exit
+-- result
+0x1
