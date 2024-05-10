@@ -13,15 +13,25 @@ mov %r6, 6
 mov %r7, 7
 mov %r8, 8
 mov %r9, 9
+# Write to the stack to make sure it's preserved.
+stdw [%r10-4], 0x44332211
+stdw [%r10-8], 0x88776655
 call local func1
 # %r0 contains the return value
 # %r0 should contain 1 + 2 + 3 + 4 + 5
+# Write to the stack to make sure it's preserved.
 jne %r0, 15, failed
 # %r6 through %r9 should be preserved
 jne %r6, 6, failed
 jne %r7, 7, failed
 jne %r8, 8, failed
 jne %r9, 9, failed
+# Read back values from stack.
+ldxw %r6, [%r10-4]
+ldxw %r7, [%r10-8]
+# Check that the values were not overwritten by func1.
+jne %r6, 0x44332211, failed
+jne %r7, 0x88776655, failed
 # Success
 mov %r0, 1
 exit
@@ -36,6 +46,9 @@ add %r0, %r2
 add %r0, %r3
 add %r0, %r4
 add %r0, %r5
+# Write to the stack, shouldn't overwrite the callee's values.
+stdw [%r10-4], 0xCCBBAA99
+stdw [%r10-4], 0x00FFEEDD
 mov %r6, 0
 mov %r7, 0
 mov %r8, 0
