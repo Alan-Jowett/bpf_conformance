@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: MIT
 -- asm
-ldxw %r0, [%r1]
+ldxdw %r0, [%r1]
 le32 %r0
 exit
 -- mem
