@@ -109,13 +109,13 @@ jobs:
   macos_release:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: macos-11
+      platform: macos-latest
       configuration: Release
 
   macos_debug:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: macos-11
+      platform: macos-latest
       configuration: Debug
 
   finish:
