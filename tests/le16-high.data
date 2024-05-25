@@ -1,0 +1,10 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+ldxdw %r0, [%r1]
+le16 %r0
+exit
+-- mem
+22 11 00 FF EE DD CC BB AA
+-- result
+0x1122
