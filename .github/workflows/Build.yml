@@ -43,7 +43,7 @@ jobs:
       with:
         egress-policy: audit
 
-    - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       with:
         submodules: 'recursive'
 
@@ -56,8 +56,8 @@ jobs:
          libelf-dev \
          lcov
 
-    - name: Install prerequisites - macos-11
-      if: inputs.platform == 'macos-11'
+    - name: Install prerequisites - macos-latest
+      if: inputs.platform == 'macos-latest'
       run: |
         brew install \
           cmake \
@@ -85,7 +85,7 @@ jobs:
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Configure CMake
-      if: inputs.platform == 'ubuntu-latest' || inputs.platform == 'macos-11'
+      if: inputs.platform == 'ubuntu-latest' || inputs.platform == 'macos-latest'
       run: |
         if [ "${{inputs.enable_sanitizers}}" = "true" ]; then
           export SANITIZER_FLAGS="-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all"
@@ -142,7 +142,7 @@ jobs:
 
     - name: Coveralls Parallel
       if: inputs.enable_coverage == true
-      uses: coverallsapp/github-action@3dfc5567390f6fa9267c0ee9c251e4c8c3f18949 # v2.2.3
+      uses: coverallsapp/github-action@643bc377ffa44ace6394b2b5d0d3950076de9f63 # v2.3.0
       with:
         github-token: ${{ secrets.github_token }}
         flag-name: run-${{inputs.build_type}}-${{inputs.platform}}-${{inputs.arch}}
