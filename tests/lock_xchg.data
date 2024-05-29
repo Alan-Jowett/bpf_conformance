@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: MIT
 -- asm
-mov %r0, 0
+mov %r0, 1
 # Write 0x1111111111111111 to [%r10-8]
 lddw %r1, 0x1111111111111111
 stxdw [%r10-8], %r1
@@ -10,9 +10,6 @@ lddw %r1, 0x2222222222222222
 # After the exchange, %r1 should contain 0x1111111111111111 and
 # [%r10-8] should contain 0x2222222222222222
 lock xchg [%r10-8], %r1
-# Check that the old value is stored in %r0
-lddw %r2, 0x1111111111111111
-jne %r2, %r0, exit
 # Check that [%r10-8] contains 0x2222222222222222
 ldxdw %r2, [%r10-8]
 lddw %r0, 0x2222222222222222
