@@ -286,13 +286,24 @@ bpf_conformance_options(
 
             // Read the return value from the plugin from stdout.
             while (std::getline(output, line)) {
-                return_value_string += line;
+                return_value_string += line + "\n";
             }
             output.close();
 
             while (std::getline(error, line)) {
-                error_string += line;
+                error_string += line + "\n";
             }
+
+            // Strip the trailing newline from the return value.
+            if (return_value_string.empty()) {
+                return_value_string = return_value_string.substr(0, return_value_string.size() - 1);
+            }
+
+            // Strip the trailing newline from the error string.
+            if (error_string.empty()) {
+                error_string = error_string.substr(0, error_string.size() - 1);
+            }
+
             c.wait();
 
             // If the plugin returned a non-zero exit code, then check to see if the error string matches the expected
@@ -359,7 +370,7 @@ bpf_conformance_options(
         if (return_value != expected_return_value) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_FAIL,
-                "Plugin returned incorrect return value " + return_value_string + " expected " +
+                "Plugin returned incorrect return value " + std::to_string(return_value) + " expected " +
                     std::to_string(expected_return_value)};
         } else {
             test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_PASS, ""};
