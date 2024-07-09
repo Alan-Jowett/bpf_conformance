@@ -286,12 +286,12 @@ bpf_conformance_options(
 
             // Read the return value from the plugin from stdout.
             while (std::getline(output, line)) {
-                return_value_string += line;
+                return_value_string += line + "\n";
             }
             output.close();
 
             while (std::getline(error, line)) {
-                error_string += line;
+                error_string += line + "\n";
             }
             c.wait();
 
