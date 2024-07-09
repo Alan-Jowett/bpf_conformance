@@ -370,7 +370,7 @@ bpf_conformance_options(
         if (return_value != expected_return_value) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_FAIL,
-                "Plugin returned incorrect return value " + return_value_string + " expected " +
+                "Plugin returned incorrect return value " + std::to_string(return_value) + " expected " +
                     std::to_string(expected_return_value)};
         } else {
             test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_PASS, ""};
