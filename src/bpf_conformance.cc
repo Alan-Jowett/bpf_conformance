@@ -293,6 +293,17 @@ bpf_conformance_options(
             while (std::getline(error, line)) {
                 error_string += line + "\n";
             }
+
+            // Strip the trailing newline from the return value.
+            if (return_value_string.empty()) {
+                return_value_string = return_value_string.substr(0, return_value_string.size() - 1);
+            }
+
+            // Strip the trailing newline from the error string.
+            if (error_string.empty()) {
+                error_string = error_string.substr(0, error_string.size() - 1);
+            }
+
             c.wait();
 
             // If the plugin returned a non-zero exit code, then check to see if the error string matches the expected
