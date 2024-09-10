@@ -322,6 +322,10 @@ bpf_conformance_options(
                     if (cr != std::string::npos) {
                         return_value_string = return_value_string.substr(0, cr);
                     }
+
+                    // Strip any trailing whitespace from the return value.
+                    return_value_string = std::regex_replace(return_value_string, std::regex("\\s+$"), "");
+
                     if (expected_error_string == return_value_string) {
                         test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_PASS, ""};
 
