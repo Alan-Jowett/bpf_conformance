@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 -- asm
 mov %r0, 0x80000000
-mov %r1, -1
 neg32 %r0
 exit
 -- result
