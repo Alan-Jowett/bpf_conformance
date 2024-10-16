@@ -61,7 +61,7 @@ jobs:
   ubuntu_release:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-latest
+      platform: ubuntu-22.04
       configuration: Release
       enable_sanitizers: false
       enable_coverage: false
@@ -94,7 +94,7 @@ jobs:
   ubuntu_release_coverage:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-latest
+      platform: ubuntu-22.04
       configuration: Release
       enable_sanitizers: false
       enable_coverage: true

@@ -81,22 +81,22 @@ enable_testing()
 
 add_test(
   NAME cpu_v1
-  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v1 --exclude_regex "imm-" --exclude_groups callx
+  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v1 --exclude_regex "(imm|intmin)-" --exclude_groups callx
 )
 
 add_test(
   NAME cpu_v2
-  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v2 --exclude_regex "imm-" --exclude_groups callx
+  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v2 --exclude_regex "(imm|intmin)-" --exclude_groups callx
 )
 
 add_test(
   NAME cpu_v3
-  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v3 --debug true --list_instructions true --exclude_regex "imm-" --exclude_groups callx
+  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v3 --debug true --list_instructions true --exclude_regex "(imm|intmin)-" --exclude_groups callx
 )
 
 add_test(
   NAME elf_format
-  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v3 --debug true --list_instructions true --elf true --exclude_regex "(call_local*|imm-)" --exclude_groups callx
+  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v3 --debug true --list_instructions true --elf true --exclude_regex "(call_local*|imm-|intmin-)" --exclude_groups callx
 )
 
 add_test(
@@ -414,7 +414,7 @@ set_tests_properties(
 
 add_test(
   NAME list_used_instructions
-  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v1 --list_used_instructions true
+  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v1 --exclude_regex "intmin-" --list_used_instructions true
 )
 
 set_tests_properties(
@@ -425,7 +425,7 @@ set_tests_properties(
 
 add_test(
   NAME list_unused_instructions
-  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --cpu_version v1 --list_unused_instructions true
+  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --cpu_version v1 --exclude_regex "intmin-" --list_unused_instructions true
 )
 
 set_tests_properties(

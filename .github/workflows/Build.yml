@@ -47,8 +47,8 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: Install prerequisites - Ubuntu-latest
-      if: inputs.platform == 'ubuntu-latest'
+    - name: Install prerequisites - Ubuntu
+      if: ${{ startsWith(inputs.platform, 'ubuntu-') }}
       run: |
         sudo apt-get install -y libboost-dev \
          libboost-filesystem-dev \
@@ -66,12 +66,12 @@ jobs:
           boost
 
     - name: Build/install libbpf From Source
-      if: inputs.platform == 'ubuntu-latest'
+      if: ${{ startsWith(inputs.platform, 'ubuntu-') }}
       run: ./.github/scripts/build-libbpf.sh
       shell: bash
 
     - name: Cache nuget packages
-      if: inputs.platform == 'windows-2019' || inputs.platform == 'windows-2022'
+      if: ${{ startsWith(inputs.platform, 'windows-') }}
       uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8
       env:
         cache-name: cache-nuget-modules
@@ -79,13 +79,13 @@ jobs:
         path: build\packages
         key: ${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}-${{inputs.platform}}
 
-    - name: Configure CMake
-      if: inputs.platform == 'windows-2019' || inputs.platform == 'windows-2022'
+    - name: Configure CMake (Windows)
+      if: ${{ startsWith(inputs.platform, 'windows-') }}
       run: |
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
-    - name: Configure CMake
-      if: inputs.platform == 'ubuntu-latest' || inputs.platform == 'macos-latest'
+    - name: Configure CMake (non-Windows)
+      if: ${{ !startsWith(inputs.platform, 'windows-') }}
       run: |
         if [ "${{inputs.enable_sanitizers}}" = "true" ]; then
           export SANITIZER_FLAGS="-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all"
@@ -129,7 +129,7 @@ jobs:
           ${{github.workspace}}/build/upload
 
     - name: Tests
-      if: inputs.platform == 'ubuntu-latest'
+      if: ${{ startsWith(inputs.platform, 'ubuntu-') }}
       working-directory: ${{github.workspace}}
       run: |
         cmake --build build --target test --
