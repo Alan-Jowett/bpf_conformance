@@ -134,6 +134,19 @@ jobs:
       run: |
         cmake --build build --target test --
 
+    - name: Rerun failed tests with more verbose output
+      if: inputs.platform == 'ubuntu-latest' && failure()
+      working-directory: ${{github.workspace}}/build
+      run: |
+        ctest --rerun-failed --output-on-failure
+
+    - name: Upload build folder for diagnosing issues
+      if: always()
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+      with:
+        name: bpf_conformance-diagnostic-${{inputs.platform}}-${{inputs.configuration}}-enable-sanitizers-${{inputs.enable_sanitizers}}-enable-coverage-${{inputs.enable_coverage}}
+        path: ${{github.workspace}}/build
+
     - name: Generate code coverage report
       if: inputs.enable_coverage == true
       run: |
