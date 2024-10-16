@@ -71,7 +71,7 @@ jobs:
       shell: bash
 
     - name: Cache nuget packages
-      if: inputs.platform == 'windows-2019' || inputs.platform == 'windows-2022'
+      if: ${{ startsWith(inputs.platform, 'windows-') }}
       uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8
       env:
         cache-name: cache-nuget-modules
@@ -80,12 +80,12 @@ jobs:
         key: ${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}-${{inputs.platform}}
 
     - name: Configure CMake (Windows)
-      if: inputs.platform == 'windows-2019' || inputs.platform == 'windows-2022'
+      if: ${{ startsWith(inputs.platform, 'windows-') }}
       run: |
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Configure CMake (non-Windows)
-      if: ${{ startsWith(inputs.platform, 'ubuntu-') }} || inputs.platform == 'macos-latest'
+      if: ${{ !startsWith(inputs.platform, 'windows-') }}
       run: |
         if [ "${{inputs.enable_sanitizers}}" = "true" ]; then
           export SANITIZER_FLAGS="-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all"
