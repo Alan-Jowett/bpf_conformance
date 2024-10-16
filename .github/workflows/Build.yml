@@ -47,8 +47,8 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: Install prerequisites - Ubuntu-latest
-      if: inputs.platform == 'ubuntu-latest'
+    - name: Install prerequisites - Ubuntu
+      if: ${{ startsWith(inputs.platform, 'ubuntu-') }}
       run: |
         sudo apt-get install -y libboost-dev \
          libboost-filesystem-dev \
@@ -66,12 +66,12 @@ jobs:
           boost
 
     - name: Build/install libbpf From Source
-      if: inputs.platform == 'ubuntu-latest'
+      if: ${{ startsWith(inputs.platform, 'ubuntu-') }}
       run: ./.github/scripts/build-libbpf.sh
       shell: bash
 
     - name: Cache nuget packages
-      if: inputs.platform == 'windows-2019' || inputs.platform == 'windows-2022'
+      if: ${{ startsWith(inputs.platform, 'windows-') }}
       uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8
       env:
         cache-name: cache-nuget-modules
@@ -79,13 +79,13 @@ jobs:
         path: build\packages
         key: ${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}-${{inputs.platform}}
 
-    - name: Configure CMake
-      if: inputs.platform == 'windows-2019' || inputs.platform == 'windows-2022'
+    - name: Configure CMake (Windows)
+      if: ${{ startsWith(inputs.platform, 'windows-') }}
       run: |
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
-    - name: Configure CMake
-      if: inputs.platform == 'ubuntu-latest' || inputs.platform == 'macos-latest'
+    - name: Configure CMake (non-Windows)
+      if: ${{ !startsWith(inputs.platform, 'windows-') }}
       run: |
         if [ "${{inputs.enable_sanitizers}}" = "true" ]; then
           export SANITIZER_FLAGS="-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all"
@@ -129,10 +129,23 @@ jobs:
           ${{github.workspace}}/build/upload
 
     - name: Tests
-      if: inputs.platform == 'ubuntu-latest'
+      if: ${{ startsWith(inputs.platform, 'ubuntu-') }}
       working-directory: ${{github.workspace}}
       run: |
         cmake --build build --target test --
+
+    - name: Rerun failed tests with more verbose output
+      if: inputs.platform == 'ubuntu-latest' && failure()
+      working-directory: ${{github.workspace}}/build
+      run: |
+        ctest --rerun-failed --output-on-failure
+
+    - name: Upload build folder for diagnosing issues
+      if: always()
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+      with:
+        name: bpf_conformance-diagnostic-${{inputs.platform}}-${{inputs.configuration}}-enable-sanitizers-${{inputs.enable_sanitizers}}-enable-coverage-${{inputs.enable_coverage}}
+        path: ${{github.workspace}}/build
 
     - name: Generate code coverage report
       if: inputs.enable_coverage == true
