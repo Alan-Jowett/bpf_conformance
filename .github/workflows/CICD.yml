@@ -131,7 +131,7 @@ jobs:
         egress-policy: audit
 
     - name: Coveralls Finished
-      uses: coverallsapp/github-action@1134c89e4bf10443bf8f0ec69640b667cfd91041 # v2.3.1
+      uses: coverallsapp/github-action@cfd0633edbd2411b532b808ba7a8b5e04f76d2c8 # v2.3.4
       with:
         github-token: ${{ secrets.github_token }}
         parallel-finished: true
