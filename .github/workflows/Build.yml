@@ -39,7 +39,7 @@ jobs:
 
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
+      uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
       with:
         egress-policy: audit
 
@@ -155,7 +155,7 @@ jobs:
 
     - name: Coveralls Parallel
       if: inputs.enable_coverage == true
-      uses: coverallsapp/github-action@cfd0633edbd2411b532b808ba7a8b5e04f76d2c8 # v2.3.4
+      uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2.3.6
       with:
         github-token: ${{ secrets.github_token }}
         flag-name: run-${{inputs.build_type}}-${{inputs.platform}}-${{inputs.arch}}
@@ -178,7 +178,7 @@ jobs:
 
     - name: Build and push Docker image
       if: inputs.publish_docker == true && github.event_name == 'push'
-      uses: docker/build-push-action@67a2d409c0a876cbe6b11854e3e25193efe4e62d
+      uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991
       with:
         context: build
         push: true
