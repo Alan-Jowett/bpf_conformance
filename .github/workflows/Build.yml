@@ -63,7 +63,7 @@ jobs:
           cmake \
           ninja \
           ccache \
-          boost@1.86
+          boost@1.85
 
     - name: Build/install libbpf From Source
       if: ${{ startsWith(inputs.platform, 'ubuntu-') }}

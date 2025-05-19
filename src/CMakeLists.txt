@@ -11,7 +11,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   find_program(NUGET nuget)
 
   if("${BOOST_VERSION}" STREQUAL "")
-    set(BOOST_VERSION "1.86.0")
+    set(BOOST_VERSION "1.85.0")
   endif()
 
   if ("${CMAKE_GENERATOR}" MATCHES "Visual Studio 17 2022")
