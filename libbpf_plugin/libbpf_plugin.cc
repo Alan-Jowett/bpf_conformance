@@ -32,6 +32,10 @@ enum bpf_stats_type_fake
 
 #include "../include/bpf_conformance.h"
 
+// This is the minimal size of the memory required to initialize a test program in the kernel,
+// defined in linux/include/uapi/linux/if_ether.h in the kernel source tree.
+#define ETH_HLEN 14
+
 /**
  * @brief Read in a string of hex bytes and return a vector of bytes.
  *
@@ -294,6 +298,10 @@ main(int argc, char** argv)
     auto map = bpf_map_create(BPF_MAP_TYPE_ARRAY, NULL, sizeof(int), sizeof(uint64_t), 1, NULL);
 
     std::vector<uint8_t> memory = base16_decode(memory_string);
+    if (memory.size() < ETH_HLEN) {
+        memory.resize(ETH_HLEN, 0);
+    }
+
     std::string log;
     int fd = -1;
     struct bpf_object* elf_object = nullptr;
