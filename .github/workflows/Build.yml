@@ -105,7 +105,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Prepare for upload
-      if: inputs.platform == 'windows-2019' && (github.event_name == 'schedule' || github.event_name == 'push')
+      if: inputs.platform == 'windows-2022' && (github.event_name == 'schedule' || github.event_name == 'push')
       run: |
         md -p ${{github.workspace}}/build/upload
         cp ${{github.workspace}}/build/bin/${{env.BUILD_TYPE}}/bpf_conformance_runner.exe ${{github.workspace}}/build/upload/bpf_conformance_runner.exe
@@ -113,7 +113,7 @@ jobs:
         cp -r ${{github.workspace}}/tests ${{github.workspace}}/build/upload
 
     - name: Upload build as artifact
-      if: inputs.platform == 'windows-2019' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'RelWithDebInfo'
+      if: inputs.platform == 'windows-2022' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'RelWithDebInfo'
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: bpf_conformance-Release
@@ -121,7 +121,7 @@ jobs:
           ${{github.workspace}}/build/upload
 
     - name: Upload build as artifact
-      if: inputs.platform == 'windows-2019' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'Debug'
+      if: inputs.platform == 'windows-2022' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'Debug'
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: bpf_conformance-Debug
@@ -135,7 +135,7 @@ jobs:
         cmake --build build --target test --
 
     - name: Rerun failed tests with more verbose output
-      if: inputs.platform == 'ubuntu-latest' && failure()
+      if: startsWith(inputs.platform, 'ubuntu-') && failure()
       working-directory: ${{github.workspace}}/build
       run: |
         ctest --rerun-failed --output-on-failure
