@@ -54,7 +54,7 @@ jobs:
   ubuntu_debug:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-latest
+      platform: ubuntu-22.04
       configuration: Debug
       enable_sanitizers: false
       enable_coverage: false
@@ -62,7 +62,7 @@ jobs:
   ubuntu_release_sanitizers:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-latest
+      platform: ubuntu-22.04
       configuration: Release
       enable_sanitizers: true
       enable_coverage: false
@@ -70,7 +70,7 @@ jobs:
   ubuntu_debug_sanitizers:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-latest
+      platform: ubuntu-22.04
       configuration: Debug
       enable_sanitizers: true
       enable_coverage: false
@@ -86,7 +86,7 @@ jobs:
   ubuntu_debug_coverage:
     uses: ./.github/workflows/Build.yml
     with:
-      platform: ubuntu-latest
+      platform: ubuntu-22.04
       configuration: Debug
       enable_sanitizers: false
       enable_coverage: true
@@ -107,7 +107,7 @@ jobs:
     needs:
       - ubuntu_release_coverage
       - ubuntu_debug_coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
