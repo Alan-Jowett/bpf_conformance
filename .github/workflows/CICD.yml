@@ -26,22 +26,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  windows_release:
-    uses: ./.github/workflows/Build.yml
-    with:
-      platform: windows-2019
-      configuration: RelWithDebInfo
-      enable_sanitizers: false
-      enable_coverage: false
-
-  windows_debug:
-    uses: ./.github/workflows/Build.yml
-    with:
-      platform: windows-2019
-      configuration: Debug
-      enable_sanitizers: false
-      enable_coverage: false
-
   windows_release_2022:
     uses: ./.github/workflows/Build.yml
     with:
