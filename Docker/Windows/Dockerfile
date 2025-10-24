@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: MIT
 
-FROM mcr.microsoft.com/windows/nanoserver:ltsc2019@sha256:3031c9d0c35b38cd11d4263551d4f3d105b3e24be4373fb20a5759e5b5b879bc
+FROM mcr.microsoft.com/windows/nanoserver:ltsc2019@sha256:1a212d0a200046130ae7a89630b5676121964ec22658bcaf5bb4dd7533cda434
 
 WORKDIR /app
 
