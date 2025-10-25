@@ -113,7 +113,7 @@ jobs:
 
     - name: Upload build as artifact
       if: inputs.platform == 'windows-2022' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'RelWithDebInfo'
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       with:
         name: bpf_conformance-Release
         path: |
@@ -121,7 +121,7 @@ jobs:
 
     - name: Upload build as artifact
       if: inputs.platform == 'windows-2022' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'Debug'
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       with:
         name: bpf_conformance-Debug
         path: |
@@ -141,7 +141,7 @@ jobs:
 
     - name: Upload build folder for diagnosing issues
       if: always()
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       with:
         name: bpf_conformance-diagnostic-${{inputs.platform}}-${{inputs.configuration}}-enable-sanitizers-${{inputs.enable_sanitizers}}-enable-coverage-${{inputs.enable_coverage}}
         path: ${{github.workspace}}/build
