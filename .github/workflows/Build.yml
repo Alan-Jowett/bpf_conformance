@@ -39,11 +39,11 @@ jobs:
 
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+      uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
       with:
         egress-policy: audit
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: 'recursive'
 
@@ -71,7 +71,7 @@ jobs:
 
     - name: Cache nuget packages
       if: ${{ startsWith(inputs.platform, 'windows-') }}
-      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+      uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
       env:
         cache-name: cache-nuget-modules
       with:
@@ -113,7 +113,7 @@ jobs:
 
     - name: Upload build as artifact
       if: inputs.platform == 'windows-2022' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'RelWithDebInfo'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: bpf_conformance-Release
         path: |
@@ -121,7 +121,7 @@ jobs:
 
     - name: Upload build as artifact
       if: inputs.platform == 'windows-2022' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'Debug'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: bpf_conformance-Debug
         path: |
@@ -141,7 +141,7 @@ jobs:
 
     - name: Upload build folder for diagnosing issues
       if: always()
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: bpf_conformance-diagnostic-${{inputs.platform}}-${{inputs.configuration}}-enable-sanitizers-${{inputs.enable_sanitizers}}-enable-coverage-${{inputs.enable_coverage}}
         path: ${{github.workspace}}/build
@@ -171,7 +171,7 @@ jobs:
     - name: Extract metadata (tags, labels) for Docker
       if: inputs.publish_docker == true
       id: meta
-      uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893
+      uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
