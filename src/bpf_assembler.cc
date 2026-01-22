@@ -187,6 +187,14 @@ typedef class _bpf_assembler
             inst.opcode = EBPF_OP_LDXH;
         } else if (mnemonic == "ldxw") {
             inst.opcode = EBPF_OP_LDXW;
+        } else if (mnemonic == "ldxsb") {
+            inst.opcode = EBPF_OP_LDXSB;
+        } else if (mnemonic == "ldxsh") {
+            inst.opcode = EBPF_OP_LDXSH;
+        } else if (mnemonic == "ldxsw") {
+            inst.opcode = EBPF_OP_LDXSW;
+        } else {
+            throw std::runtime_error(std::string("Invalid mnemonic: ") + mnemonic);
         }
 
         return inst;

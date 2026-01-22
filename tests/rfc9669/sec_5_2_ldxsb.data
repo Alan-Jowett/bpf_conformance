@@ -2,14 +2,8 @@
 # SPDX-License-Identifier: MIT
 -- asm
 # RFC 9669 Section 5.2: {MEMSX, B, LDX} sign-extending byte load.
-# Note: assembler doesn't support MEMSX mnemonics; use raw encoding.
-
-# stb  [%r10-1], 0x80
-# ldxsb %r0, [%r10-1]
-# exit
--- raw
-0x00000080ffff0a72
-0x00000000ffffa091
-0x0000000000000095
+stb [%r10-1], 0x80
+ldxsb %r0, [%r10-1]
+exit
 -- result
 0xffffffffffffff80

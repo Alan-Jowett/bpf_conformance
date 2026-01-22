@@ -94,6 +94,12 @@ add_test(
   COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v3 --debug true --list_instructions true --exclude_regex "(imm|intmin)-" --exclude_groups callx --plugin_options "--debug"
 )
 
+# Run the RFC 9669-focused corpus (kept in a subdirectory; runner enumeration is non-recursive).
+add_test(
+  NAME rfc9669_cpu_v3
+  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests/rfc9669 --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v3 --debug true --list_instructions true --exclude_regex "(imm|intmin)-" --exclude_groups callx --plugin_options "--debug"
+)
+
 add_test(
   NAME elf_format
   COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v3 --debug true --list_instructions true --elf true --exclude_regex "(call_local*|imm-|intmin-)" --exclude_groups callx --plugin_options "--debug"
