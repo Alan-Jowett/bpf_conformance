@@ -1,0 +1,23 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 4.1: SUB (ALU64) imm/reg semantics.
+
+# imm variant
+mov %r1, 44
+sub %r1, 2
+jne %r1, 42, fail
+
+# reg variant
+mov %r2, 45
+mov %r3, 3
+sub %r2, %r3
+jne %r2, 42, fail
+
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1

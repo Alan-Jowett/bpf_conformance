@@ -1,0 +1,19 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 5.3: atomic XCHG (32-bit) always has FETCH semantics.
+
+stw [%r10-4], 0x11223344
+mov32 %r1, 0xaabbccdd
+lock xchg32 [%r10-4], %r1
+# src overwritten with old value
+jne %r1, 0x11223344, fail
+ldxw %r2, [%r10-4]
+jne %r2, 0xaabbccdd, fail
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1

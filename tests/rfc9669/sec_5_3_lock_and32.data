@@ -1,0 +1,28 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 5.3: atomic AND (32-bit), with/without FETCH.
+
+# no FETCH
+stw [%r10-4], 0xff
+mov32 %r1, 0x0f
+lock and32 [%r10-4], %r1
+ldxw %r2, [%r10-4]
+jne %r2, 0x0f, fail
+jne %r1, 0x0f, fail
+
+# FETCH
+stw [%r10-4], 0xf0
+mov32 %r3, 0x0f
+lock fetch and32 [%r10-4], %r3
+jne %r3, 0xf0, fail
+ldxw %r4, [%r10-4]
+jne %r4, 0x00, fail
+
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1

@@ -1,0 +1,11 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 5.1: {MEM, H, STX} store register.
+
+mov32 %r1, 0xbeef
+stxh [%r10-2], %r1
+ldxh %r0, [%r10-2]
+exit
+-- result
+0xbeef

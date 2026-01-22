@@ -1,0 +1,29 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 4.1: MOD32 (imm/reg) semantics, including mod-by-zero behavior.
+
+# imm variant
+mov32 %r1, 85
+mod32 %r1, 43
+jne %r1, 42, fail
+
+# reg variant
+mov32 %r2, 128
+mov32 %r3, 43
+mod32 %r2, %r3
+jne %r2, 42, fail
+
+# mod-by-zero leaves dst unchanged (reg variant)
+mov32 %r4, 123
+mov32 %r5, 0
+mod32 %r4, %r5
+jne %r4, 123, fail
+
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1

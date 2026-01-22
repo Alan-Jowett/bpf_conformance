@@ -1,0 +1,23 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 4.1: LSH32 (imm/reg) shift masking behavior.
+
+# imm variant: shift count masked by 0x1f
+mov32 %r1, 1
+lsh32 %r1, 40   # 40 & 31 == 8
+jne %r1, 0x100, fail
+
+# reg variant
+mov32 %r2, 1
+mov32 %r3, 8
+lsh32 %r2, %r3
+jne %r2, 0x100, fail
+
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1
