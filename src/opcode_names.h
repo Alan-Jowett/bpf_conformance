@@ -301,9 +301,9 @@ static const std::set<bpf_conformance_instruction_t, InstCmp> instructions_from_
     {bpf_conformance_test_cpu_version_t::v3, bpf_conformance_groups_t::base32, 0x7e},
     {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base64, 0x7f},
     // MEMSX sign-extending loads.
-    {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base32, 0x81},
-    {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base32, 0x89},
-    {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base32, 0x91},
+    {bpf_conformance_test_cpu_version_t::v4, bpf_conformance_groups_t::base32, 0x81},
+    {bpf_conformance_test_cpu_version_t::v4, bpf_conformance_groups_t::base32, 0x89},
+    {bpf_conformance_test_cpu_version_t::v4, bpf_conformance_groups_t::base32, 0x91},
     {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base32, 0x84},
     {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base32, 0x85, 0x00},
     {bpf_conformance_test_cpu_version_t::v3, bpf_conformance_groups_t::base32, 0x85, 0x01},
