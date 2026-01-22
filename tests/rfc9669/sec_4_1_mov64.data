@@ -1,0 +1,22 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 4.1: MOV (ALU64) imm/reg semantics.
+
+# imm variant uses sign-extended 32-bit immediate to s64
+mov %r1, -10
+lddw %r2, 0xfffffffffffffff6
+jne %r1, %r2, fail
+
+# reg variant copies full 64-bit
+lddw %r3, 0x1122334455667788
+mov %r4, %r3
+jne %r4, %r3, fail
+
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1

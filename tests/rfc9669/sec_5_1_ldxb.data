@@ -1,0 +1,10 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 5.1: {MEM, B, LDX} unsigned byte load.
+
+stb [%r10-1], 0xff
+ldxb %r0, [%r10-1]
+exit
+-- result
+0xff

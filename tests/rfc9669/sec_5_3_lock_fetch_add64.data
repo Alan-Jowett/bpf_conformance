@@ -1,0 +1,19 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 5.3: atomic FETCH|ADD (64-bit).
+
+lddw %r3, 1
+stxdw [%r10-8], %r3
+mov %r1, 41
+lock fetch add [%r10-8], %r1
+jne %r1, 1, fail
+ldxdw %r2, [%r10-8]
+jne %r2, 42, fail
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1

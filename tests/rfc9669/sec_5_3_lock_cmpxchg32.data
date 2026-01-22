@@ -1,0 +1,30 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 5.3: atomic CMPXCHG (32-bit).
+
+stw [%r10-4], 0x12345678
+
+# success case: r0 matches memory, memory replaced with src, r0 gets old value
+mov32 %r0, 0x12345678
+mov32 %r1, 0x9abcdef0
+lock cmpxchg32 [%r10-4], %r1
+jne %r0, 0x12345678, fail
+ldxw %r2, [%r10-4]
+jne %r2, 0x9abcdef0, fail
+
+# failure case: r0 mismatch, memory unchanged, r0 gets old memory value
+mov32 %r0, 0x11111111
+mov32 %r1, 0x22222222
+lock cmpxchg32 [%r10-4], %r1
+jne %r0, 0x9abcdef0, fail
+ldxw %r3, [%r10-4]
+jne %r3, 0x9abcdef0, fail
+
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1

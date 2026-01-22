@@ -1,0 +1,17 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 4.2: BE64 converts between host and big-endian for width=64.
+
+lddw %r0, 0x1122334455667788
+be64 %r0
+lddw %r1, 0x8877665544332211
+jne %r0, %r1, fail
+
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1
