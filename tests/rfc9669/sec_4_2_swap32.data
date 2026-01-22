@@ -1,0 +1,16 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 4.2: SWAP32 (bswap32) is unconditional byte swap.
+
+mov %r0, 0x11223344
+swap32 %r0
+jne %r0, 0x44332211, fail
+
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1

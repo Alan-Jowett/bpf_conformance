@@ -1,0 +1,31 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 4.1: LSH (ALU64) uses mask 0x3f.
+
+# imm variant (40 is not masked for 64-bit, only AND 0x3f)
+mov %r1, 1
+lsh %r1, 40
+lddw %r2, 0x0000010000000000
+jne %r1, %r2, fail
+
+# imm masking check: Linux verifier rejects invalid immediate shifts.
+# Use a register shift to validate masking behavior (130 & 63 == 2).
+mov %r3, 1
+mov %r6, 130
+lsh %r3, %r6
+jne %r3, 4, fail
+
+# reg variant
+mov %r4, 1
+mov %r5, 40
+lsh %r4, %r5
+jne %r4, %r2, fail
+
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1

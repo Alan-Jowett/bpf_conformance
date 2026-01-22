@@ -1,0 +1,9 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 5.2: {MEMSX, W, LDX} sign-extending word load.
+stw [%r10-4], 0x80000001
+ldxsw %r0, [%r10-4]
+exit
+-- result
+0xffffffff80000001

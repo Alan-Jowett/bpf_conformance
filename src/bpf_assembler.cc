@@ -187,6 +187,14 @@ typedef class _bpf_assembler
             inst.opcode = EBPF_OP_LDXH;
         } else if (mnemonic == "ldxw") {
             inst.opcode = EBPF_OP_LDXW;
+        } else if (mnemonic == "ldxsb") {
+            inst.opcode = EBPF_OP_LDXSB;
+        } else if (mnemonic == "ldxsh") {
+            inst.opcode = EBPF_OP_LDXSH;
+        } else if (mnemonic == "ldxsw") {
+            inst.opcode = EBPF_OP_LDXSW;
+        } else {
+            throw std::runtime_error(std::string("Invalid mnemonic: ") + mnemonic);
         }
 
         return inst;
@@ -487,7 +495,9 @@ typedef class _bpf_assembler
         {"jslt", {&_bpf_assembler::_encode_jmp, 3}},  {"jslt32", {&_bpf_assembler::_encode_jmp, 3}},
         {"lddw", {&_bpf_assembler::_encode_ld, 2}},   {"ldxb", {&_bpf_assembler::_encode_ldx, 2}},
         {"ldxdw", {&_bpf_assembler::_encode_ldx, 2}}, {"ldxh", {&_bpf_assembler::_encode_ldx, 2}},
-        {"ldxw", {&_bpf_assembler::_encode_ldx, 2}},  {"le16", {&_bpf_assembler::_encode_alu, 1}},
+        {"ldxw", {&_bpf_assembler::_encode_ldx, 2}},  {"ldxsb", {&_bpf_assembler::_encode_ldx, 2}},
+        {"ldxsh", {&_bpf_assembler::_encode_ldx, 2}}, {"ldxsw", {&_bpf_assembler::_encode_ldx, 2}},
+        {"le16", {&_bpf_assembler::_encode_alu, 1}},
         {"le32", {&_bpf_assembler::_encode_alu, 1}},  {"le64", {&_bpf_assembler::_encode_alu, 1}},
         {"lsh", {&_bpf_assembler::_encode_alu, 2}},   {"lsh32", {&_bpf_assembler::_encode_alu, 2}},
         {"mod", {&_bpf_assembler::_encode_alu, 2}},   {"mod32", {&_bpf_assembler::_encode_alu, 2}},
@@ -545,14 +555,11 @@ typedef class _bpf_assembler
             std::string operand;
             std::vector<std::string> operands;
             // Check for empty lines.
-            if (!std::getline(line_stream, mnemonic, ' ')) {
+            if (!(line_stream >> mnemonic)) {
                 continue;
             }
-            // Split the line on ' '
-            while (std::getline(line_stream, operand, ' ')) {
-                if (operand.starts_with('#')) {
-                    break;
-                }
+            // Use operator>> to skip repeated whitespace and avoid generating empty operands.
+            while (line_stream >> operand) {
                 if (operand.ends_with(',')) {
                     operand = operand.substr(0, operand.length() - 1);
                 }

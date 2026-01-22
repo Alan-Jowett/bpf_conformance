@@ -66,6 +66,8 @@ typedef struct ebpf_inst
 /* Other memory modes are not yet supported */
 #define EBPF_MODE_IMM 0x00
 #define EBPF_MODE_MEM 0x60
+// Sign-extending load mode (BPF_MEMSX in Linux UAPI).
+#define EBPF_MODE_MEMSX 0x80
 
 #define EBPF_ALU_OP_ADD 0x00
 #define EBPF_ALU_OP_SUB 0x10
@@ -141,6 +143,9 @@ typedef struct ebpf_inst
 #define EBPF_OP_LDXH (EBPF_CLS_LDX | EBPF_MODE_MEM | EBPF_SIZE_H)
 #define EBPF_OP_LDXB (EBPF_CLS_LDX | EBPF_MODE_MEM | EBPF_SIZE_B)
 #define EBPF_OP_LDXDW (EBPF_CLS_LDX | EBPF_MODE_MEM | EBPF_SIZE_DW)
+#define EBPF_OP_LDXSW (EBPF_CLS_LDX | EBPF_MODE_MEMSX | EBPF_SIZE_W)
+#define EBPF_OP_LDXSH (EBPF_CLS_LDX | EBPF_MODE_MEMSX | EBPF_SIZE_H)
+#define EBPF_OP_LDXSB (EBPF_CLS_LDX | EBPF_MODE_MEMSX | EBPF_SIZE_B)
 #define EBPF_OP_STW (EBPF_CLS_ST | EBPF_MODE_MEM | EBPF_SIZE_W)
 #define EBPF_OP_STH (EBPF_CLS_ST | EBPF_MODE_MEM | EBPF_SIZE_H)
 #define EBPF_OP_STB (EBPF_CLS_ST | EBPF_MODE_MEM | EBPF_SIZE_B)

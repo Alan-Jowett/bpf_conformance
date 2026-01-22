@@ -1,0 +1,30 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 5.3: atomic XOR (64-bit), with/without FETCH.
+
+# no FETCH
+lddw %r7, 0xaa
+stxdw [%r10-8], %r7
+lddw %r1, 0xff
+lock xor [%r10-8], %r1
+ldxdw %r2, [%r10-8]
+jne %r2, 0x55, fail
+jne %r1, 0xff, fail
+
+# FETCH
+lddw %r7, 0xaa
+stxdw [%r10-8], %r7
+lddw %r3, 0xff
+lock fetch xor [%r10-8], %r3
+jne %r3, 0xaa, fail
+ldxdw %r4, [%r10-8]
+jne %r4, 0x55, fail
+
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1
