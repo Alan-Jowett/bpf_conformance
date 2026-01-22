@@ -555,14 +555,11 @@ typedef class _bpf_assembler
             std::string operand;
             std::vector<std::string> operands;
             // Check for empty lines.
-            if (!std::getline(line_stream, mnemonic, ' ')) {
+            if (!(line_stream >> mnemonic)) {
                 continue;
             }
             // Use operator>> to skip repeated whitespace and avoid generating empty operands.
             while (line_stream >> operand) {
-                if (operand.starts_with('#')) {
-                    break;
-                }
                 if (operand.ends_with(',')) {
                     operand = operand.substr(0, operand.length() - 1);
                 }
