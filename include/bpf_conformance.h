@@ -141,7 +141,8 @@ bpf_conformance(
     options.include_test_regex = include_test_regex;
     options.exclude_test_regex = exclude_test_regex;
     options.cpu_version = cpu_version;
-    options.groups = groups, options.list_instructions_option = list_instructions_option;
+    options.groups = groups;
+    options.list_instructions_option = list_instructions_option;
     options.debug = debug;
     return bpf_conformance_options(test_files, plugin_path, plugin_options, options);
 }
