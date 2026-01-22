@@ -495,7 +495,9 @@ typedef class _bpf_assembler
         {"jslt", {&_bpf_assembler::_encode_jmp, 3}},  {"jslt32", {&_bpf_assembler::_encode_jmp, 3}},
         {"lddw", {&_bpf_assembler::_encode_ld, 2}},   {"ldxb", {&_bpf_assembler::_encode_ldx, 2}},
         {"ldxdw", {&_bpf_assembler::_encode_ldx, 2}}, {"ldxh", {&_bpf_assembler::_encode_ldx, 2}},
-        {"ldxw", {&_bpf_assembler::_encode_ldx, 2}},  {"le16", {&_bpf_assembler::_encode_alu, 1}},
+        {"ldxw", {&_bpf_assembler::_encode_ldx, 2}},  {"ldxsb", {&_bpf_assembler::_encode_ldx, 2}},
+        {"ldxsh", {&_bpf_assembler::_encode_ldx, 2}}, {"ldxsw", {&_bpf_assembler::_encode_ldx, 2}},
+        {"le16", {&_bpf_assembler::_encode_alu, 1}},
         {"le32", {&_bpf_assembler::_encode_alu, 1}},  {"le64", {&_bpf_assembler::_encode_alu, 1}},
         {"lsh", {&_bpf_assembler::_encode_alu, 2}},   {"lsh32", {&_bpf_assembler::_encode_alu, 2}},
         {"mod", {&_bpf_assembler::_encode_alu, 2}},   {"mod32", {&_bpf_assembler::_encode_alu, 2}},
@@ -556,8 +558,8 @@ typedef class _bpf_assembler
             if (!std::getline(line_stream, mnemonic, ' ')) {
                 continue;
             }
-            // Split the line on ' '
-            while (std::getline(line_stream, operand, ' ')) {
+            // Use operator>> to skip repeated whitespace and avoid generating empty operands.
+            while (line_stream >> operand) {
                 if (operand.starts_with('#')) {
                     break;
                 }

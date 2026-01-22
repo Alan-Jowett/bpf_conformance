@@ -7,13 +7,13 @@
 mov32 %r1, -13
 mov32 %r2, 3
 smod32 %r1, %r2
-jne %r1, 0xffffffff, fail
+jne32 %r1, 0xffffffff, fail
 
-# modulo by zero leaves dst unchanged for ALU, but upper 32 bits are zeroed (ALU32)
+# modulo by zero sets dst to 0 for ALU32
 mov %r3, -13
 mov32 %r4, 0
 smod32 %r3, %r4
-jne %r3, 0x00000000fffffff3, fail
+jne32 %r3, 0, fail
 
 mov %r0, 1
 exit

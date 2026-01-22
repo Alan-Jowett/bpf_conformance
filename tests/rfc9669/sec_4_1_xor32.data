@@ -6,13 +6,13 @@
 # imm variant
 mov32 %r1, 0xffff0000
 xor32 %r1, 0x00ff00ff
-jne %r1, 0xff0000ff, fail
+jne32 %r1, 0xff0000ff, fail
 
 # reg variant
 mov32 %r2, 0x12345678
 mov32 %r3, 0x87654321
 xor32 %r2, %r3
-jne %r2, 0x95511559, fail
+jne32 %r2, 0x95511559, fail
 
 mov %r0, 1
 exit

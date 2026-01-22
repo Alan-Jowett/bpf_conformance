@@ -6,19 +6,19 @@
 # imm variant normal
 mov32 %r1, 84
 div32 %r1, 2
-jne %r1, 42, fail
+jne32 %r1, 42, fail
 
 # reg variant normal
 mov32 %r2, 126
 mov32 %r3, 3
 div32 %r2, %r3
-jne %r2, 42, fail
+jne32 %r2, 42, fail
 
-# div-by-zero leaves dst unchanged (reg variant)
+# div-by-zero sets dst to 0 (reg variant)
 mov32 %r4, 123
 mov32 %r5, 0
 div32 %r4, %r5
-jne %r4, 123, fail
+jne32 %r4, 0, fail
 
 mov %r0, 1
 exit

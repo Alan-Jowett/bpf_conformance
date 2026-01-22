@@ -6,13 +6,13 @@
 # imm variant masking
 mov32 %r1, 0x80000000
 arsh32 %r1, 31
-jne %r1, 0xffffffff, fail
+jne32 %r1, 0xffffffff, fail
 
 # reg variant
 mov32 %r2, 0x80000000
 mov32 %r3, 31
 arsh32 %r2, %r3
-jne %r2, 0xffffffff, fail
+jne32 %r2, 0xffffffff, fail
 
 mov %r0, 1
 exit

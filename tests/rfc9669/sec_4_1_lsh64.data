@@ -9,9 +9,11 @@ lsh %r1, 40
 lddw %r2, 0x0000010000000000
 jne %r1, %r2, fail
 
-# imm masking check: 130 & 63 == 2
+# imm masking check: Linux verifier rejects invalid immediate shifts.
+# Use a register shift to validate masking behavior (130 & 63 == 2).
 mov %r3, 1
-lsh %r3, 130
+mov %r6, 130
+lsh %r3, %r6
 jne %r3, 4, fail
 
 # reg variant

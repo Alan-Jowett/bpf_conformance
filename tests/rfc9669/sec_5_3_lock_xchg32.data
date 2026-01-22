@@ -1,15 +1,27 @@
 # Copyright (c) Microsoft Corporation
 # SPDX-License-Identifier: MIT
 -- asm
-# RFC 9669 Section 5.3: atomic XCHG (32-bit) always has FETCH semantics.
+# RFC 9669 Section 5.3: atomic XCHG (32-bit).
+# A 32-bit atomic op updates 4 bytes at the target address. When the address
+# points at an 8-byte little-endian word, this corresponds to the low 32 bits.
 
-stw [%r10-4], 0x11223344
-mov32 %r1, 0xaabbccdd
-lock xchg32 [%r10-4], %r1
-# src overwritten with old value
-jne %r1, 0x11223344, fail
-ldxw %r2, [%r10-4]
-jne %r2, 0xaabbccdd, fail
+# Write 0x1111111111111111 to [%r10-8]
+lddw %r1, 0x1111111111111111
+stxdw [%r10-8], %r1
+
+# Exchange low 32-bits with 0x22222222.
+mov32 %r1, 0x22222222
+lock xchg32 [%r10-8], %r1
+
+# After the exchange, [%r10-8] should contain 0x1111111122222222.
+ldxdw %r2, [%r10-8]
+lddw %r3, 0x1111111122222222
+jne %r2, %r3, fail
+
+# %r1 should contain the old low 32-bits (0x11111111).
+mov32 %r3, 0x11111111
+jne32 %r1, %r3, fail
+
 mov %r0, 1
 exit
 fail:

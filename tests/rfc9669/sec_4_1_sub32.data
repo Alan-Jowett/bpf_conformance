@@ -6,19 +6,19 @@
 # imm variant wrap: 0 - 1 == 0xffffffff
 mov32 %r1, 0
 sub32 %r1, 1
-jne %r1, 0xffffffff, fail
+jne32 %r1, 0xffffffff, fail
 
 # reg variant
 mov32 %r2, 44
 mov32 %r3, 2
 sub32 %r2, %r3
-jne %r2, 42, fail
+jne32 %r2, 42, fail
 
 # verify upper 32 bits cleared after a 32-bit op
 mov %r4, -1
 mov32 %r4, 0
 rsh %r4, 32
-jne %r4, 0, fail
+jne32 %r4, 0, fail
 
 mov %r0, 1
 exit

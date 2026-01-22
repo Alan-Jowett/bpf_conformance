@@ -5,11 +5,11 @@
 
 mov32 %r1, 1
 neg32 %r1
-jne %r1, 0xffffffff, fail
+jne32 %r1, 0xffffffff, fail
 
 mov32 %r2, 0
 neg32 %r2
-jne %r2, 0, fail
+jne32 %r2, 0, fail
 
 mov %r0, 1
 exit

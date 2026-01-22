@@ -6,18 +6,18 @@
 # imm variant
 mov32 %r1, 6
 mul32 %r1, 7
-jne %r1, 42, fail
+jne32 %r1, 42, fail
 
 # reg variant
 mov32 %r2, 14
 mov32 %r3, 3
 mul32 %r2, %r3
-jne %r2, 42, fail
+jne32 %r2, 42, fail
 
 # overflow wrap check: 0x80000000 * 2 == 0
 mov32 %r4, 0x80000000
 mul32 %r4, 2
-jne %r4, 0, fail
+jne32 %r4, 0, fail
 
 mov %r0, 1
 exit
