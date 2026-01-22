@@ -2,14 +2,8 @@
 # SPDX-License-Identifier: MIT
 -- asm
 # RFC 9669 Section 5.2: {MEMSX, W, LDX} sign-extending word load.
-# Note: assembler doesn't support MEMSX mnemonics; use raw encoding.
-
-# stw  [%r10-4], 0x80000001
-# ldxsw %r0, [%r10-4]
-# exit
--- raw
-0x80000001fffc0a62
-0x00000000fffca081
-0x0000000000000095
+stw [%r10-4], 0x80000001
+ldxsw %r0, [%r10-4]
+exit
 -- result
 0xffffffff80000001
