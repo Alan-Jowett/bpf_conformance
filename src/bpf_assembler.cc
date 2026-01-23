@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <variant>
 #include <sstream>
+#include <limits>
 
 #include "bpf_assembler.h"
 
@@ -86,34 +87,53 @@ typedef class _bpf_assembler
     uint64_t
     _decode_imm64(const std::string& str)
     {
-        if (str.find("0x") == std::string::npos) {
-            return std::stoull(str);
-        } else {
+        // Accept either hex (treated as unsigned 64-bit) or signed decimal.
+        if (str.find("0x") != std::string::npos) {
             return std::stoull(str, nullptr, 16);
         }
+        if (str.starts_with("-")) {
+            return static_cast<uint64_t>(std::stoll(str));
+        }
+        return std::stoull(str);
     }
 
     uint32_t
     _decode_imm32(const std::string& str)
     {
-        if (str.find("0x") == std::string::npos) {
-            return static_cast<uint32_t>(std::stoull(str));
-        } else {
-            return static_cast<uint32_t>(std::stoull(str, nullptr, 16));
+        // The eBPF instruction immediate field is 32-bit. Do not silently truncate.
+        if (str.find("0x") != std::string::npos) {
+            uint64_t value = std::stoull(str, nullptr, 16);
+            if (value > std::numeric_limits<uint32_t>::max()) {
+                throw std::runtime_error(std::string("Immediate out of 32-bit range: ") + str);
+            }
+            return static_cast<uint32_t>(value);
         }
+        int64_t value = std::stoll(str);
+        if (value < std::numeric_limits<int32_t>::min() || value > std::numeric_limits<int32_t>::max()) {
+            throw std::runtime_error(std::string("Immediate out of 32-bit signed range: ") + str);
+        }
+        return static_cast<uint32_t>(static_cast<int32_t>(value));
     }
 
-    uint16_t
+    int16_t
     _decode_offset(const std::string& str)
     {
-        if (str.find("0x") == std::string::npos) {
-            return static_cast<uint16_t>(std::stoull(str));
-        } else {
-            return static_cast<uint16_t>(std::stoull(str, nullptr, 16));
+        // The eBPF instruction offset field is 16-bit signed. Do not silently truncate.
+        if (str.find("0x") != std::string::npos) {
+            uint64_t value = std::stoull(str, nullptr, 16);
+            if (value > std::numeric_limits<uint16_t>::max()) {
+                throw std::runtime_error(std::string("Offset out of 16-bit range: ") + str);
+            }
+            return static_cast<int16_t>(static_cast<uint16_t>(value));
         }
+        int64_t value = std::stoll(str);
+        if (value < std::numeric_limits<int16_t>::min() || value > std::numeric_limits<int16_t>::max()) {
+            throw std::runtime_error(std::string("Offset out of 16-bit signed range: ") + str);
+        }
+        return static_cast<int16_t>(value);
     }
 
-    uint16_t
+    int16_t
     _decode_jump_target(const std::string& str)
     {
         if (str.starts_with("+") || str.starts_with("-")) {
@@ -134,7 +154,7 @@ typedef class _bpf_assembler
         return static_cast<uint8_t>(reg->second);
     }
 
-    std::tuple<uint8_t, uint16_t>
+    std::tuple<uint8_t, int16_t>
     _decode_register_and_offset(const std::string& operand)
     {
         auto reg_start = operand.find('[');
@@ -147,10 +167,10 @@ typedef class _bpf_assembler
         }
 
         if (operand.substr(reg_end).starts_with(']')) {
-            return std::make_tuple<uint8_t, uint16_t>(
+            return std::make_tuple<uint8_t, int16_t>(
                 _decode_register(operand.substr(reg_start + 1, reg_end - reg_start - 1)), 0);
         } else {
-            return std::make_tuple<uint8_t, uint16_t>(
+            return std::make_tuple<uint8_t, int16_t>(
                 _decode_register(operand.substr(reg_start + 1, reg_end - reg_start - 1)),
                 _decode_offset(operand.substr(reg_end)));
         }
