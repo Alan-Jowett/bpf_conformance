@@ -1,9 +1,0 @@
-# Copyright (c) Microsoft Corporation
-# SPDX-License-Identifier: MIT
--- asm
-# RFC 9669 Section 5.4: {IMM, DW, LD} wide encoding for 64-bit integer immediate (subtype 0x0).
-
-lddw %r0, 0x1122334455667788
-exit
--- result
-0x1122334455667788

@@ -1,9 +1,0 @@
-# Copyright (c) Microsoft Corporation
-# SPDX-License-Identifier: MIT
--- asm
-# RFC 9669 Section 5.2: {MEMSX, H, LDX} sign-extending halfword load.
-sth [%r10-2], 0x8001
-ldxsh %r0, [%r10-2]
-exit
--- result
-0xffffffffffff8001
