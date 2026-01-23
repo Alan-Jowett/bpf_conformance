@@ -210,6 +210,39 @@ set_tests_properties(
 )
 
 add_test(
+  NAME invalid_offset_range
+  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${PROJECT_SOURCE_DIR}/negative/invalid_offset_range.data --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --plugin_options "--debug"
+)
+
+set_tests_properties(
+  invalid_offset_range
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "Offset out of 16-bit range: .*0x10000"
+)
+
+add_test(
+  NAME invalid_imm32_hex_range
+  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${PROJECT_SOURCE_DIR}/negative/invalid_imm32_hex_range.data --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --plugin_options "--debug"
+)
+
+set_tests_properties(
+  invalid_imm32_hex_range
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "Immediate out of 32-bit range: 0x100000000"
+)
+
+add_test(
+  NAME invalid_imm32_dec_range
+  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${PROJECT_SOURCE_DIR}/negative/invalid_imm32_dec_range.data --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --plugin_options "--debug"
+)
+
+set_tests_properties(
+  invalid_imm32_dec_range
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "Immediate out of 32-bit range: 2147483648"
+)
+
+add_test(
   NAME invalid_operand_count
   COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --debug true --test_file_path ${PROJECT_SOURCE_DIR}/negative/invalid_operand_count.data --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --plugin_options "--debug"
 )

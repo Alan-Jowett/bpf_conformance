@@ -110,7 +110,7 @@ typedef class _bpf_assembler
         }
         int64_t value = std::stoll(str);
         if (value < std::numeric_limits<int32_t>::min() || value > std::numeric_limits<int32_t>::max()) {
-            throw std::runtime_error(std::string("Immediate out of 32-bit signed range: ") + str);
+            throw std::runtime_error(std::string("Immediate out of 32-bit range: ") + str);
         }
         return static_cast<uint32_t>(static_cast<int32_t>(value));
     }
@@ -128,7 +128,7 @@ typedef class _bpf_assembler
         }
         int64_t value = std::stoll(str);
         if (value < std::numeric_limits<int16_t>::min() || value > std::numeric_limits<int16_t>::max()) {
-            throw std::runtime_error(std::string("Offset out of 16-bit signed range: ") + str);
+            throw std::runtime_error(std::string("Offset out of 16-bit range: ") + str);
         }
         return static_cast<int16_t>(value);
     }
