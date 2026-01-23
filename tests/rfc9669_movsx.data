@@ -16,17 +16,17 @@ jne %r4, 0x00000000ffff8001, fail
 # MOVSX (ALU64, offset=8): sign-extend s8 into 64-bit
 mov32 %r5, 0x00000080
 movsx864 %r6, %r5
-jne %r6, 0xffffffffffffff80, fail
+jne %r6, 0xffffff80, fail
 
 # MOVSX (ALU64, offset=16): sign-extend s16 into 64-bit
 mov32 %r7, 0x00008001
 movsx1664 %r8, %r7
-jne %r8, 0xffffffffffff8001, fail
+jne %r8, 0xffff8001, fail
 
 # MOVSX (ALU64, offset=32): sign-extend s32 into 64-bit
 mov32 %r9, 0x80000001
 movsx3264 %r0, %r9
-jne %r0, 0xffffffff80000001, fail
+jne %r0, 0x80000001, fail
 
 mov %r0, 1
 exit

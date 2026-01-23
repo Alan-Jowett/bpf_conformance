@@ -5,7 +5,7 @@
 
 mov %r1, 1
 neg %r1
-jne %r1, 0xffffffffffffffff, fail
+jne %r1, 0xffffffff, fail
 
 mov %r2, 0
 neg %r2

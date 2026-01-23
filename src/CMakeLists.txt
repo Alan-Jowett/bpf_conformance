@@ -425,7 +425,7 @@ set_tests_properties(
 
 add_test(
   NAME list_unused_instructions
-  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --cpu_version v1 --exclude_regex "intmin-" --list_unused_instructions true
+  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_BINARY_DIR}/tests --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v1 --exclude_regex "intmin-" --list_unused_instructions true
 )
 
 set_tests_properties(

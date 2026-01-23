@@ -3,7 +3,7 @@
 -- asm
 lddw %r0, 0x123456789abcdef0
 stxdw [%r10-8], %r0
-mov32 %r1, 0x876543210
+mov32 %r1, 0x87654321
 mov32 %r0, 0x12345678
 # Expected to fail
 lock cmpxchg32 [%r10-8], %r1
