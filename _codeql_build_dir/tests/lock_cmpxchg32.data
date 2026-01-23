@@ -1,0 +1,35 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+lddw %r0, 0x123456789abcdef0
+stxdw [%r10-8], %r0
+mov32 %r1, 0x876543210
+mov32 %r0, 0x12345678
+# Expected to fail
+lock cmpxchg32 [%r10-8], %r1
+# Test if %r0 contains 0x9abcdef0
+mov32 %r1, 0x9abcdef0
+jne %r0, %r1, exit
+# Test if [%r10-8] is unmodified
+ldxdw %r0, [%r10-8]
+lddw %r1, 0x123456789abcdef0
+jne %r0, %r1, exit
+
+lddw %r0, 0x123456789abcdef0
+stxdw [%r10-8], %r0
+mov32 %r1, 0x11223344
+# Expected to succeed
+lock cmpxchg32 [%r10-8], %r1
+# Test if %r0 contains 0x9abcdef0
+mov32 %r1, 0x9abcdef0
+jne %r0, %r1, exit
+
+# Test if [%r10-8] contains the expected value.
+ldxdw %r0, [%r10-8]
+lddw %r1, 0x1234567811223344
+jne %r0, %r1, exit
+
+mov %r0, 0
+exit
+-- result
+0x0

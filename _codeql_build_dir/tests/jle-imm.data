@@ -1,0 +1,16 @@
+# Copyright (c) Big Switch Networks, Inc
+# SPDX-License-Identifier: Apache-2.0
+-- asm
+mov32 %r0, 0
+mov32 %r1, 5
+jle %r1, 4, exit # Not taken
+jle %r1, 6, +1 # Taken
+exit
+taken:
+jle %r1, 5, +1 # Taken
+exit
+taken2:
+mov32 %r0, 1
+exit
+-- result
+0x1

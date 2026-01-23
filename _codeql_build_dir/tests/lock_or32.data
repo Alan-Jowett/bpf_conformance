@@ -1,0 +1,15 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+lddw %r0, 0x1100110011001100
+lddw %r1, 0x0011001100110011
+stxdw [%r10-8], %r0
+lock or32 [%r10-8], %r1
+ldxdw %r0, [%r10-8]
+# Only lower 4 bytes are modified
+lddw %r1, 0x1100110011111111
+jne %r0, %r1, exit
+mov %r0, 0
+exit
+-- result
+0

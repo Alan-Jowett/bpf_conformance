@@ -1,0 +1,21 @@
+# Copyright (c) Big Switch Networks, Inc
+# SPDX-License-Identifier: Apache-2.0
+-- asm
+# Set %r9 to 0x100000000
+mov %r9, 1
+lsh %r9, 32
+mov32 %r0, 0x0
+mov32 %r1, 0xa
+jeq32 %r1, 0xb, exit # Not taken
+
+mov32 %r0, 1
+# Confirm upper bits are ignored in comparison
+mov %r1, 0xb
+# set %r1 to 0x10000000b
+or %r1, %r9
+jeq32 %r1, 0xb, exit # Taken
+
+mov32 %r0, 2 # Skipped
+exit
+-- result
+0x1

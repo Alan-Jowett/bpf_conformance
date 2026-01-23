@@ -1,0 +1,15 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+lddw %r0, 0x123456789abcdef0
+stxdw [%r10-8], %r0
+mov %r1, 1
+lock fetch add32 [%r10-8], %r1
+jne32 %r1, %r0, exit
+ldxdw %r1, [%r10-8]
+lddw %r0, 0x123456789abcdef1
+jne %r0, %r1, exit
+mov %r0, 0
+exit
+-- result
+0x0

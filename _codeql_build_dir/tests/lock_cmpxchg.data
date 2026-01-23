@@ -1,0 +1,34 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# Store 0x123456789abcdef0 in [%r10-8]
+lddw %r0, 0x123456789abcdef0
+stxdw [%r10-8], %r0
+lddw %r1, 0x1122334455667788
+lddw %r0, 0xfedcba987654321
+# Expected to fail as [%r10-8] != %r1
+lock cmpxchg [%r10-8], %r1 # Atomically compare %r0 and [%r10-8] and set [%r10-8] to %r1 if matches.
+# Test if %r0 contains value from [%r10-8]
+lddw %r1, 0x123456789abcdef0
+jne %r0, %r1, exit
+# Test if [%r10-8] is unmodified
+ldxdw %r0, [%r10-8]
+jne %r0, %r1, exit
+
+lddw %r0, 0x123456789abcdef0
+stxdw [%r10-8], %r0
+lddw %r1, 0x1122334455667788
+# Expected to succeed
+lock cmpxchg [%r10-8], %r1 # Atomically compare %r0 and [%r10-8] and set [%r10-8] to %r1 if matches.
+# Test if %r0 contains 0x123456789abcdef0
+lddw %r1, 0x123456789abcdef0
+jne %r0, %r1, exit
+# Test if %r0 contains value from [%r10-8]
+ldxdw %r0, [%r10-8]
+lddw %r1, 0x1122334455667788
+jne %r0, %r1, exit
+
+mov %r0, 0
+exit
+-- result
+0x0

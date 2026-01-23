@@ -1,0 +1,24 @@
+# Copyright (c) Big Switch Networks, Inc
+# SPDX-License-Identifier: Apache-2.0
+-- asm
+# Set %r9 to 0x100000000
+mov %r9, 1
+lsh %r9, 32
+mov32 %r0, 0
+mov32 %r1, 0xb
+# set %r1 to 0x10000000b
+or %r1, %r9
+mov32 %r2, 0xb
+jne32 %r1, %r2, +5 # Not taken
+jne32 %r1, %r1, +4 # Not taken
+
+mov32 %r0, 1
+mov32 %r1, 0xa
+# set %r1 to 0x10000000a
+or %r1, %r9
+jne32 %r1, %r2, +1 # Taken
+
+mov32 %r0, 2 # Skipped
+exit
+-- result
+0x1

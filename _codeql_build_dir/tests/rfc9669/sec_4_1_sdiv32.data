@@ -1,0 +1,24 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 4.1: SDIV (signed) ALU32 semantics.
+
+# (-13) s/ 3 == -4 (trunc toward zero)
+mov32 %r1, -13
+mov32 %r2, 3
+sdiv32 %r1, %r2
+jne32 %r1, 0xfffffffc, fail
+
+# div-by-zero sets dst to 0
+mov32 %r3, -13
+mov32 %r4, 0
+sdiv32 %r3, %r4
+jne32 %r3, 0, fail
+
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1

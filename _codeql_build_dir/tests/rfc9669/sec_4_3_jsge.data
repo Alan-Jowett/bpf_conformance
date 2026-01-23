@@ -1,0 +1,34 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# RFC 9669 Section 4.3: JSGE variants (signed) (JMP/JMP32, imm/reg).
+
+mov %r1, -1
+jsge %r1, -1, ok1
+ja fail
+ok1:
+
+mov %r2, -1
+mov %r3, -1
+jsge %r2, %r3, ok2
+ja fail
+ok2:
+
+mov %r4, -1
+jsge32 %r4, -1, ok3
+ja fail
+ok3:
+
+mov %r5, -1
+mov %r6, -1
+jsge32 %r5, %r6, ok4
+ja fail
+ok4:
+
+mov %r0, 1
+exit
+fail:
+mov %r0, 0
+exit
+-- result
+0x1

@@ -1,0 +1,23 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+mov %r0, 1
+# Write 0x1111111111111111 to [%r10-8]
+lddw %r1, 0x1111111111111111
+stxdw [%r10-8], %r1
+# Set the exchange value to 0x2222222222222222
+lddw %r1, 0x2222222222222222
+# After the exchange, %r1 should contain 0x11111111 and
+# [%r10-8] should contain 0x1111111122222222
+lock xchg32 [%r10-8], %r1
+# Check that [%r10-8] contains 0x1111111122222222
+ldxdw %r2, [%r10-8]
+lddw %r0, 0x1111111122222222
+jne %r2, %r0, exit
+# Check that %r1 contains 0x11111111
+lddw %r0, 0x11111111
+jne %r1, %r0, exit
+mov %r0, 0
+exit
+-- result
+0x0

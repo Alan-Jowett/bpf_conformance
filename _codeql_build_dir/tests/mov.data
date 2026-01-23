@@ -1,0 +1,13 @@
+# Copyright (c) Alan Jowett
+# SPDX-License-Identifier: MIT
+-- asm
+mov32 %r1, 2
+mov32 %r0, %r1
+jne %r0, 2, exit
+lddw %r2, 0xFFFFFF00000002
+mov32 %r0, %r2
+jne %r0, 2, exit
+mov32 %r0, 1
+exit
+-- result
+0x1
