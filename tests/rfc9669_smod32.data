@@ -9,11 +9,14 @@ mov32 %r2, 3
 smod32 %r1, %r2
 jne32 %r1, 0xffffffff, fail
 
-# modulo by zero sets dst to 0 for ALU32
-mov %r3, -13
+# modulo by zero: dst unchanged but upper 32 bits zeroed for ALU32.
+# Per RFC 9669: dst = (src != 0) ? (dst s% src) : dst
+# Start with 32-bit value to avoid sign-extension issues.
+mov32 %r3, -13
 mov32 %r4, 0
 smod32 %r3, %r4
-jne32 %r3, 0, fail
+# r3 should still be -13 (0xfffffff3) as 32-bit value
+jne32 %r3, 0xfffffff3, fail
 
 mov %r0, 1
 exit

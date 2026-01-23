@@ -1,8 +1,11 @@
 # Copyright (c) Dave Thaler
 # SPDX-License-Identifier: MIT
 -- asm
+# Test smod32 by zero - dst unchanged per RFC 9669.
+# Use register instead of immediate since Linux kernel rejects mod by imm 0.
 mov32 %r0, -10
-smod32 %r0, 0
+mov32 %r1, 0
+smod32 %r0, %r1
 exit
 -- result
 0xFFFFFFF6
