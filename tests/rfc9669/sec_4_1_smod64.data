@@ -7,13 +7,13 @@
 mov %r1, -13
 mov %r2, 3
 smod %r1, %r2
-jne %r1, 0xffffffffffffffff, fail
+jne %r1, -1, fail
 
 # modulo by zero leaves dst unchanged for ALU64
 mov %r3, -13
 mov %r4, 0
 smod %r3, %r4
-jne %r3, 0xfffffffffffffff3, fail
+jne %r3, -13, fail
 
 mov %r0, 1
 exit

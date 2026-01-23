@@ -7,7 +7,7 @@
 mov %r1, -13
 mov %r2, 3
 sdiv %r1, %r2
-jne %r1, 0xfffffffffffffffc, fail
+jne %r1, -4, fail
 
 # div-by-zero sets dst to 0
 mov %r3, -13
