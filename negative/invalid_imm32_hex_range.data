@@ -1,0 +1,8 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# Immediate is out of 32-bit range (hex)
+mov32 %r0, 0x100000000
+exit
+-- result
+0x11

@@ -1,0 +1,8 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+-- asm
+# Offset is out of 16-bit range (hex)
+ldxb %r0, [%r1+0x10000]
+exit
+-- result
+0x11
