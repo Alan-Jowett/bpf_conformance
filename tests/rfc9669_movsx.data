@@ -4,14 +4,16 @@
 # RFC 9669 Section 4.1: MOVSX semantics for ALU (8/16) and ALU64 (8/16/32), register source only.
 
 # MOVSX (ALU, offset=8): sign-extend s8 into 32-bit, then zero upper 32.
+# Use jne32 for 32-bit comparison since result has upper 32 bits cleared.
 mov32 %r1, 0x00000080
 movsx832 %r2, %r1
-jne %r2, 0x00000000ffffff80, fail
+jne32 %r2, 0xffffff80, fail
 
 # MOVSX (ALU, offset=16): sign-extend s16 into 32-bit, then zero upper 32.
+# Use jne32 for 32-bit comparison since result has upper 32 bits cleared.
 mov32 %r3, 0x00008001
 movsx1632 %r4, %r3
-jne %r4, 0x00000000ffff8001, fail
+jne32 %r4, 0xffff8001, fail
 
 # MOVSX (ALU64, offset=8): sign-extend s8 into 64-bit
 mov32 %r5, 0x00000080
