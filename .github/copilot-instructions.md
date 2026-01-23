@@ -20,7 +20,7 @@
 ## Running tests locally
 - Typical (Linux kernel + libbpf plugin; requires sudo/BPF permissions):
   - `sudo build/bin/bpf_conformance_runner --test_file_directory build/tests --plugin_path build/bin/libbpf_plugin --xdp_prolog true --cpu_version v3`
-- The runner’s directory scan is **non-recursive** (see `_get_test_files()` in `src/runner.cc`). Point `--test_file_directory` directly at a folder of `.data` files (e.g., `tests/rfc9669`).
+- The runner’s directory scan is **non-recursive** (see `_get_test_files()` in `src/runner.cc`). Point `--test_file_directory` directly at a folder of `.data` files (e.g., `tests`).
 - CPU gating + feature groups:
   - Tests are skipped if they require a higher `--cpu_version` (v1–v4) or excluded groups.
   - Default groups exclude `callx` and `packet`; use `--include_groups` / `--exclude_groups` as needed.
