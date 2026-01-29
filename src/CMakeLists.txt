@@ -50,6 +50,16 @@ add_executable(
   runner.cc
 )
 
+# Include elfio - check if already defined (for consumers who include it themselves)
+if(NOT TARGET elfio)
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../external/elfio/CMakeLists.txt")
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../external/elfio"
+                     "${CMAKE_CURRENT_BINARY_DIR}/elfio" EXCLUDE_FROM_ALL)
+  else()
+    message(FATAL_ERROR "elfio not found. Run 'git submodule update --init'")
+  endif()
+endif()
+
 add_dependencies(bpf_conformance elfio)
 
 target_include_directories("bpf_conformance" PRIVATE
