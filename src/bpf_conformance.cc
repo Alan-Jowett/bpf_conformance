@@ -296,12 +296,12 @@ bpf_conformance_options(
             }
 
             // Strip the trailing newline from the return value.
-            if (return_value_string.empty()) {
+            if (!return_value_string.empty()) {
                 return_value_string = return_value_string.substr(0, return_value_string.size() - 1);
             }
 
             // Strip the trailing newline from the error string.
-            if (error_string.empty()) {
+            if (!error_string.empty()) {
                 error_string = error_string.substr(0, error_string.size() - 1);
             }
 
@@ -339,9 +339,9 @@ bpf_conformance_options(
                 }
                 if (options.debug) {
                     auto [result, message] = test_results[test];
-                    std::cerr << "Test:" << test
+                    std::cerr << "Test: \"" << test << "\" "
                               << (result == bpf_conformance_test_result_t::TEST_RESULT_PASS ? "PASS" : "FAIL")
-                              << message << std::endl;
+                              << "\n" << message << std::endl;
                 }
 
                 _log_debug_result(test_results, test);
