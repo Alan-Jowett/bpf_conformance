@@ -26,10 +26,10 @@ add_subdirectory("src")
 
 # Include elfio if not already defined (src/CMakeLists.txt may have already included it)
 if(NOT TARGET elfio)
-  if (EXISTS "${PROJECT_SOURCE_DIR}/external/elfio")
+  if (EXISTS "${PROJECT_SOURCE_DIR}/external/elfio/CMakeLists.txt")
     add_subdirectory("external/elfio")
   else()
-    message(FATAL_ERROR "Missing elfio -- initialize submodules recursively, please.")
+    message(FATAL_ERROR "elfio not found. Run 'git submodule update --init --recursive'")
   endif()
 endif()
 

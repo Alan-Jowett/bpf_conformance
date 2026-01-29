@@ -56,7 +56,7 @@ if(NOT TARGET elfio)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../external/elfio"
                      "${CMAKE_CURRENT_BINARY_DIR}/elfio" EXCLUDE_FROM_ALL)
   else()
-    message(FATAL_ERROR "elfio not found. Run 'git submodule update --init'")
+    message(FATAL_ERROR "elfio not found. Run 'git submodule update --init --recursive'")
   endif()
 endif()
 
