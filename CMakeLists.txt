@@ -23,10 +23,14 @@ include("cmake/FindLibBpf.cmake")
 include(CTest)
 
 add_subdirectory("src")
-if (EXISTS "${PROJECT_SOURCE_DIR}/external/elfio")
-add_subdirectory("external/elfio")
-else()
-message(FATAL_ERROR "Missing elfio -- initialize submodules recursively, please.")
+
+# Include elfio if not already defined (src/CMakeLists.txt may have already included it)
+if (NOT TARGET elfio)
+  if (EXISTS "${PROJECT_SOURCE_DIR}/external/elfio/CMakeLists.txt")
+    add_subdirectory("external/elfio")
+  else()
+    message(FATAL_ERROR "elfio not found. Run 'git submodule update --init --recursive'")
+  endif()
 endif()
 
 file(COPY tests DESTINATION .)
