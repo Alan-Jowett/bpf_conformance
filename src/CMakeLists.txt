@@ -19,11 +19,18 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   elseif ("${CMAKE_GENERATOR}" MATCHES "Visual Studio 16 2019")
     set(MSVC_PLATFORM "142")
   else()
-    message("ERROR: Unsupported Visual Studio version")
+    message(FATAL_ERROR
+      "Unsupported Visual Studio version: ${CMAKE_GENERATOR}\n"
+      "Supported versions:\n"
+      "  - Visual Studio 17 2022 (vc143)\n"
+      "  - Visual Studio 16 2019 (vc142)\n"
+      "Use: cmake -G \"Visual Studio 17 2022\" ...")
   endif()
 
   if(NOT NUGET)
-    message("ERROR: You must first install nuget.exe from https://www.nuget.org/downloads")
+    message(FATAL_ERROR
+      "NuGet not found. Install from https://www.nuget.org/downloads\n"
+      "Then ensure nuget.exe is in your PATH")
   else()
     exec_program(${NUGET} ARGS install "Boost" -Version ${BOOST_VERSION} -ExcludeVersion -OutputDirectory ${PROJECT_BINARY_DIR}/packages)
     exec_program(${NUGET} ARGS install "boost_filesystem-vc${MSVC_PLATFORM}" -Version ${BOOST_VERSION} -ExcludeVersion -OutputDirectory ${PROJECT_BINARY_DIR}/packages)
