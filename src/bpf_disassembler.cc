@@ -291,20 +291,20 @@ typedef class _bpf_disassembler
         uint8_t opcode_src = inst.opcode & EBPF_SRC_REG;
 
         result << "call ";
-        if (inst.src == 0) {
-            // Helper call
-            if (opcode_src) {
-                result << "helper " << _format_register(inst.dst);
-            } else {
-                result << "helper " << _format_imm(inst.imm);
-            }
+        if (opcode_src) {
+            // Indirect call via register (callx) - inst.dst contains the register number
+            result << "helper " << _format_register(inst.dst);
+        } else if (inst.src == 0) {
+            // Helper call with immediate
+            result << "helper " << _format_imm(inst.imm);
         } else if (inst.src == 1) {
-            // Local call
+            // Local call (BPF-to-BPF)
             result << "local " << _format_jump_offset(inst.imm);
         } else if (inst.src == 2) {
-            // Runtime call
+            // Runtime/kfunc call
             result << "runtime " << _format_imm(inst.imm);
         } else {
+            // Unknown call type
             result << "unknown " << _format_imm(inst.imm);
         }
         return result.str();
@@ -372,8 +372,6 @@ bpf_disassemble_inst(const ebpf_inst& inst)
 void
 bpf_disassembler(const std::vector<ebpf_inst>& instructions, std::ostream& output, bool show_raw)
 {
-    bpf_disassembler_t disassembler;
-
     for (size_t i = 0; i < instructions.size(); i++) {
         const ebpf_inst& inst = instructions[i];
         output << std::setw(4) << std::setfill(' ') << std::dec << i << ": ";
@@ -396,7 +394,7 @@ bpf_disassembler(const std::vector<ebpf_inst>& instructions, std::ostream& outpu
                 i++; // Skip the next instruction
             }
         } else {
-            output << disassembler.disassemble_inst(inst);
+            output << bpf_disassemble_inst(inst);
 
             if (show_raw) {
                 output << " ; " << format_raw_bytes(inst);
