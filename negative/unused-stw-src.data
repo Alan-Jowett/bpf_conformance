@@ -1,0 +1,7 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+# Test stw with non-zero src (unused field must be zero)
+-- raw
+62 1a fc ff 00 00 00 00
+95 00 00 00 00 00 00 00
+-- error

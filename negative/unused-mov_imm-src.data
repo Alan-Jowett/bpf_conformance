@@ -1,0 +1,7 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+# Test mov_imm with non-zero src (unused field must be zero)
+-- raw
+b4 10 00 00 01 00 00 00
+95 00 00 00 00 00 00 00
+-- error

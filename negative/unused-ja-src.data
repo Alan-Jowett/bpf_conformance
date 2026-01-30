@@ -1,0 +1,7 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+# Test ja with non-zero src (unused field must be zero)
+-- raw
+05 10 00 00 00 00 00 00
+95 00 00 00 00 00 00 00
+-- error
