@@ -703,7 +703,7 @@ set_tests_properties(
 # Test empty instructions file
 add_test(
   NAME bpf_disasm_empty_file
-  COMMAND ${BPF_DISASM_EXE} --file ${PROJECT_SOURCE_DIR}/tests/empty_instructions.data
+  COMMAND ${BPF_DISASM_EXE} --file ${PROJECT_SOURCE_DIR}/negative/empty_instructions.data
 )
 
 set_tests_properties(
