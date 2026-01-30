@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "_comment": "Copyright (c) Microsoft Corporation. SPDX-License-Identifier: MIT",
+  "extends": [
+    "config:recommended"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["\\.github/scripts/build-libbpf\\.sh$"],
+      "matchStrings": [
+        "--branch (?<currentValue>v[\\d.]+) https://github.com/(?<depName>libbpf/libbpf)\\.git"
+      ],
+      "datasourceTemplate": "github-releases"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["regex"],
+      "matchPackageNames": ["libbpf/libbpf"],
+      "groupName": "libbpf"
+    }
+  ]
+}
