@@ -537,7 +537,7 @@ set_tests_properties(
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   add_test(
     NAME assembler_disassembler_roundtrip
-    COMMAND powershell -ExecutionPolicy Bypass -File ${PROJECT_SOURCE_DIR}/scripts/roundtrip_test.ps1 -BpfDisasm ${PROJECT_BINARY_DIR}/bin/bpf_disasm -BpfAsm ${PROJECT_BINARY_DIR}/bin/bpf_asm -TestDirectory ${PROJECT_BINARY_DIR}/tests
+    COMMAND powershell -ExecutionPolicy Bypass -File ${PROJECT_SOURCE_DIR}/scripts/roundtrip_test.ps1 -BpfDisasm $<TARGET_FILE:bpf_disasm> -BpfAsm $<TARGET_FILE:bpf_asm> -TestDirectory ${PROJECT_BINARY_DIR}/tests
   )
 else()
   add_test(
