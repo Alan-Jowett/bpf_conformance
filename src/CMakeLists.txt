@@ -687,3 +687,40 @@ set_tests_properties(
   PROPERTIES
   WILL_FAIL TRUE
 )
+
+# Test invalid hex bytes to cover parse_hex_string exception handler
+add_test(
+  NAME bpf_disasm_invalid_hex
+  COMMAND ${BPF_DISASM_EXE} --program "zz xx 95 00 00 00 00 00 00 00"
+)
+
+set_tests_properties(
+  bpf_disasm_invalid_hex
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "exit"
+)
+
+# Test empty instructions file
+add_test(
+  NAME bpf_disasm_empty_file
+  COMMAND ${BPF_DISASM_EXE} --file ${PROJECT_SOURCE_DIR}/tests/empty_instructions.data
+)
+
+set_tests_properties(
+  bpf_disasm_empty_file
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+# Test non-lddw LD class instruction to cover _decode_ld
+# Opcode 0x00 = LD class with mode=0, size=B (legacy packet load)
+add_test(
+  NAME bpf_disasm_legacy_ld
+  COMMAND ${BPF_DISASM_EXE} --program "00 00 00 00 00 00 00 00 95 00 00 00 00 00 00 00"
+)
+
+set_tests_properties(
+  bpf_disasm_legacy_ld
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "lddw"
+)
