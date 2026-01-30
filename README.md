@@ -22,15 +22,42 @@ Linux Kernel is treated as the authorative eBPF implementation.
 
 ### Ubuntu
 
-```
-sudo apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libelf-dev lcov libbpf-dev
+Install build dependencies:
+```bash
+sudo apt-get install -y \
+    build-essential \
+    cmake \
+    libboost-dev \
+    libboost-filesystem-dev \
+    libboost-program-options-dev \
+    libelf-dev \
+    lcov
 ```
 
-### MacOS
-
+For the libbpf_plugin (required to run tests against the Linux kernel), you also need libbpf.
+The system package (`libbpf-dev`) may be outdated; building from source is recommended.
+This mirrors the CI workflow in `.github/scripts/build-libbpf.sh`:
+```bash
+# Clone libbpf v1.3.0 (pinned to commit for reproducibility)
+git clone https://github.com/libbpf/libbpf.git
+cd libbpf
+git checkout 20c0a9e3d7e7d4aeb283eae982543c9cacc29477  # v1.3.0
+cd src
+make
+sudo PREFIX=/usr LIBDIR=/usr/lib/x86_64-linux-gnu/ make install
 ```
+
+### macOS
+
+```bash
 brew install cmake ninja ccache boost
 ```
+
+Note: The libbpf_plugin is Linux-only. On macOS, you can build the conformance runner and use other plugins.
+
+### Windows
+
+On Windows, Boost is automatically fetched via NuGet during CMake configuration. No manual dependency installation is required beyond having Visual Studio with C++ support.
 
 ## Building
 
