@@ -47,6 +47,7 @@ link_directories(${Boost_LIBRARY_DIRS})
 
 add_library("bpf_conformance"
   bpf_assembler.cc
+  bpf_disassembler.cc
   bpf_test_parser.cc
   bpf_conformance.cc
   bpf_writer.cc
