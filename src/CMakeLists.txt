@@ -58,6 +58,11 @@ add_executable(
   runner.cc
 )
 
+add_executable(
+  bpf_disasm
+  bpf_disasm.cc
+)
+
 # Include elfio - check if already defined (for consumers who include it themselves)
 if(NOT TARGET elfio)
   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../external/elfio/CMakeLists.txt")
@@ -85,6 +90,13 @@ target_link_directories(bpf_conformance PRIVATE elfio)
 target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB} elfio)
 target_link_libraries(bpf_conformance_runner PRIVATE ${PLATFORM_LIB} "bpf_conformance")
 
+target_include_directories("bpf_disasm" PRIVATE
+  "${Boost_INCLUDE_DIRS}"
+  "${PROJECT_SOURCE_DIR}/include"
+)
+
+target_link_libraries(bpf_disasm PRIVATE ${PLATFORM_LIB} "bpf_conformance")
+
 add_executable(
   bpf_assembler_disassembler_test
   bpf_assembler_disassembler_test.cc
@@ -100,10 +112,12 @@ target_link_libraries(bpf_assembler_disassembler_test PRIVATE ${PLATFORM_LIB} "b
 if(MSVC)
   target_compile_options(bpf_conformance PRIVATE /W4)
   target_compile_options(bpf_conformance_runner PRIVATE /W4)
+  target_compile_options(bpf_disasm PRIVATE /W4)
   target_compile_options(bpf_assembler_disassembler_test PRIVATE /W4)
 else()
   target_compile_options(bpf_conformance PRIVATE -Wall -Wextra -pedantic)
   target_compile_options(bpf_conformance_runner PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(bpf_disasm PRIVATE -Wall -Wextra -pedantic)
   target_compile_options(bpf_assembler_disassembler_test PRIVATE -Wall -Wextra -pedantic)
 endif()
 
