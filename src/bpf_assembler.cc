@@ -475,8 +475,8 @@ typedef class _bpf_assembler
         inst.dst = dst;
         inst.offset = offset;
         inst.src = _decode_register(operands[2]);
-        // EPBF_ATOMIC_OP_XCHG always has the fetch bit set.
-        inst.imm = EPBF_ATOMIC_OP_XCHG;
+        // EBPF_ATOMIC_OP_XCHG always has the fetch bit set.
+        inst.imm = EBPF_ATOMIC_OP_XCHG;
         return inst;
     }
 

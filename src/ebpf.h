@@ -60,7 +60,7 @@ typedef struct ebpf_inst
 #define EBPF_MODE_ATOMIC 0xc0
 
 #define EBPF_ATOMIC_OP_FETCH 0x01
-#define EPBF_ATOMIC_OP_XCHG (0xe0 | EBPF_ATOMIC_OP_FETCH)
+#define EBPF_ATOMIC_OP_XCHG (0xe0 | EBPF_ATOMIC_OP_FETCH)
 #define EBPF_ATOMIC_OP_CMPXCHG (0xf0 | EBPF_ATOMIC_OP_FETCH)
 
 /* Other memory modes are not yet supported */

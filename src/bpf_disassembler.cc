@@ -219,7 +219,7 @@ typedef class _bpf_disassembler
 
         result << "lock ";
 
-        if (inst.imm == EPBF_ATOMIC_OP_XCHG) {
+        if (inst.imm == EBPF_ATOMIC_OP_XCHG) {
             result << "xchg" << width << " ";
         } else if (inst.imm == EBPF_ATOMIC_OP_CMPXCHG) {
             result << "cmpxchg" << width << " ";
