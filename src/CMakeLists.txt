@@ -63,6 +63,11 @@ add_executable(
   bpf_disasm.cc
 )
 
+add_executable(
+  bpf_asm
+  bpf_asm.cc
+)
+
 # Include elfio - check if already defined (for consumers who include it themselves)
 if(NOT TARGET elfio)
   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../external/elfio/CMakeLists.txt")
@@ -97,28 +102,23 @@ target_include_directories("bpf_disasm" PRIVATE
 
 target_link_libraries(bpf_disasm PRIVATE ${PLATFORM_LIB} "bpf_conformance")
 
-add_executable(
-  bpf_assembler_disassembler_test
-  bpf_assembler_disassembler_test.cc
-)
-
-target_include_directories("bpf_assembler_disassembler_test" PRIVATE
+target_include_directories("bpf_asm" PRIVATE
   "${Boost_INCLUDE_DIRS}"
   "${PROJECT_SOURCE_DIR}/include"
 )
 
-target_link_libraries(bpf_assembler_disassembler_test PRIVATE ${PLATFORM_LIB} "bpf_conformance")
+target_link_libraries(bpf_asm PRIVATE ${PLATFORM_LIB} "bpf_conformance")
 
 if(MSVC)
   target_compile_options(bpf_conformance PRIVATE /W4)
   target_compile_options(bpf_conformance_runner PRIVATE /W4)
   target_compile_options(bpf_disasm PRIVATE /W4)
-  target_compile_options(bpf_assembler_disassembler_test PRIVATE /W4)
+  target_compile_options(bpf_asm PRIVATE /W4)
 else()
   target_compile_options(bpf_conformance PRIVATE -Wall -Wextra -pedantic)
   target_compile_options(bpf_conformance_runner PRIVATE -Wall -Wextra -pedantic)
   target_compile_options(bpf_disasm PRIVATE -Wall -Wextra -pedantic)
-  target_compile_options(bpf_assembler_disassembler_test PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(bpf_asm PRIVATE -Wall -Wextra -pedantic)
 endif()
 
 find_program(ECHO echo)
@@ -534,10 +534,17 @@ set_tests_properties(
   PASS_REGULAR_EXPRESSION "incorrect return value.*9905498421827150353"
 )
 
-add_test(
-  NAME assembler_disassembler_roundtrip
-  COMMAND ${PROJECT_BINARY_DIR}/bin/bpf_assembler_disassembler_test --test_directory ${PROJECT_BINARY_DIR}/tests --verbose
-)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  add_test(
+    NAME assembler_disassembler_roundtrip
+    COMMAND powershell -ExecutionPolicy Bypass -File ${PROJECT_SOURCE_DIR}/scripts/roundtrip_test.ps1 -BpfDisasm ${PROJECT_BINARY_DIR}/bin/bpf_disasm -BpfAsm ${PROJECT_BINARY_DIR}/bin/bpf_asm -TestDirectory ${PROJECT_BINARY_DIR}/tests
+  )
+else()
+  add_test(
+    NAME assembler_disassembler_roundtrip
+    COMMAND bash ${PROJECT_SOURCE_DIR}/scripts/roundtrip_test.sh ${PROJECT_BINARY_DIR}/bin/bpf_disasm ${PROJECT_BINARY_DIR}/bin/bpf_asm ${PROJECT_BINARY_DIR}/tests
+  )
+endif()
 
 set_tests_properties(
   assembler_disassembler_roundtrip
