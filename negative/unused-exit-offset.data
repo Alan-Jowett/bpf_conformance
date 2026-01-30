@@ -1,0 +1,7 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+# Test exit with non-zero offset (unused field must be zero)
+-- raw
+95 00 01 00 00 00 00 00
+95 00 00 00 00 00 00 00
+-- error

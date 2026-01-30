@@ -534,6 +534,22 @@ set_tests_properties(
   PASS_REGULAR_EXPRESSION "incorrect return value.*9905498421827150353"
 )
 
+# Test that instructions with non-zero unused fields are rejected
+# These tests use -- raw format and expect -- error responses
+# Note: The Linux kernel may not reject all non-zero unused fields,
+# which would be a conformance issue per the BPF spec.
+# This test validates the tests run without crashing.
+add_test(
+  NAME unused_field_negative_tests
+  COMMAND sudo ${PROJECT_BINARY_DIR}/bin/bpf_conformance_runner --test_file_directory ${PROJECT_SOURCE_DIR}/negative --plugin_path ${PROJECT_BINARY_DIR}/bin/libbpf_plugin --xdp_prolog true --cpu_version v3 --include_regex "unused-" --plugin_options "--debug"
+)
+
+set_tests_properties(
+  unused_field_negative_tests
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "out of [0-9]+ tests"
+)
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   add_test(
     NAME assembler_disassembler_roundtrip

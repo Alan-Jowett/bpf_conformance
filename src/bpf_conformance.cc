@@ -159,13 +159,7 @@ bpf_conformance_options(
     std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>> test_results;
 
     for (auto& test : test_files) {
-        // Parse the test file and extract:
-        // Input memory contents - Memory to pass to the BPF program.
-        // Expected return value - Expected return value from the BPF program.
-        // Expected error string - String returned by BPF runtime if the program fails.
-        // BPF instructions - Instructions to pass to the BPF program.
-        auto [input_memory, expected_return_value, expected_error_string, byte_code] = parse_test_file(test);
-
+        // Check include/exclude regex BEFORE parsing to avoid exceptions from unrelated test files.
         if (options.include_test_regex.has_value()) {
             std::regex include_regex(options.include_test_regex.value_or(""));
             if (!std::regex_search(test.filename().string(), include_regex)) {
@@ -181,6 +175,13 @@ bpf_conformance_options(
                 continue;
             }
         }
+
+        // Parse the test file and extract:
+        // Input memory contents - Memory to pass to the BPF program.
+        // Expected return value - Expected return value from the BPF program.
+        // Expected error string - String returned by BPF runtime if the program fails.
+        // BPF instructions - Instructions to pass to the BPF program.
+        auto [input_memory, expected_return_value, expected_error_string, byte_code] = parse_test_file(test);
 
         // It the test file has no BPF instructions, then skip it.
         if (byte_code.size() == 0) {

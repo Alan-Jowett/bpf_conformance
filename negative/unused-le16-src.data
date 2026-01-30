@@ -1,0 +1,7 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+# Test le16 with non-zero src (unused field must be zero)
+-- raw
+d4 10 00 00 10 00 00 00
+95 00 00 00 00 00 00 00
+-- error

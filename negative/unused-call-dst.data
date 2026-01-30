@@ -1,0 +1,7 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+# Test call with non-zero dst (unused field must be zero)
+-- raw
+85 01 00 00 00 00 00 00
+95 00 00 00 00 00 00 00
+-- error

@@ -1,0 +1,7 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+# Test neg64 with non-zero src (unused field must be zero)
+-- raw
+87 10 00 00 00 00 00 00
+95 00 00 00 00 00 00 00
+-- error
