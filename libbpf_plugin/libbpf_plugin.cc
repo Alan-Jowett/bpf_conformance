@@ -130,13 +130,12 @@ load_bpf_instructions(const std::string& program_string, int map_fd, size_t memo
         &log[0],
         log_size);
 #else
-    bpf_prog_load_opts opts{
-        .sz = sizeof(opts),
+    LIBBPF_OPTS(bpf_prog_load_opts, opts,
         .attempts = 1,
         .expected_attach_type = BPF_XDP,
         .log_size = log_size,
         .log_buf = &log[0],
-    };
+    );
     int fd = bpf_prog_load(
         BPF_PROG_TYPE_XDP,
         "conformance_test",
@@ -180,14 +179,14 @@ load_elf_file(const std::string& file_contents, int map_fd, std::string& log)
     int fd = -1;
     int error = 0;
     bool result = false;
-    bpf_object_open_opts opts = {};
-    opts.sz = sizeof(opts);
-    opts.relaxed_maps = true;
+    LIBBPF_OPTS(bpf_object_open_opts, opts,
+        .relaxed_maps = true,
+    );
 
-    libbpf_prog_handler_opts handler_opts = {};
-    handler_opts.sz = sizeof(libbpf_prog_handler_opts);
-    handler_opts.cookie = map_fd;
-    handler_opts.prog_prepare_load_fn = bpf_elf_file_prepare_load_handler;
+    LIBBPF_OPTS(libbpf_prog_handler_opts, handler_opts,
+        .cookie = map_fd,
+        .prog_prepare_load_fn = bpf_elf_file_prepare_load_handler,
+    );
 
     int default_program_handler_handler = 0;
     int xdp_program_handler_handle = 0;
@@ -327,14 +326,13 @@ main(int argc, char** argv)
     }
 
     // Run program.
-    bpf_test_run_opts test_run{
-        .sz = sizeof(bpf_test_run_opts),
+    LIBBPF_OPTS(bpf_test_run_opts, test_run,
         .data_in = memory.data(),
         .data_out = memory.data(),
         .data_size_in = static_cast<uint32_t>(memory.size()),
         .data_size_out = static_cast<uint32_t>(memory.size()),
         .repeat = 1,
-    };
+    );
 
     int result = bpf_prog_test_run_opts(fd, &test_run);
     if (result == 0) {
