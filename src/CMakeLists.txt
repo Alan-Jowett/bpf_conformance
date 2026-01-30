@@ -724,3 +724,42 @@ set_tests_properties(
   PROPERTIES
   PASS_REGULAR_EXPRESSION "lddw"
 )
+
+# Test callx (indirect call via register) to cover callx disassembly path
+# opcode=0x8d, dst=2 (register), src=0
+add_test(
+  NAME bpf_disasm_callx
+  COMMAND ${BPF_DISASM_EXE} --program "8d 02 00 00 00 00 00 00 95 00 00 00 00 00 00 00"
+)
+
+set_tests_properties(
+  bpf_disasm_callx
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "call helper %r2"
+)
+
+# Test call runtime (kfunc) to cover src==2 branch in _decode_call
+# opcode=0x85, dst=0, src=2, imm=1
+add_test(
+  NAME bpf_disasm_call_runtime
+  COMMAND ${BPF_DISASM_EXE} --program "85 20 00 00 01 00 00 00 95 00 00 00 00 00 00 00"
+)
+
+set_tests_properties(
+  bpf_disasm_call_runtime
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "call runtime"
+)
+
+# Test unknown call type (src > 2) to cover fallback branch in _decode_call
+# opcode=0x85, dst=0, src=3, imm=1
+add_test(
+  NAME bpf_disasm_call_unknown
+  COMMAND ${BPF_DISASM_EXE} --program "85 30 00 00 01 00 00 00 95 00 00 00 00 00 00 00"
+)
+
+set_tests_properties(
+  bpf_disasm_call_unknown
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "call unknown"
+)
