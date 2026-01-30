@@ -139,8 +139,10 @@ typedef class _bpf_disassembler
         }
 
         // Handle MOV with sign extension
+        // Format: movsx<source_bits><dest_bits> where dest is 64 (no suffix) or 32
         if (opcode_alu == EBPF_ALU_OP_MOV && inst.offset != 0) {
-            result << "movsx" << suffix << inst.offset << " " << _format_register(inst.dst) << ", "
+            std::string dest_bits = is_64 ? "64" : "32";
+            result << "movsx" << inst.offset << dest_bits << " " << _format_register(inst.dst) << ", "
                    << _format_register(inst.src);
             return result.str();
         }
@@ -228,10 +230,11 @@ typedef class _bpf_disassembler
             auto iter = _bpf_decode_atomic_ops.find(base_op);
             std::string op = (iter != _bpf_decode_atomic_ops.end()) ? iter->second : "unknown";
 
-            result << op << width << " ";
+            // Assembler expects: lock [fetch] <op><width> [mem], reg
             if (has_fetch) {
                 result << "fetch ";
             }
+            result << op << width << " ";
         }
 
         result << _format_memory(inst.dst, inst.offset) << ", " << _format_register(inst.src);
@@ -252,8 +255,8 @@ typedef class _bpf_disassembler
             return "exit";
         }
 
-        // Handle call
-        if (inst.opcode == EBPF_OP_CALL) {
+        // Handle call (both immediate and register variants)
+        if ((inst.opcode & ~EBPF_SRC_REG) == EBPF_OP_CALL) {
             return _decode_call(inst);
         }
 

@@ -85,12 +85,26 @@ target_link_directories(bpf_conformance PRIVATE elfio)
 target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB} elfio)
 target_link_libraries(bpf_conformance_runner PRIVATE ${PLATFORM_LIB} "bpf_conformance")
 
+add_executable(
+  bpf_assembler_disassembler_test
+  bpf_assembler_disassembler_test.cc
+)
+
+target_include_directories("bpf_assembler_disassembler_test" PRIVATE
+  "${Boost_INCLUDE_DIRS}"
+  "${PROJECT_SOURCE_DIR}/include"
+)
+
+target_link_libraries(bpf_assembler_disassembler_test PRIVATE ${PLATFORM_LIB} "bpf_conformance")
+
 if(MSVC)
   target_compile_options(bpf_conformance PRIVATE /W4)
   target_compile_options(bpf_conformance_runner PRIVATE /W4)
+  target_compile_options(bpf_assembler_disassembler_test PRIVATE /W4)
 else()
   target_compile_options(bpf_conformance PRIVATE -Wall -Wextra -pedantic)
   target_compile_options(bpf_conformance_runner PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(bpf_assembler_disassembler_test PRIVATE -Wall -Wextra -pedantic)
 endif()
 
 find_program(ECHO echo)
@@ -504,4 +518,15 @@ set_tests_properties(
   incorrect_return_value_high_bits
   PROPERTIES
   PASS_REGULAR_EXPRESSION "incorrect return value.*9905498421827150353"
+)
+
+add_test(
+  NAME assembler_disassembler_roundtrip
+  COMMAND ${PROJECT_BINARY_DIR}/bin/bpf_assembler_disassembler_test --test_directory ${PROJECT_BINARY_DIR}/tests --verbose
+)
+
+set_tests_properties(
+  assembler_disassembler_roundtrip
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "0 failed"
 )
