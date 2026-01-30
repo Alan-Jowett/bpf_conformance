@@ -47,6 +47,7 @@ link_directories(${Boost_LIBRARY_DIRS})
 
 add_library("bpf_conformance"
   bpf_assembler.cc
+  bpf_disassembler.cc
   bpf_test_parser.cc
   bpf_conformance.cc
   bpf_writer.cc
@@ -55,6 +56,16 @@ add_library("bpf_conformance"
 add_executable(
   bpf_conformance_runner
   runner.cc
+)
+
+add_executable(
+  bpf_disasm
+  bpf_disasm.cc
+)
+
+add_executable(
+  bpf_asm
+  bpf_asm.cc
 )
 
 # Include elfio - check if already defined (for consumers who include it themselves)
@@ -84,12 +95,30 @@ target_link_directories(bpf_conformance PRIVATE elfio)
 target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB} elfio)
 target_link_libraries(bpf_conformance_runner PRIVATE ${PLATFORM_LIB} "bpf_conformance")
 
+target_include_directories("bpf_disasm" PRIVATE
+  "${Boost_INCLUDE_DIRS}"
+  "${PROJECT_SOURCE_DIR}/include"
+)
+
+target_link_libraries(bpf_disasm PRIVATE ${PLATFORM_LIB} "bpf_conformance")
+
+target_include_directories("bpf_asm" PRIVATE
+  "${Boost_INCLUDE_DIRS}"
+  "${PROJECT_SOURCE_DIR}/include"
+)
+
+target_link_libraries(bpf_asm PRIVATE ${PLATFORM_LIB} "bpf_conformance")
+
 if(MSVC)
   target_compile_options(bpf_conformance PRIVATE /W4)
   target_compile_options(bpf_conformance_runner PRIVATE /W4)
+  target_compile_options(bpf_disasm PRIVATE /W4)
+  target_compile_options(bpf_asm PRIVATE /W4)
 else()
   target_compile_options(bpf_conformance PRIVATE -Wall -Wextra -pedantic)
   target_compile_options(bpf_conformance_runner PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(bpf_disasm PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(bpf_asm PRIVATE -Wall -Wextra -pedantic)
 endif()
 
 find_program(ECHO echo)
@@ -503,4 +532,236 @@ set_tests_properties(
   incorrect_return_value_high_bits
   PROPERTIES
   PASS_REGULAR_EXPRESSION "incorrect return value.*9905498421827150353"
+)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  add_test(
+    NAME assembler_disassembler_roundtrip
+    COMMAND powershell -ExecutionPolicy Bypass -File ${PROJECT_SOURCE_DIR}/scripts/roundtrip_test.ps1 -BpfDisasm $<TARGET_FILE:bpf_disasm> -BpfAsm $<TARGET_FILE:bpf_asm> -TestDirectory ${PROJECT_BINARY_DIR}/tests
+  )
+else()
+  add_test(
+    NAME assembler_disassembler_roundtrip
+    COMMAND bash ${PROJECT_SOURCE_DIR}/scripts/roundtrip_test.sh ${PROJECT_BINARY_DIR}/bin/bpf_disasm ${PROJECT_BINARY_DIR}/bin/bpf_asm ${PROJECT_BINARY_DIR}/tests
+  )
+endif()
+
+set_tests_properties(
+  assembler_disassembler_roundtrip
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "0 failed"
+)
+
+# CLI tool tests for bpf_disasm error path coverage
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  set(BPF_DISASM_EXE $<TARGET_FILE:bpf_disasm>)
+  set(SUDO_CMD "")
+else()
+  set(BPF_DISASM_EXE ${PROJECT_BINARY_DIR}/bin/bpf_disasm)
+  set(SUDO_CMD sudo)
+endif()
+
+add_test(
+  NAME bpf_disasm_help
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --help
+)
+
+set_tests_properties(
+  bpf_disasm_help
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "BPF Disassembler"
+)
+
+add_test(
+  NAME bpf_disasm_no_args
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE}
+)
+
+set_tests_properties(
+  bpf_disasm_no_args
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+add_test(
+  NAME bpf_disasm_unknown_option
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --unknown
+)
+
+set_tests_properties(
+  bpf_disasm_unknown_option
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+add_test(
+  NAME bpf_disasm_file_not_found
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --file nonexistent.data
+)
+
+set_tests_properties(
+  bpf_disasm_file_not_found
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+add_test(
+  NAME bpf_disasm_too_few_bytes
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "b4 00"
+)
+
+set_tests_properties(
+  bpf_disasm_too_few_bytes
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+add_test(
+  NAME bpf_disasm_raw_output
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "95 00 00 00 00 00 00 00" --raw
+)
+
+set_tests_properties(
+  bpf_disasm_raw_output
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "exit.*;"
+)
+
+# Test lddw with raw output to cover format_raw_bytes in lddw path
+add_test(
+  NAME bpf_disasm_lddw_raw
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "18 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 95 00 00 00 00 00 00 00" --raw
+)
+
+set_tests_properties(
+  bpf_disasm_lddw_raw
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "lddw.*;"
+)
+
+# CLI tool tests for bpf_asm error path coverage
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  set(BPF_ASM_EXE $<TARGET_FILE:bpf_asm>)
+else()
+  set(BPF_ASM_EXE ${PROJECT_BINARY_DIR}/bin/bpf_asm)
+endif()
+
+add_test(
+  NAME bpf_asm_help
+  COMMAND ${SUDO_CMD} ${BPF_ASM_EXE} --help
+)
+
+set_tests_properties(
+  bpf_asm_help
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "BPF Assembler"
+)
+
+add_test(
+  NAME bpf_asm_no_args
+  COMMAND ${SUDO_CMD} ${BPF_ASM_EXE}
+)
+
+set_tests_properties(
+  bpf_asm_no_args
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+add_test(
+  NAME bpf_asm_unknown_option
+  COMMAND ${SUDO_CMD} ${BPF_ASM_EXE} --unknown
+)
+
+set_tests_properties(
+  bpf_asm_unknown_option
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+add_test(
+  NAME bpf_asm_file_not_found
+  COMMAND ${SUDO_CMD} ${BPF_ASM_EXE} --file nonexistent.asm
+)
+
+set_tests_properties(
+  bpf_asm_file_not_found
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+# Test invalid hex bytes to cover parse_hex_string exception handler
+add_test(
+  NAME bpf_disasm_invalid_hex
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "zz xx 95 00 00 00 00 00 00 00"
+)
+
+set_tests_properties(
+  bpf_disasm_invalid_hex
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "exit"
+)
+
+# Test empty instructions file
+add_test(
+  NAME bpf_disasm_empty_file
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --file ${PROJECT_SOURCE_DIR}/negative/empty_instructions.data
+)
+
+set_tests_properties(
+  bpf_disasm_empty_file
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+# Test non-lddw LD class instruction to cover _decode_ld
+# Opcode 0x00 = LD class with mode=0, size=B (legacy packet load)
+add_test(
+  NAME bpf_disasm_legacy_ld
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "00 00 00 00 00 00 00 00 95 00 00 00 00 00 00 00"
+)
+
+set_tests_properties(
+  bpf_disasm_legacy_ld
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "lddw"
+)
+
+# Test callx (indirect call via register) to cover callx disassembly path
+# opcode=0x8d, dst=2 (register), src=0
+add_test(
+  NAME bpf_disasm_callx
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "8d 02 00 00 00 00 00 00 95 00 00 00 00 00 00 00"
+)
+
+set_tests_properties(
+  bpf_disasm_callx
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "call helper %r2"
+)
+
+# Test call runtime (kfunc) to cover src==2 branch in _decode_call
+# opcode=0x85, dst=0, src=2, imm=1
+add_test(
+  NAME bpf_disasm_call_runtime
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "85 20 00 00 01 00 00 00 95 00 00 00 00 00 00 00"
+)
+
+set_tests_properties(
+  bpf_disasm_call_runtime
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "call runtime"
+)
+
+# Test unknown call type (src > 2) to cover fallback branch in _decode_call
+# opcode=0x85, dst=0, src=3, imm=1
+add_test(
+  NAME bpf_disasm_call_unknown
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "85 30 00 00 01 00 00 00 95 00 00 00 00 00 00 00"
+)
+
+set_tests_properties(
+  bpf_disasm_call_unknown
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "call unknown"
 )

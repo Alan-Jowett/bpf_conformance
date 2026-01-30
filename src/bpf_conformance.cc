@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "bpf_disassembler.h"
 #include "bpf_test_parser.h"
 #include "bpf_writer.h"
 #include "opcode_names.h"
@@ -233,6 +234,8 @@ bpf_conformance_options(
             std::cerr << "Expected return value: " << expected_return_value << std::endl;
             std::cerr << "Expected error string: " << expected_error_string << std::endl;
             std::cerr << "Byte code: " << _base_16_encode(_ebpf_inst_to_byte_vector(byte_code)) << std::endl;
+            std::cerr << "Disassembly:" << std::endl;
+            bpf_disassembler(byte_code, std::cerr, false);
         }
 
         std::string return_value_string;

@@ -1,0 +1,5 @@
+# Copyright (c) Microsoft Corporation
+# SPDX-License-Identifier: MIT
+# Empty test file - no asm or raw section
+-- result
+0x0
