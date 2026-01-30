@@ -551,3 +551,127 @@ set_tests_properties(
   PROPERTIES
   PASS_REGULAR_EXPRESSION "0 failed"
 )
+
+# CLI tool tests for bpf_disasm error path coverage
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  set(BPF_DISASM_EXE $<TARGET_FILE:bpf_disasm>)
+else()
+  set(BPF_DISASM_EXE ${PROJECT_BINARY_DIR}/bin/bpf_disasm)
+endif()
+
+add_test(
+  NAME bpf_disasm_help
+  COMMAND ${BPF_DISASM_EXE} --help
+)
+
+set_tests_properties(
+  bpf_disasm_help
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "BPF Disassembler"
+)
+
+add_test(
+  NAME bpf_disasm_no_args
+  COMMAND ${BPF_DISASM_EXE}
+)
+
+set_tests_properties(
+  bpf_disasm_no_args
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+add_test(
+  NAME bpf_disasm_unknown_option
+  COMMAND ${BPF_DISASM_EXE} --unknown
+)
+
+set_tests_properties(
+  bpf_disasm_unknown_option
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+add_test(
+  NAME bpf_disasm_file_not_found
+  COMMAND ${BPF_DISASM_EXE} --file nonexistent.data
+)
+
+set_tests_properties(
+  bpf_disasm_file_not_found
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+add_test(
+  NAME bpf_disasm_too_few_bytes
+  COMMAND ${BPF_DISASM_EXE} --program "b4 00"
+)
+
+set_tests_properties(
+  bpf_disasm_too_few_bytes
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+add_test(
+  NAME bpf_disasm_raw_output
+  COMMAND ${BPF_DISASM_EXE} --program "95 00 00 00 00 00 00 00" --raw
+)
+
+set_tests_properties(
+  bpf_disasm_raw_output
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "exit.*;"
+)
+
+# CLI tool tests for bpf_asm error path coverage
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  set(BPF_ASM_EXE $<TARGET_FILE:bpf_asm>)
+else()
+  set(BPF_ASM_EXE ${PROJECT_BINARY_DIR}/bin/bpf_asm)
+endif()
+
+add_test(
+  NAME bpf_asm_help
+  COMMAND ${BPF_ASM_EXE} --help
+)
+
+set_tests_properties(
+  bpf_asm_help
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "BPF Assembler"
+)
+
+add_test(
+  NAME bpf_asm_no_args
+  COMMAND ${BPF_ASM_EXE}
+)
+
+set_tests_properties(
+  bpf_asm_no_args
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+add_test(
+  NAME bpf_asm_unknown_option
+  COMMAND ${BPF_ASM_EXE} --unknown
+)
+
+set_tests_properties(
+  bpf_asm_unknown_option
+  PROPERTIES
+  WILL_FAIL TRUE
+)
+
+add_test(
+  NAME bpf_asm_file_not_found
+  COMMAND ${BPF_ASM_EXE} --file nonexistent.asm
+)
+
+set_tests_properties(
+  bpf_asm_file_not_found
+  PROPERTIES
+  WILL_FAIL TRUE
+)
