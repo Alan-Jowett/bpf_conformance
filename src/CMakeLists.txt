@@ -625,6 +625,18 @@ set_tests_properties(
   PASS_REGULAR_EXPRESSION "exit.*;"
 )
 
+# Test lddw with raw output to cover format_raw_bytes in lddw path
+add_test(
+  NAME bpf_disasm_lddw_raw
+  COMMAND ${BPF_DISASM_EXE} --program "18 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 95 00 00 00 00 00 00 00" --raw
+)
+
+set_tests_properties(
+  bpf_disasm_lddw_raw
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "lddw.*;"
+)
+
 # CLI tool tests for bpf_asm error path coverage
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(BPF_ASM_EXE $<TARGET_FILE:bpf_asm>)
