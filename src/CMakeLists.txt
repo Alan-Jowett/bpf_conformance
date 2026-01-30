@@ -555,13 +555,15 @@ set_tests_properties(
 # CLI tool tests for bpf_disasm error path coverage
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(BPF_DISASM_EXE $<TARGET_FILE:bpf_disasm>)
+  set(SUDO_CMD "")
 else()
   set(BPF_DISASM_EXE ${PROJECT_BINARY_DIR}/bin/bpf_disasm)
+  set(SUDO_CMD sudo)
 endif()
 
 add_test(
   NAME bpf_disasm_help
-  COMMAND ${BPF_DISASM_EXE} --help
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --help
 )
 
 set_tests_properties(
@@ -572,7 +574,7 @@ set_tests_properties(
 
 add_test(
   NAME bpf_disasm_no_args
-  COMMAND ${BPF_DISASM_EXE}
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE}
 )
 
 set_tests_properties(
@@ -583,7 +585,7 @@ set_tests_properties(
 
 add_test(
   NAME bpf_disasm_unknown_option
-  COMMAND ${BPF_DISASM_EXE} --unknown
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --unknown
 )
 
 set_tests_properties(
@@ -594,7 +596,7 @@ set_tests_properties(
 
 add_test(
   NAME bpf_disasm_file_not_found
-  COMMAND ${BPF_DISASM_EXE} --file nonexistent.data
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --file nonexistent.data
 )
 
 set_tests_properties(
@@ -605,7 +607,7 @@ set_tests_properties(
 
 add_test(
   NAME bpf_disasm_too_few_bytes
-  COMMAND ${BPF_DISASM_EXE} --program "b4 00"
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "b4 00"
 )
 
 set_tests_properties(
@@ -616,7 +618,7 @@ set_tests_properties(
 
 add_test(
   NAME bpf_disasm_raw_output
-  COMMAND ${BPF_DISASM_EXE} --program "95 00 00 00 00 00 00 00" --raw
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "95 00 00 00 00 00 00 00" --raw
 )
 
 set_tests_properties(
@@ -628,7 +630,7 @@ set_tests_properties(
 # Test lddw with raw output to cover format_raw_bytes in lddw path
 add_test(
   NAME bpf_disasm_lddw_raw
-  COMMAND ${BPF_DISASM_EXE} --program "18 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 95 00 00 00 00 00 00 00" --raw
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "18 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 95 00 00 00 00 00 00 00" --raw
 )
 
 set_tests_properties(
@@ -646,7 +648,7 @@ endif()
 
 add_test(
   NAME bpf_asm_help
-  COMMAND ${BPF_ASM_EXE} --help
+  COMMAND ${SUDO_CMD} ${BPF_ASM_EXE} --help
 )
 
 set_tests_properties(
@@ -657,7 +659,7 @@ set_tests_properties(
 
 add_test(
   NAME bpf_asm_no_args
-  COMMAND ${BPF_ASM_EXE}
+  COMMAND ${SUDO_CMD} ${BPF_ASM_EXE}
 )
 
 set_tests_properties(
@@ -668,7 +670,7 @@ set_tests_properties(
 
 add_test(
   NAME bpf_asm_unknown_option
-  COMMAND ${BPF_ASM_EXE} --unknown
+  COMMAND ${SUDO_CMD} ${BPF_ASM_EXE} --unknown
 )
 
 set_tests_properties(
@@ -679,7 +681,7 @@ set_tests_properties(
 
 add_test(
   NAME bpf_asm_file_not_found
-  COMMAND ${BPF_ASM_EXE} --file nonexistent.asm
+  COMMAND ${SUDO_CMD} ${BPF_ASM_EXE} --file nonexistent.asm
 )
 
 set_tests_properties(
@@ -691,7 +693,7 @@ set_tests_properties(
 # Test invalid hex bytes to cover parse_hex_string exception handler
 add_test(
   NAME bpf_disasm_invalid_hex
-  COMMAND ${BPF_DISASM_EXE} --program "zz xx 95 00 00 00 00 00 00 00"
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "zz xx 95 00 00 00 00 00 00 00"
 )
 
 set_tests_properties(
@@ -703,7 +705,7 @@ set_tests_properties(
 # Test empty instructions file
 add_test(
   NAME bpf_disasm_empty_file
-  COMMAND ${BPF_DISASM_EXE} --file ${PROJECT_SOURCE_DIR}/negative/empty_instructions.data
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --file ${PROJECT_SOURCE_DIR}/negative/empty_instructions.data
 )
 
 set_tests_properties(
@@ -716,7 +718,7 @@ set_tests_properties(
 # Opcode 0x00 = LD class with mode=0, size=B (legacy packet load)
 add_test(
   NAME bpf_disasm_legacy_ld
-  COMMAND ${BPF_DISASM_EXE} --program "00 00 00 00 00 00 00 00 95 00 00 00 00 00 00 00"
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "00 00 00 00 00 00 00 00 95 00 00 00 00 00 00 00"
 )
 
 set_tests_properties(
@@ -729,7 +731,7 @@ set_tests_properties(
 # opcode=0x8d, dst=2 (register), src=0
 add_test(
   NAME bpf_disasm_callx
-  COMMAND ${BPF_DISASM_EXE} --program "8d 02 00 00 00 00 00 00 95 00 00 00 00 00 00 00"
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "8d 02 00 00 00 00 00 00 95 00 00 00 00 00 00 00"
 )
 
 set_tests_properties(
@@ -742,7 +744,7 @@ set_tests_properties(
 # opcode=0x85, dst=0, src=2, imm=1
 add_test(
   NAME bpf_disasm_call_runtime
-  COMMAND ${BPF_DISASM_EXE} --program "85 20 00 00 01 00 00 00 95 00 00 00 00 00 00 00"
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "85 20 00 00 01 00 00 00 95 00 00 00 00 00 00 00"
 )
 
 set_tests_properties(
@@ -755,7 +757,7 @@ set_tests_properties(
 # opcode=0x85, dst=0, src=3, imm=1
 add_test(
   NAME bpf_disasm_call_unknown
-  COMMAND ${BPF_DISASM_EXE} --program "85 30 00 00 01 00 00 00 95 00 00 00 00 00 00 00"
+  COMMAND ${SUDO_CMD} ${BPF_DISASM_EXE} --program "85 30 00 00 01 00 00 00 95 00 00 00 00 00 00 00"
 )
 
 set_tests_properties(
