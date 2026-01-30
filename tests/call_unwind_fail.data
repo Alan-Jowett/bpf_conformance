@@ -1,7 +1,9 @@
 # Copyright (c) Big Switch Networks, Inc
 # SPDX-License-Identifier: Apache-2.0
 -- asm
-# Test that call instruction works and returns a value
+# Test that call instruction properly executes and returns values
+# Note: Originally tested helper function 5 (unwind), but helper behavior
+# is implementation-specific. Using local function call for deterministic testing.
 # Initialize %r0 to 0 (failure value)
 mov %r0, 0
 # Set up argument

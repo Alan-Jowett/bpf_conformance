@@ -1,7 +1,9 @@
 # Copyright (c) Big Switch Networks, Inc
 # SPDX-License-Identifier: Apache-2.0
 -- asm
-# Test that call via register (callx) works
+# Test that call instruction properly executes and returns values
+# Note: Originally tested call via register (callx) for helper functions,
+# but helper calls are not reliably testable. Using local function call instead.
 # Initialize result to failure value
 mov %r0, 0
 # Set up argument
