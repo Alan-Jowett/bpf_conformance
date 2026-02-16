@@ -1,3 +1,1 @@
-[submodule "external/elfio"]
-	path = external/elfio
-	url = https://github.com/serge1/ELFIO.git
+# No submodules - dependencies are fetched via CMake FetchContent

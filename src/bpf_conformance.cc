@@ -14,7 +14,9 @@
 
 #include "bpf_disassembler.h"
 #include "bpf_test_parser.h"
+#ifdef BPF_CONFORMANCE_HAS_ELF_WRITER
 #include "bpf_writer.h"
+#endif
 #include "opcode_names.h"
 
 /**
@@ -53,6 +55,7 @@ _ebpf_inst_to_byte_vector(const std::vector<ebpf_inst>& instructions)
     return result;
 }
 
+#ifdef BPF_CONFORMANCE_HAS_ELF_WRITER
 /**
  * @brief Convert a vector of ebpf instructions to an ELF file.
  * In the future this will include map definitions and relocation information.
@@ -75,6 +78,7 @@ _ebpf_inst_to_elf_file(
     std::copy(elf_file_string.begin(), elf_file_string.end(), result.begin());
     return result;
 }
+#endif // BPF_CONFORMANCE_HAS_ELF_WRITER
 
 static void
 _log_debug_result(
@@ -266,6 +270,7 @@ bpf_conformance_options(
                 boost::process::std_in<input, boost::process::std_err> error);
 
             // Pass the BPF instructions to the plugin as stdin.
+#ifdef BPF_CONFORMANCE_HAS_ELF_WRITER
             if (options.elf_format) {
                 // Encode the instructions as an ELF file.
                 // Issue: https://github.com/Alan-Jowett/bpf_conformance/issues/68
@@ -282,7 +287,21 @@ bpf_conformance_options(
                     std::cerr << "ELF-encoded bytes: " << elf_bytes
                               << std::endl;
                 }
-            } else {
+            } else
+#else
+            if (options.elf_format) {
+                // ELF writer not available - skip test
+                if (options.debug) {
+                    std::cerr << "ELF format requested but ELF writer not compiled in" << std::endl;
+                }
+                test_results[test] = std::make_tuple(
+                    bpf_conformance_test_result_t::TEST_RESULT_SKIP,
+                    "ELF format not available (elfio not compiled in)");
+                c.terminate();
+                continue;
+            }
+#endif
+            {
                 // Encode the instructions as a byte array.
                 input << _base_16_encode(_ebpf_inst_to_byte_vector(byte_code)) << std::endl;
             }

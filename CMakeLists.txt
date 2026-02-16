@@ -19,12 +19,19 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   add_link_options(/guard:cf /CETCOMPAT)
 endif()
 
+# Option to enable ELF writer functionality (requires elfio)
+# Default: ON for standalone builds, can be disabled by consumers
+option(BPF_CONFORMANCE_ENABLE_ELF_WRITER "Enable ELF file writing support (requires elfio)" ON)
+
+# Fetch elfio if ELF writer is enabled
+if(BPF_CONFORMANCE_ENABLE_ELF_WRITER)
+  include("cmake/FetchElfio.cmake")
+endif()
+
 include("cmake/FindLibBpf.cmake")
 include(CTest)
 
 add_subdirectory("src")
-
-# elfio is handled by src/CMakeLists.txt
 
 file(COPY tests DESTINATION .)
 

@@ -63,6 +63,29 @@ On Windows, Boost is automatically fetched via NuGet during CMake configuration.
 
 Run ```cmake -S . -B build``` to configure the project, then run ```cmake --build build``` to build the project.
 
+### CMake Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `BPF_CONFORMANCE_ENABLE_ELF_WRITER` | `ON` | Enable ELF file writing support. Requires elfio (automatically fetched via FetchContent if not available). Set to `OFF` to build without elfio dependency. |
+
+#### Building as a Subdirectory
+
+When consuming bpf_conformance as a CMake subdirectory:
+
+```cmake
+# Option 1: Let bpf_conformance fetch elfio automatically (default)
+add_subdirectory(bpf_conformance)
+
+# Option 2: Provide your own elfio target first
+add_subdirectory(path/to/elfio)  # Creates 'elfio' target
+add_subdirectory(bpf_conformance)  # Will use existing elfio target
+
+# Option 3: Disable ELF writer if you don't need it
+set(BPF_CONFORMANCE_ENABLE_ELF_WRITER OFF CACHE BOOL "" FORCE)
+add_subdirectory(bpf_conformance)
+```
+
 ## Usage
 
 ```

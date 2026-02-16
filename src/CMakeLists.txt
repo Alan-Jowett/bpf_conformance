@@ -45,13 +45,25 @@ include_directories(${Boost_INCLUDE_DIR})
 
 link_directories(${Boost_LIBRARY_DIRS})
 
-add_library("bpf_conformance"
+# Core library sources
+set(BPF_CONFORMANCE_SOURCES
   bpf_assembler.cc
   bpf_disassembler.cc
   bpf_test_parser.cc
   bpf_conformance.cc
-  bpf_writer.cc
 )
+
+# Add ELF writer if enabled
+if(BPF_CONFORMANCE_ENABLE_ELF_WRITER AND TARGET elfio)
+  list(APPEND BPF_CONFORMANCE_SOURCES bpf_writer.cc)
+  set(BPF_CONFORMANCE_HAS_ELF_WRITER TRUE)
+  message(STATUS "bpf_conformance: ELF writer enabled")
+else()
+  set(BPF_CONFORMANCE_HAS_ELF_WRITER FALSE)
+  message(STATUS "bpf_conformance: ELF writer disabled (elfio not available or disabled)")
+endif()
+
+add_library("bpf_conformance" ${BPF_CONFORMANCE_SOURCES})
 
 add_executable(
   bpf_conformance_runner
@@ -68,31 +80,30 @@ add_executable(
   bpf_asm.cc
 )
 
-# Include elfio - check if already defined (for consumers who include it themselves)
-if(NOT TARGET elfio)
-  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../external/elfio/CMakeLists.txt")
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../external/elfio"
-                     "${CMAKE_CURRENT_BINARY_DIR}/elfio" EXCLUDE_FROM_ALL)
-  else()
-    message(FATAL_ERROR "elfio not found. Run 'git submodule update --init --recursive'")
-  endif()
+# Conditionally add elfio dependencies if ELF writer is enabled
+if(BPF_CONFORMANCE_HAS_ELF_WRITER)
+  add_dependencies(bpf_conformance elfio)
+  target_compile_definitions(bpf_conformance PRIVATE BPF_CONFORMANCE_HAS_ELF_WRITER)
+  target_include_directories("bpf_conformance" PRIVATE
+    "${Boost_INCLUDE_DIRS}"
+    "${PROJECT_SOURCE_DIR}/include"
+    elfio
+  )
+  target_link_directories(bpf_conformance PRIVATE elfio)
+  target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB} elfio)
+else()
+  target_include_directories("bpf_conformance" PRIVATE
+    "${Boost_INCLUDE_DIRS}"
+    "${PROJECT_SOURCE_DIR}/include"
+  )
+  target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB})
 endif()
-
-add_dependencies(bpf_conformance elfio)
-
-target_include_directories("bpf_conformance" PRIVATE
-  "${Boost_INCLUDE_DIRS}"
-  "${PROJECT_SOURCE_DIR}/include"
-  elfio
-)
 
 target_include_directories("bpf_conformance_runner" PRIVATE
   "${Boost_INCLUDE_DIRS}"
   "${PROJECT_SOURCE_DIR}/include"
 )
 
-target_link_directories(bpf_conformance PRIVATE elfio)
-target_link_libraries(bpf_conformance PRIVATE ${PLATFORM_LIB} elfio)
 target_link_libraries(bpf_conformance_runner PRIVATE ${PLATFORM_LIB} "bpf_conformance")
 
 target_include_directories("bpf_disasm" PRIVATE
