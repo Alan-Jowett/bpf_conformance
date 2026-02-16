@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation
 // SPDX-License-Identifier: MIT
 
+// This header provides shared type definitions and the executor-based conformance API.
+// The main user-facing API with Boost.Process is in include/bpf_conformance.h
+
 #pragma once
 
 #include <cstdint>
@@ -15,31 +18,26 @@
 #include "ebpf.h"
 
 /**
- * @brief Result of executing a BPF program.
+ * @brief Result of executing a BPF program via an executor.
  */
-struct bpf_execution_result_t
+struct bpf_conformance_plugin_result_t
 {
-    bool success;               ///< True if execution completed (may still have semantic error)
-    int exit_code;              ///< Process/execution exit code (0 = success)
-    uint64_t return_value;      ///< Return value (%r0) if successful
-    std::string output;         ///< stdout or result output
-    std::string error_message;  ///< stderr or error message
+    int exit_code;              ///< Process exit code (0 = success)
+    std::string stdout_output;  ///< Plugin stdout
+    std::string stderr_output;  ///< Plugin stderr
 };
 
 /**
  * @brief Function type for executing BPF bytecode.
  *
- * Implementations can use any execution strategy: subprocess, in-process VM, etc.
- *
- * @param bytecode The BPF bytecode to execute (raw bytes or ELF depending on elf_format).
- * @param memory Input memory to pass to the BPF program.
- * @param elf_format If true, bytecode is ELF format; if false, raw instruction bytes.
- * @return Execution result including return value or error.
+ * @param input_data Hex-encoded bytecode to send to plugin stdin.
+ * @param args Command line arguments for the plugin.
+ * @return Execution result.
+ * @throws std::runtime_error if execution fails (e.g., plugin not found).
  */
-using bpf_executor_fn = std::function<bpf_execution_result_t(
-    const std::vector<uint8_t>& bytecode,
-    const std::vector<uint8_t>& memory,
-    bool elf_format
+using bpf_conformance_executor_t = std::function<bpf_conformance_plugin_result_t(
+    const std::string& input_data,
+    const std::vector<std::string>& args
 )>;
 
 /**
@@ -143,17 +141,17 @@ typedef struct _bpf_conformance_options
  * This is the core conformance testing function that accepts any executor implementation.
  *
  * @param test_files List of test files to run.
- * @param executor Function to execute BPF bytecode.
+ * @param executor Function to execute the plugin (send data to stdin, return stdout/stderr/exit_code).
  * @param options Options controlling the behavior of the tests.
  * @return Map of test file paths to (result, message) tuples.
  */
 std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>>
 bpf_conformance_run(
     const std::vector<std::filesystem::path>& test_files,
-    bpf_executor_fn executor,
+    bpf_conformance_executor_t executor,
     const bpf_conformance_options_t& options);
 
 // Well-known section/function names
-const std::string bpf_conformance_xdp_section_name = "xdp";
-const std::string bpf_conformance_default_section_name = ".text";
-const std::string bpf_conformance_default_function_name = "main";
+extern const std::string bpf_conformance_xdp_section_name;
+extern const std::string bpf_conformance_default_section_name;
+extern const std::string bpf_conformance_default_function_name;

@@ -53,9 +53,9 @@ include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIRS})
 
 # bpf_conformance library (with Boost process execution)
-# Note: bpf_writer is now in bpf_conformance_core (conditionally compiled with ELFIO)
+# This includes the main conformance logic which depends on Boost.Process
 add_library(bpf_conformance STATIC
-  bpf_conformance_process.cc
+  bpf_conformance.cc
 )
 
 add_dependencies(bpf_conformance bpf_conformance_core)

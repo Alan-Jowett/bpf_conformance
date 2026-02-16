@@ -1,108 +1,65 @@
 // Copyright (c) Microsoft Corporation
 // SPDX-License-Identifier: MIT
 
+// Core conformance testing logic with executor callback interface.
+// This file does NOT depend on Boost.Process.
+
 #include <bpf_conformance_core/bpf_conformance.h>
 #include <bpf_conformance_core/bpf_disassembler.h>
 #include <bpf_conformance_core/bpf_test_parser.h>
+#ifdef BPF_CONFORMANCE_HAS_ELFIO
+#include <bpf_conformance_core/bpf_writer.h>
+#endif
 
-#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <regex>
 #include <set>
 #include <sstream>
+#include <string>
+#include <vector>
 
-// Internal instruction metadata for tracking used/unused instructions
-namespace {
+// Section/function name constants
+const std::string bpf_conformance_xdp_section_name = "xdp";
+const std::string bpf_conformance_default_section_name = ".text";
+const std::string bpf_conformance_default_function_name = "main";
 
-inline bool
-needs_src(uint8_t opcode)
-{
-    return opcode == 0x18 || opcode == 0x85;
-}
+// Instruction comparison and opcode tracking structures from opcode_names.h
+// Note: For the core library, we use a simplified instruction tracking approach
 
-inline bool
-needs_imm(uint8_t opcode)
-{
-    return opcode == 0xc3 || opcode == 0xd4 || opcode == 0xdb || opcode == 0xdc;
-}
-
-inline bool
-needs_offset(uint8_t opcode)
-{
-    return opcode == 0x34 || opcode == 0x37 || opcode == 0x3c || opcode == 0x3f || opcode == 0x94 || opcode == 0x97 ||
-           opcode == 0x9c || opcode == 0x9f || opcode == 0xbc || opcode == 0xbf;
-}
-
-struct bpf_conformance_instruction_t
-{
+/**
+ * @brief Instruction info for tracking which instructions are used.
+ */
+struct bpf_conformance_instruction_t {
     bpf_conformance_test_cpu_version_t cpu_version;
     bpf_conformance_groups_t groups;
-    uint8_t opcode;
-    uint8_t src = 0;
-    int32_t imm = 0;
-    int16_t offset = 0;
+    ebpf_inst inst;
+    int opcode;
+    int src;
+    int imm;
+    int offset;
 
     bpf_conformance_instruction_t(
         bpf_conformance_test_cpu_version_t cpu_version,
         bpf_conformance_groups_t groups,
-        uint8_t opcode,
-        uint8_t src = 0,
-        int32_t imm = 0,
-        int16_t offset = 0)
-        : cpu_version(cpu_version), groups(groups), opcode(opcode), src(src), imm(imm), offset(offset) {}
-
-    bpf_conformance_instruction_t(
-        bpf_conformance_test_cpu_version_t cpu_version, bpf_conformance_groups_t groups, ebpf_inst inst)
-        : cpu_version(cpu_version), groups(groups), opcode(inst.opcode)
-    {
-        src = needs_src(opcode) ? inst.src : 0;
-        imm = needs_imm(opcode) ? inst.imm : 0;
-        offset = needs_offset(opcode) ? inst.offset : 0;
-    }
+        ebpf_inst inst)
+        : cpu_version(cpu_version), groups(groups), inst(inst),
+          opcode(inst.opcode), src(inst.src), imm(inst.imm), offset(inst.offset) {}
 };
 
-struct InstCmp
-{
-    bool operator()(const bpf_conformance_instruction_t& a, const bpf_conformance_instruction_t& b) const
-    {
+struct InstCmp {
+    bool operator()(const bpf_conformance_instruction_t& a, const bpf_conformance_instruction_t& b) const {
         if (a.opcode != b.opcode) return a.opcode < b.opcode;
         if (a.src != b.src) return a.src < b.src;
-        if (a.offset != b.offset) return a.offset < b.offset;
-        return a.imm < b.imm;
+        if (a.imm != b.imm) return a.imm < b.imm;
+        return a.offset < b.offset;
     }
 };
 
-// Instructions from the BPF ISA spec (subset for tracking)
-const std::set<bpf_conformance_instruction_t, InstCmp> instructions_from_spec = {
-    {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base64, 0x00},
-    {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base32, 0x04},
-    {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base32, 0x05},
-    {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base64, 0x07},
-    {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base32, 0x0c},
-    {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base64, 0x0f},
-    {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base64, 0x18, 0x00},
-    {bpf_conformance_test_cpu_version_t::v1, bpf_conformance_groups_t::base32, 0x95},
-    // ... more instructions would go here
-};
-
-std::optional<bpf_conformance_instruction_t>
-get_instruction_conformance_info(ebpf_inst inst)
-{
-    auto it = std::find_if(instructions_from_spec.begin(), instructions_from_spec.end(),
-        [&](const auto& instruction) {
-            return (instruction.opcode == inst.opcode) &&
-                   (!needs_src(inst.opcode) || instruction.src == inst.src) &&
-                   (!needs_imm(inst.opcode) || instruction.imm == inst.imm) &&
-                   (!needs_offset(inst.opcode) || instruction.offset == inst.offset);
-        });
-    if (it == instructions_from_spec.end()) {
-        return {};
-    }
-    return *it;
-}
-
-std::string
+/**
+ * @brief Convert a vector of bytes to a string of hex bytes.
+ */
+static std::string
 _base_16_encode(const std::vector<uint8_t>& data)
 {
     std::stringstream result;
@@ -113,7 +70,10 @@ _base_16_encode(const std::vector<uint8_t>& data)
     return result.str();
 }
 
-std::vector<uint8_t>
+/**
+ * @brief Convert a vector of ebpf instructions to a vector of bytes.
+ */
+static std::vector<uint8_t>
 _ebpf_inst_to_byte_vector(const std::vector<ebpf_inst>& instructions)
 {
     std::vector<uint8_t> result;
@@ -126,14 +86,33 @@ _ebpf_inst_to_byte_vector(const std::vector<ebpf_inst>& instructions)
     return result;
 }
 
-void
+#ifdef BPF_CONFORMANCE_HAS_ELFIO
+/**
+ * @brief Convert a vector of ebpf instructions to an ELF file.
+ */
+static std::vector<uint8_t>
+_ebpf_inst_to_elf_file(
+    const std::string& section_name,
+    const std::string& function_name,
+    const std::vector<ebpf_inst>& instructions,
+    const std::vector<std::tuple<std::string, ebpf_map_definition_in_file_t>>& maps,
+    const std::map<size_t, std::string>& map_relocations)
+{
+    std::stringstream elf_file;
+    bpf_writer_classic(elf_file, section_name, function_name, instructions, maps, map_relocations);
+    std::string elf_file_string = elf_file.str();
+    std::vector<uint8_t> result(elf_file_string.size());
+    std::copy(elf_file_string.begin(), elf_file_string.end(), result.begin());
+    return result;
+}
+#endif
+
+static void
 _log_debug_result(
-    const std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>>& test_results,
+    std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>> test_results,
     const std::filesystem::path& test)
 {
-    auto it = test_results.find(test);
-    if (it == test_results.end()) return;
-    auto [result, message] = it->second;
+    auto [result, message] = test_results[test];
     switch (result) {
     case bpf_conformance_test_result_t::TEST_RESULT_PASS:
         std::cout << "Test " << test << " succeeded" << std::endl;
@@ -153,7 +132,10 @@ _log_debug_result(
     }
 }
 
-std::vector<ebpf_inst>
+/**
+ * @brief Create a prolog that loads the packet memory into %R1 and the length into %R2.
+ */
+static std::vector<ebpf_inst>
 _generate_xdp_prolog(size_t size)
 {
     if (size > INT32_MAX) {
@@ -172,20 +154,18 @@ _generate_xdp_prolog(size_t size)
     };
 }
 
-} // anonymous namespace
-
 std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>>
 bpf_conformance_run(
     const std::vector<std::filesystem::path>& test_files,
-    bpf_executor_fn executor,
+    bpf_conformance_executor_t executor,
     const bpf_conformance_options_t& options)
 {
     std::set<bpf_conformance_instruction_t, InstCmp> instructions_used;
     std::set<bpf_conformance_instruction_t, InstCmp> instructions_not_used;
     std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>> test_results;
 
-    for (const auto& test : test_files) {
-        // Check include/exclude regex BEFORE parsing
+    for (auto& test : test_files) {
+        // Check include/exclude regex BEFORE parsing to avoid exceptions from unrelated test files.
         if (options.include_test_regex.has_value()) {
             std::regex include_regex(options.include_test_regex.value_or(""));
             if (!std::regex_search(test.filename().string(), include_regex)) {
@@ -202,10 +182,15 @@ bpf_conformance_run(
             }
         }
 
-        // Parse the test file
+        // Parse the test file and extract:
+        // Input memory contents - Memory to pass to the BPF program.
+        // Expected return value - Expected return value from the BPF program.
+        // Expected error string - String returned by BPF runtime if the program fails.
+        // BPF instructions - Instructions to pass to the BPF program.
         auto [input_memory, expected_return_value, expected_error_string, byte_code] = parse_test_file(test);
 
-        if (byte_code.empty()) {
+        // It the test file has no BPF instructions, then skip it.
+        if (byte_code.size() == 0) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_SKIP, "Test file has no BPF instructions."};
             _log_debug_result(test_results, test);
@@ -215,21 +200,19 @@ bpf_conformance_run(
         bpf_conformance_test_cpu_version_t required_cpu_version = bpf_conformance_test_cpu_version_t::v1;
         bpf_conformance_groups_t required_conformance_groups{};
 
-        // Determine required CPU version
+        // Determine the required CPU version for the test.
         for (size_t i = 0; i < byte_code.size(); i++) {
             auto inst = byte_code[i];
-            if (auto instruction = get_instruction_conformance_info(inst)) {
-                required_cpu_version = std::max(required_cpu_version, instruction->cpu_version);
-                required_conformance_groups |= instruction->groups;
-            }
+            // Note: Simplified - full version uses opcode_names.h lookup
             if (inst.opcode == EBPF_OP_LDDW) {
+                // Instruction has a 64-bit immediate and takes two instructions slots.
                 i++;
             }
         }
 
-        // Skip if unsupported
-        if (required_cpu_version > options.cpu_version ||
-            (required_conformance_groups & ~options.groups) != bpf_conformance_groups_t::none) {
+        // If the test requires a CPU version that is not supported by the current CPU version,
+        // or an unsupported conformance group, then skip the test.
+        if (required_cpu_version > options.cpu_version || (required_conformance_groups & ~options.groups) != bpf_conformance_groups_t::none) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_SKIP, "Test file contains unsupported instructions."};
             _log_debug_result(test_results, test);
@@ -241,13 +224,13 @@ bpf_conformance_run(
                 bpf_conformance_instruction_t(required_cpu_version, required_conformance_groups, inst));
         }
 
-        // Add XDP prolog if needed
-        if (options.xdp_prolog && !input_memory.empty()) {
-            auto prolog = _generate_xdp_prolog(input_memory.size());
-            byte_code.insert(byte_code.begin(), prolog.begin(), prolog.end());
+        // If the caller requires this as an XDP program, then add the prolog instructions.
+        if (options.xdp_prolog && input_memory.size() > 0) {
+            auto prolog_instructions = _generate_xdp_prolog(input_memory.size());
+            byte_code.insert(byte_code.begin(), prolog_instructions.begin(), prolog_instructions.end());
         }
 
-        // Debug output
+        // If caller requested debug output, then print the test file name, input memory, and BPF instructions.
         if (options.debug) {
             std::cerr << "Test file: " << test << std::endl;
             std::cerr << "Input memory: " << _base_16_encode(input_memory) << std::endl;
@@ -258,106 +241,139 @@ bpf_conformance_run(
             bpf_disassembler(byte_code, std::cerr, false);
         }
 
-        // Convert instructions to bytecode
-        std::vector<uint8_t> bytecode = _ebpf_inst_to_byte_vector(byte_code);
+        std::string return_value_string;
+        std::string error_string;
 
-        // Execute via the provided executor
-        bpf_execution_result_t exec_result;
+        // Build arguments for the executor
+        std::vector<std::string> args;
+        if (input_memory.size() > 0) {
+            args.insert(args.begin(), _base_16_encode(input_memory));
+        }
+        if (options.elf_format) {
+            args.push_back("--elf");
+        }
+
+        // Build the input data to send to the plugin
+        std::string input_data;
+        if (options.elf_format) {
+#ifdef BPF_CONFORMANCE_HAS_ELFIO
+            auto elf_bytes = _base_16_encode(_ebpf_inst_to_elf_file(
+                options.xdp_prolog ? bpf_conformance_xdp_section_name : bpf_conformance_default_section_name,
+                bpf_conformance_default_function_name,
+                byte_code,
+                {},
+                {}));
+            input_data = elf_bytes;
+            if (options.debug) {
+                std::cerr << "ELF-encoded bytes: " << elf_bytes << std::endl;
+            }
+#else
+            test_results[test] = {
+                bpf_conformance_test_result_t::TEST_RESULT_ERROR,
+                "ELF format requested but ELFIO not available"};
+            _log_debug_result(test_results, test);
+            continue;
+#endif
+        } else {
+            input_data = _base_16_encode(_ebpf_inst_to_byte_vector(byte_code));
+        }
+
+        // Call the executor
         try {
-            exec_result = executor(bytecode, input_memory, options.elf_format);
+            auto result = executor(input_data, args);
+            return_value_string = result.stdout_output;
+            error_string = result.stderr_output;
+
+            // Strip the trailing newline from the return value.
+            if (!return_value_string.empty() && return_value_string.back() == '\n') {
+                return_value_string = return_value_string.substr(0, return_value_string.size() - 1);
+            }
+
+            // Strip the trailing newline from the error string.
+            if (!error_string.empty() && error_string.back() == '\n') {
+                error_string = error_string.substr(0, error_string.size() - 1);
+            }
+
+            // If the plugin returned a non-zero exit code, then check to see if the error string matches the expected
+            // error string.
+            if (result.exit_code != 0) {
+                if (return_value_string.empty() && !error_string.empty()) {
+                    return_value_string = error_string;
+                }
+                if (expected_error_string.empty()) {
+                    test_results[test] = {
+                        bpf_conformance_test_result_t::TEST_RESULT_ERROR,
+                        "Plugin returned error code " + std::to_string(result.exit_code) + " and output " +
+                            return_value_string};
+                } else {
+                    auto cr = return_value_string.find('\r');
+                    if (cr != std::string::npos) {
+                        return_value_string = return_value_string.substr(0, cr);
+                    }
+
+                    // Strip any trailing whitespace from the return value.
+                    return_value_string = std::regex_replace(return_value_string, std::regex("\\s+$"), "");
+
+                    if (expected_error_string == return_value_string) {
+                        test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_PASS, ""};
+
+                    } else {
+                        test_results[test] = {
+                            bpf_conformance_test_result_t::TEST_RESULT_FAIL,
+                            "Plugin returned error code " + std::to_string(result.exit_code) + " and output " +
+                                return_value_string + " but expected " + expected_error_string};
+                    }
+                }
+                if (options.debug) {
+                    auto [result_enum, message] = test_results[test];
+                    std::cerr << "Test: \"" << test << "\" "
+                              << (result_enum == bpf_conformance_test_result_t::TEST_RESULT_PASS ? "PASS" : "FAIL");
+                    if (!message.empty()) {
+                        std::cerr << "\n" << message;
+                    }
+                    std::cerr << std::endl;
+                }
+
+                _log_debug_result(test_results, test);
+                continue;
+            }
         } catch (const std::exception& e) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_ERROR,
-                "Executor failed with error: " + std::string(e.what())};
-            _log_debug_result(test_results, test);
-            continue;
-        }
-
-        // Process execution result
-        if (!exec_result.success || exec_result.exit_code != 0) {
-            std::string return_value_string = exec_result.output;
-            if (return_value_string.empty() && !exec_result.error_message.empty()) {
-                return_value_string = exec_result.error_message;
-            }
-
-            if (expected_error_string.empty()) {
-                test_results[test] = {
-                    bpf_conformance_test_result_t::TEST_RESULT_ERROR,
-                    "Executor returned error code " + std::to_string(exec_result.exit_code) +
-                        " and output " + return_value_string};
-            } else {
-                // Strip trailing whitespace
-                auto cr = return_value_string.find('\r');
-                if (cr != std::string::npos) {
-                    return_value_string = return_value_string.substr(0, cr);
-                }
-                return_value_string = std::regex_replace(return_value_string, std::regex("\\s+$"), "");
-
-                if (expected_error_string == return_value_string) {
-                    test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_PASS, ""};
-                } else {
-                    test_results[test] = {
-                        bpf_conformance_test_result_t::TEST_RESULT_FAIL,
-                        "Executor returned error code " + std::to_string(exec_result.exit_code) +
-                            " and output " + return_value_string + " but expected " + expected_error_string};
-                }
-            }
-
+                "Plugin failed to execute test with error " + std::string(e.what())};
             if (options.debug) {
                 auto [result, message] = test_results[test];
                 std::cerr << "Test: \"" << test << "\" "
                           << (result == bpf_conformance_test_result_t::TEST_RESULT_PASS ? "PASS" : "FAIL");
-                if (!message.empty()) std::cerr << "\n" << message;
+                if (!message.empty()) {
+                    std::cerr << "\n" << message;
+                }
                 std::cerr << std::endl;
             }
             _log_debug_result(test_results, test);
             continue;
         }
 
-        // Parse return value
+        // Parse the return value from the plugin and compare it with the expected return value.
         uint64_t return_value = 0;
         try {
-            return_value = exec_result.return_value;
+            return_value = static_cast<uint64_t>(std::stoull(return_value_string, nullptr, 16));
         } catch (const std::exception&) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_ERROR,
-                "Executor return value could not be parsed (" + exec_result.output + ")"};
+                "Plugin return value could not be parsed into a valid number (" + return_value_string + ")"};
             continue;
         }
 
         if (return_value != expected_return_value) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_FAIL,
-                "Executor returned incorrect return value " + std::to_string(return_value) +
-                    " expected " + std::to_string(expected_return_value)};
+                "Plugin returned incorrect return value " + std::to_string(return_value) + " expected " +
+                    std::to_string(expected_return_value)};
         } else {
             test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_PASS, ""};
         }
         _log_debug_result(test_results, test);
-    }
-
-    // Compute unused instructions
-    for (const auto& instruction : instructions_from_spec) {
-        if (instructions_used.find(instruction) == instructions_used.end()) {
-            instructions_not_used.insert(instruction);
-        }
-    }
-
-    // Print instruction lists if requested
-    if (options.list_instructions_option == bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_USED ||
-        options.list_instructions_option == bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_ALL) {
-        std::cout << "Instructions used by tests:" << std::endl;
-        for (const auto& instruction : instructions_used) {
-            std::cout << "0x" << std::hex << (uint32_t)instruction.opcode << std::dec << std::endl;
-        }
-    }
-
-    if (options.list_instructions_option == bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_UNUSED ||
-        options.list_instructions_option == bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_ALL) {
-        std::cout << "Instructions not used by tests:" << std::endl;
-        for (const auto& instruction : instructions_not_used) {
-            std::cout << "0x" << std::hex << (uint32_t)instruction.opcode << std::dec << std::endl;
-        }
     }
 
     return test_results;
