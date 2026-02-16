@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation
 // SPDX-License-Identifier: MIT
 
-#include "bpf_test_parser.h"
+#include <bpf_conformance_core/bpf_test_parser.h>
+#include <bpf_conformance_core/bpf_assembler.h>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
-
-#include "bpf_assembler.h"
+#include <iostream>
 
 std::tuple<std::vector<uint8_t>, uint64_t, std::string, std::vector<ebpf_inst>>
 parse_test_file(const std::filesystem::path& data_file)

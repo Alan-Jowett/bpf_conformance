@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#ifndef EBPF_INST_H
-#define EBPF_INST_H
+#ifndef BPF_CONFORMANCE_CORE_EBPF_INST_H
+#define BPF_CONFORMANCE_CORE_EBPF_INST_H
 
 #include <stdint.h>
 

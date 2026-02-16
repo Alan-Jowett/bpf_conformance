@@ -7,7 +7,8 @@
 #include <map>
 #include <string>
 #include <set>
-#include "ebpf.h"
+#include <bpf_conformance_core/ebpf.h>
+#include "bpf_conformance.h"
 
 inline bool
 needs_src(uint8_t opcode)

@@ -6,7 +6,7 @@
 #include <sstream>
 #include <boost/program_options.hpp>
 
-#include "../include/bpf_conformance.h"
+#include "bpf_conformance.h"
 
 #if defined(__linux__)
 #include <signal.h>

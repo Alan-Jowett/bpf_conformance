@@ -9,7 +9,7 @@
 #include <sstream>
 #include <limits>
 
-#include "bpf_assembler.h"
+#include <bpf_conformance_core/bpf_assembler.h>
 
 // The _bpf_assembler class is a helper class for the bpf_assembler.
 typedef class _bpf_assembler

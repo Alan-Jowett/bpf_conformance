@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-#include "bpf_assembler.h"
+#include <bpf_conformance_core/bpf_assembler.h>
 
 namespace fs = std::filesystem;
 

@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation
 // SPDX-License-Identifier: MIT
 
+#ifdef BPF_CONFORMANCE_HAS_ELFIO
+
 #include <elfio/elfio.hpp>
 
-#include "bpf_writer.h"
+#include <bpf_conformance_core/bpf_writer.h>
 
 const std::string symbol_section_name = ".symtab";
 // https://github.com/Alan-Jowett/bpf_conformance/issues/82
@@ -98,3 +100,5 @@ bpf_writer_classic(
 
     writer.save(output);
 }
+
+#endif // BPF_CONFORMANCE_HAS_ELFIO
