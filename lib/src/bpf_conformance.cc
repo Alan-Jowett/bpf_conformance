@@ -7,9 +7,8 @@
 #include <bpf_conformance_core/bpf_conformance.h>
 #include <bpf_conformance_core/bpf_disassembler.h>
 #include <bpf_conformance_core/bpf_test_parser.h>
-#ifdef BPF_CONFORMANCE_HAS_ELFIO
 #include <bpf_conformance_core/bpf_writer.h>
-#endif
+#include <bpf_conformance_core/opcode_names.h>
 
 #include <iomanip>
 #include <iostream>
@@ -23,38 +22,6 @@
 const std::string bpf_conformance_xdp_section_name = "xdp";
 const std::string bpf_conformance_default_section_name = ".text";
 const std::string bpf_conformance_default_function_name = "main";
-
-// Instruction comparison and opcode tracking structures from opcode_names.h
-// Note: For the core library, we use a simplified instruction tracking approach
-
-/**
- * @brief Instruction info for tracking which instructions are used.
- */
-struct bpf_conformance_instruction_t {
-    bpf_conformance_test_cpu_version_t cpu_version;
-    bpf_conformance_groups_t groups;
-    ebpf_inst inst;
-    int opcode;
-    int src;
-    int imm;
-    int offset;
-
-    bpf_conformance_instruction_t(
-        bpf_conformance_test_cpu_version_t cpu_version,
-        bpf_conformance_groups_t groups,
-        ebpf_inst inst)
-        : cpu_version(cpu_version), groups(groups), inst(inst),
-          opcode(inst.opcode), src(inst.src), imm(inst.imm), offset(inst.offset) {}
-};
-
-struct InstCmp {
-    bool operator()(const bpf_conformance_instruction_t& a, const bpf_conformance_instruction_t& b) const {
-        if (a.opcode != b.opcode) return a.opcode < b.opcode;
-        if (a.src != b.src) return a.src < b.src;
-        if (a.imm != b.imm) return a.imm < b.imm;
-        return a.offset < b.offset;
-    }
-};
 
 /**
  * @brief Convert a vector of bytes to a string of hex bytes.
@@ -86,7 +53,6 @@ _ebpf_inst_to_byte_vector(const std::vector<ebpf_inst>& instructions)
     return result;
 }
 
-#ifdef BPF_CONFORMANCE_HAS_ELFIO
 /**
  * @brief Convert a vector of ebpf instructions to an ELF file.
  */
@@ -105,7 +71,6 @@ _ebpf_inst_to_elf_file(
     std::copy(elf_file_string.begin(), elf_file_string.end(), result.begin());
     return result;
 }
-#endif
 
 static void
 _log_debug_result(
@@ -152,6 +117,21 @@ _generate_xdp_prolog(size_t size)
         {0x95, 0x0, 0x0, 0x0, 0x0},
         {0xb7, 0x2, 0x0, 0x0, static_cast<int>(size)},
     };
+}
+
+std::optional<bpf_conformance_instruction_t>
+get_instruction_conformance_info(ebpf_inst inst)
+{
+    auto instruction = std::find_if(instructions_from_spec.begin(), instructions_from_spec.end(), [&](const auto &instruction) {
+        return (instruction.opcode == inst.opcode) &&
+               (!needs_src(inst.opcode) || instruction.src == inst.src) &&
+               (!needs_imm(inst.opcode) || instruction.imm == inst.imm) &&
+               (!needs_offset(inst.opcode) || instruction.offset == inst.offset);
+         });
+    if (instruction == instructions_from_spec.end()) {
+        return {};
+    }
+    return *instruction;
 }
 
 std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>>
@@ -203,7 +183,11 @@ bpf_conformance_run(
         // Determine the required CPU version for the test.
         for (size_t i = 0; i < byte_code.size(); i++) {
             auto inst = byte_code[i];
-            // Note: Simplified - full version uses opcode_names.h lookup
+            if (auto instruction = get_instruction_conformance_info(inst)) {
+                bpf_conformance_test_cpu_version_t cpu_version = instruction->cpu_version;
+                required_cpu_version = std::max(required_cpu_version, cpu_version);
+                required_conformance_groups |= instruction->groups;
+            }
             if (inst.opcode == EBPF_OP_LDDW) {
                 // Instruction has a 64-bit immediate and takes two instructions slots.
                 i++;
@@ -256,7 +240,6 @@ bpf_conformance_run(
         // Build the input data to send to the plugin
         std::string input_data;
         if (options.elf_format) {
-#ifdef BPF_CONFORMANCE_HAS_ELFIO
             auto elf_bytes = _base_16_encode(_ebpf_inst_to_elf_file(
                 options.xdp_prolog ? bpf_conformance_xdp_section_name : bpf_conformance_default_section_name,
                 bpf_conformance_default_function_name,
@@ -267,13 +250,6 @@ bpf_conformance_run(
             if (options.debug) {
                 std::cerr << "ELF-encoded bytes: " << elf_bytes << std::endl;
             }
-#else
-            test_results[test] = {
-                bpf_conformance_test_result_t::TEST_RESULT_ERROR,
-                "ELF format requested but ELFIO not available"};
-            _log_debug_result(test_results, test);
-            continue;
-#endif
         } else {
             input_data = _base_16_encode(_ebpf_inst_to_byte_vector(byte_code));
         }
@@ -374,6 +350,30 @@ bpf_conformance_run(
             test_results[test] = {bpf_conformance_test_result_t::TEST_RESULT_PASS, ""};
         }
         _log_debug_result(test_results, test);
+    }
+
+    // Compute list of opcodes not used in tests.
+    for (auto& instruction : instructions_from_spec) {
+        if (instructions_used.find(instruction) == instructions_used.end()) {
+            instructions_not_used.insert(instruction);
+        }
+    }
+
+    // If the caller asked for a list of opcodes used by the tests, then print the list.
+    if (options.list_instructions_option == bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_USED ||
+        options.list_instructions_option == bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_ALL) {
+        std::cout << "Instructions used by tests:" << std::endl;
+        for (auto instruction : instructions_used) {
+            std::cout << instruction_to_name(instruction) << std::endl;
+        }
+    }
+
+    if (options.list_instructions_option == bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_UNUSED ||
+        options.list_instructions_option == bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_ALL) {
+        std::cout << "Instructions not used by tests:" << std::endl;
+        for (auto instruction : instructions_not_used) {
+            std::cout << instruction_to_name(instruction) << std::endl;
+        }
     }
 
     return test_results;
