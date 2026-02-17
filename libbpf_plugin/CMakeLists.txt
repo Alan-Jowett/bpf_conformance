@@ -21,7 +21,7 @@ add_executable(
   libbpf_plugin.cc
 )
 
-target_link_libraries(libbpf_plugin PRIVATE ${LIBBPF_LIBRARIES})
+target_link_libraries(libbpf_plugin PRIVATE ${LIBBPF_LIBRARIES} bpf_conformance_core)
 
 
 
