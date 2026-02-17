@@ -5,7 +5,7 @@
 // This file provides the backwards-compatible bpf_conformance_options() API
 // by creating a Boost.Process-based executor and calling bpf_conformance_run().
 
-#include "../include/bpf_conformance.h"
+#include "bpf_conformance.h"
 #include "boost_helper.h"
 
 #include <iostream>

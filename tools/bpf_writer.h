@@ -3,5 +3,6 @@
 
 #pragma once
 
-// Re-export from core library (which now owns bpf_writer when ELFIO is available)
+// Compatibility header: bpf_writer now lives in the core library.
+// This forwarding header is provided for backwards compatibility.
 #include <bpf_conformance_core/bpf_writer.h>
