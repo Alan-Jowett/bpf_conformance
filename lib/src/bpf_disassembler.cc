@@ -5,7 +5,7 @@
 #include <iomanip>
 #include <sstream>
 #include <unordered_map>
-#include "bpf_disassembler.h"
+#include <bpf_conformance_core/bpf_disassembler.h>
 
 // The _bpf_disassembler class is a helper class for the bpf_disassembler.
 typedef class _bpf_disassembler

@@ -20,8 +20,8 @@
 #include <string>
 #include <vector>
 
-#include "bpf_disassembler.h"
-#include "bpf_test_parser.h"
+#include <bpf_conformance_core/bpf_disassembler.h>
+#include <bpf_conformance_core/bpf_test_parser.h>
 
 namespace fs = std::filesystem;
 

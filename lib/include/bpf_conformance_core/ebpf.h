@@ -17,21 +17,9 @@
  * limitations under the License.
  */
 
-#ifndef EBPF_H
-#define EBPF_H
+#ifndef BPF_CONFORMANCE_CORE_EBPF_H
+#define BPF_CONFORMANCE_CORE_EBPF_H
 
 #include "ebpf_inst.h"
-
-/**
- * @brief eBPF Map Definition as it appears in the maps section of an ELF file.
- */
-typedef struct _ebpf_map_definition_in_file
-{
-    uint32_t type;          ///< Type of map.
-    uint32_t key_size;      ///< Size in bytes of a map key.
-    uint32_t value_size;    ///< Size in bytes of a map value.
-    uint32_t max_entries;   ///< Maximum number of entries allowed in the map.
-    uint32_t inner_map_idx; ///< Index of inner map if this is a nested map.
-} ebpf_map_definition_in_file_t;
 
 #endif

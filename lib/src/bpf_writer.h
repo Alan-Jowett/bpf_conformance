@@ -7,7 +7,19 @@
 #include <string>
 #include <tuple>
 #include <vector>
-#include "ebpf.h"
+#include <bpf_conformance_core/ebpf.h>
+
+/**
+ * @brief eBPF Map Definition as it appears in the maps section of an ELF file.
+ */
+typedef struct _ebpf_map_definition_in_file
+{
+    uint32_t type;          ///< Type of map.
+    uint32_t key_size;      ///< Size in bytes of a map key.
+    uint32_t value_size;    ///< Size in bytes of a map value.
+    uint32_t max_entries;   ///< Maximum number of entries allowed in the map.
+    uint32_t inner_map_idx; ///< Index of inner map if this is a nested map.
+} ebpf_map_definition_in_file_t;
 
 /**
  * @brief Write a BPF program to an ELF file, using the classic ELF format for maps.

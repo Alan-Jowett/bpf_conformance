@@ -1,10 +1,16 @@
 // Copyright (c) Microsoft Corporation
 // SPDX-License-Identifier: MIT
 
-#include "../include/bpf_conformance.h"
+// Core conformance testing logic with executor callback interface.
+// This file does NOT depend on Boost.Process.
 
-//#include <boost/process.hpp>
-#include "boost_helper.h"
+#include <bpf_conformance_core/bpf_conformance.h>
+#include <bpf_conformance_core/bpf_disassembler.h>
+#include <bpf_conformance_core/bpf_test_parser.h>
+#include <bpf_conformance_core/bpf_writer.h>
+#include <bpf_conformance_core/opcode_names.h>
+
+#include <iomanip>
 #include <iostream>
 #include <regex>
 #include <set>
@@ -12,16 +18,13 @@
 #include <string>
 #include <vector>
 
-#include "bpf_disassembler.h"
-#include "bpf_test_parser.h"
-#include "bpf_writer.h"
-#include "opcode_names.h"
+// Section/function name constants
+const std::string bpf_conformance_xdp_section_name = "xdp";
+const std::string bpf_conformance_default_section_name = ".text";
+const std::string bpf_conformance_default_function_name = "main";
 
 /**
  * @brief Convert a vector of bytes to a string of hex bytes.
- *
- * @param[in] data Vector of bytes to convert.
- * @return String of hex bytes.
  */
 static std::string
 _base_16_encode(const std::vector<uint8_t>& data)
@@ -36,9 +39,6 @@ _base_16_encode(const std::vector<uint8_t>& data)
 
 /**
  * @brief Convert a vector of ebpf instructions to a vector of bytes.
- *
- * @param[in] instructions Instructions to convert.
- * @return Vector of bytes.
  */
 static std::vector<uint8_t>
 _ebpf_inst_to_byte_vector(const std::vector<ebpf_inst>& instructions)
@@ -55,10 +55,6 @@ _ebpf_inst_to_byte_vector(const std::vector<ebpf_inst>& instructions)
 
 /**
  * @brief Convert a vector of ebpf instructions to an ELF file.
- * In the future this will include map definitions and relocation information.
- *
- * @param[in] instructions Instructions to convert.
- * @return Vector of bytes that represents the ELF file.
  */
 static std::vector<uint8_t>
 _ebpf_inst_to_elf_file(
@@ -103,9 +99,6 @@ _log_debug_result(
 
 /**
  * @brief Create a prolog that loads the packet memory into %R1 and the length into %R2.
- *
- * @param[in] size Expected size of the packet.
- * @return Vector of bpf_insn that represents the prolog.
  */
 static std::vector<ebpf_inst>
 _generate_xdp_prolog(size_t size)
@@ -113,22 +106,16 @@ _generate_xdp_prolog(size_t size)
     if (size > INT32_MAX) {
         throw std::runtime_error("Packet size too large");
     }
-    // Create a prolog that converts the BPF program to one that can be loaded
-    // at the XDP attach point.
-    // This involves:
-    // 1. Copying the ctx->data into %r1.
-    // 2. Copying the ctx->data_end - ctx->data into %r2.
-    // 3. Satisfying the verifier that %r2 is the length of the packet.
     return {
-        {0xb7, 0x0, 0x0, 0x0, -1},   // mov64 %r0, -1
-        {0xbf, 0x6, 0x1, 0x0, 0x0},  // mov %r6, %r1
-        {0x61, 0x1, 0x6, 0x0, 0x0},  // ldxw %r1, [%r6+0]
-        {0x61, 0x2, 0x6, 0x4, 0x0},  // ldxw %r2, [%r6+4]
-        {0xbf, 0x3, 0x1, 0x0, 0x0},  // mov %r3, %r1
-        {0x7, 0x3, 0x0, 0x0, static_cast<int>(size)},  // add %r3, size
-        {0xbd, 0x3, 0x2, 0x1, 0x0},  //  jle %r3, %r2, +1
-        {0x95, 0x0, 0x0, 0x0, 0x0},  // exit
-        {0xb7, 0x2, 0x0, 0x0, static_cast<int>(size)}, // mov %r2, size
+        {0xb7, 0x0, 0x0, 0x0, -1},
+        {0xbf, 0x6, 0x1, 0x0, 0x0},
+        {0x61, 0x1, 0x6, 0x0, 0x0},
+        {0x61, 0x2, 0x6, 0x4, 0x0},
+        {0xbf, 0x3, 0x1, 0x0, 0x0},
+        {0x7, 0x3, 0x0, 0x0, static_cast<int>(size)},
+        {0xbd, 0x3, 0x2, 0x1, 0x0},
+        {0x95, 0x0, 0x0, 0x0, 0x0},
+        {0xb7, 0x2, 0x0, 0x0, static_cast<int>(size)},
     };
 }
 
@@ -148,10 +135,9 @@ get_instruction_conformance_info(ebpf_inst inst)
 }
 
 std::map<std::filesystem::path, std::tuple<bpf_conformance_test_result_t, std::string>>
-bpf_conformance_options(
+bpf_conformance_run(
     const std::vector<std::filesystem::path>& test_files,
-    const std::filesystem::path& plugin_path,
-    const std::vector<std::string>& plugin_options,
+    bpf_conformance_executor_t executor,
     const bpf_conformance_options_t& options)
 {
     std::set<bpf_conformance_instruction_t, InstCmp> instructions_used;
@@ -241,86 +227,59 @@ bpf_conformance_options(
 
         std::string return_value_string;
         std::string error_string;
+
+        // Build arguments for the executor
+        std::vector<std::string> args;
+        if (input_memory.size() > 0) {
+            args.insert(args.begin(), _base_16_encode(input_memory));
+        }
+        if (options.elf_format) {
+            args.push_back("--elf");
+        }
+
+        // Build the input data to send to the plugin
+        std::string input_data;
+        if (options.elf_format) {
+            auto elf_bytes = _base_16_encode(_ebpf_inst_to_elf_file(
+                options.xdp_prolog ? bpf_conformance_xdp_section_name : bpf_conformance_default_section_name,
+                bpf_conformance_default_function_name,
+                byte_code,
+                {},
+                {}));
+            input_data = elf_bytes;
+            if (options.debug) {
+                std::cerr << "ELF-encoded bytes: " << elf_bytes << std::endl;
+            }
+        } else {
+            input_data = _base_16_encode(_ebpf_inst_to_byte_vector(byte_code));
+        }
+
+        // Call the executor
         try {
-            // Call the plugin to execute the BPF program.
-            boost::process::ipstream output;
-            boost::process::ipstream error;
-            boost::process::opstream input;
-            std::vector<std::string> args;
-            // Construct the command line arguments to pass to the plugin.
-            // First argument is any memory to pass to the BPF program.
-            // Remaining arguments are the options to pass to the plugin.
-            if (input_memory.size() > 0) {
-                args.insert(args.begin(), _base_16_encode(input_memory));
-            }
-            args.insert(args.end(), plugin_options.begin(), plugin_options.end());
-
-            if (options.elf_format) {
-                args.insert(args.end(), "--elf");
-            }
-
-            boost::process::child c(
-                plugin_path.string(),
-                boost::process::args(args),
-                boost::process::std_out > output,
-                boost::process::std_in<input, boost::process::std_err> error);
-
-            // Pass the BPF instructions to the plugin as stdin.
-            if (options.elf_format) {
-                // Encode the instructions as an ELF file.
-                // Issue: https://github.com/Alan-Jowett/bpf_conformance/issues/68
-                // Add support for parsing map definitions from the test file and
-                // passing them to the plugin.
-                auto elf_bytes = _base_16_encode(_ebpf_inst_to_elf_file(
-                    options.xdp_prolog ? bpf_conformance_xdp_section_name : bpf_conformance_default_section_name,
-                    bpf_conformance_default_function_name,
-                    byte_code,
-                    {},
-                    {}));
-                input << elf_bytes << std::endl;
-                if (options.debug) {
-                    std::cerr << "ELF-encoded bytes: " << elf_bytes
-                              << std::endl;
-                }
-            } else {
-                // Encode the instructions as a byte array.
-                input << _base_16_encode(_ebpf_inst_to_byte_vector(byte_code)) << std::endl;
-            }
-            input.pipe().close();
-            std::string line;
-
-            // Read the return value from the plugin from stdout.
-            while (std::getline(output, line)) {
-                return_value_string += line + "\n";
-            }
-            output.close();
-
-            while (std::getline(error, line)) {
-                error_string += line + "\n";
-            }
+            auto result = executor(input_data, args);
+            return_value_string = result.stdout_output;
+            error_string = result.stderr_output;
 
             // Strip the trailing newline from the return value.
-            if (!return_value_string.empty()) {
+            if (!return_value_string.empty() && return_value_string.back() == '\n') {
                 return_value_string = return_value_string.substr(0, return_value_string.size() - 1);
             }
 
             // Strip the trailing newline from the error string.
-            if (!error_string.empty()) {
+            if (!error_string.empty() && error_string.back() == '\n') {
                 error_string = error_string.substr(0, error_string.size() - 1);
             }
 
-            c.wait();
-
             // If the plugin returned a non-zero exit code, then check to see if the error string matches the expected
             // error string.
-            if (c.exit_code() != 0) {
+            if (result.exit_code != 0) {
                 if (return_value_string.empty() && !error_string.empty()) {
                     return_value_string = error_string;
                 }
                 if (expected_error_string.empty()) {
                     test_results[test] = {
                         bpf_conformance_test_result_t::TEST_RESULT_ERROR,
-                        "Plugin returned error code " + std::to_string(c.exit_code()) + " and output " +
+                        "Plugin returned error code " + std::to_string(result.exit_code) + " and output " +
                             return_value_string};
                 } else {
                     auto cr = return_value_string.find('\r');
@@ -337,14 +296,14 @@ bpf_conformance_options(
                     } else {
                         test_results[test] = {
                             bpf_conformance_test_result_t::TEST_RESULT_FAIL,
-                            "Plugin returned error code " + std::to_string(c.exit_code()) + " and output " +
+                            "Plugin returned error code " + std::to_string(result.exit_code) + " and output " +
                                 return_value_string + " but expected " + expected_error_string};
                     }
                 }
                 if (options.debug) {
-                    auto [result, message] = test_results[test];
+                    auto [result_enum, message] = test_results[test];
                     std::cerr << "Test: \"" << test << "\" "
-                              << (result == bpf_conformance_test_result_t::TEST_RESULT_PASS ? "PASS" : "FAIL");
+                              << (result_enum == bpf_conformance_test_result_t::TEST_RESULT_PASS ? "PASS" : "FAIL");
                     if (!message.empty()) {
                         std::cerr << "\n" << message;
                     }
@@ -354,7 +313,7 @@ bpf_conformance_options(
                 _log_debug_result(test_results, test);
                 continue;
             }
-        } catch (boost::process::process_error& e) {
+        } catch (const std::exception& e) {
             test_results[test] = {
                 bpf_conformance_test_result_t::TEST_RESULT_ERROR,
                 "Plugin failed to execute test with error " + std::string(e.what())};
@@ -401,7 +360,6 @@ bpf_conformance_options(
     }
 
     // If the caller asked for a list of opcodes used by the tests, then print the list.
-
     if (options.list_instructions_option == bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_USED ||
         options.list_instructions_option == bpf_conformance_list_instructions_t::LIST_INSTRUCTIONS_ALL) {
         std::cout << "Instructions used by tests:" << std::endl;
