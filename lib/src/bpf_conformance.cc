@@ -65,7 +65,6 @@ _base_16_encode(const std::vector<uint8_t>& data)
     std::stringstream result;
     for (auto byte : data) {
         result << std::hex << std::setw(2) << std::setfill('0') << (int)byte << " ";
-        result << " ";
     }
     return result.str();
 }

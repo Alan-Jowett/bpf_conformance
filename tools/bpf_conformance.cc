@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 /**
@@ -49,17 +50,30 @@ make_boost_process_executor(
         input << input_data << std::endl;
         input.pipe().close();
 
-        // Read stdout
-        std::string line;
-        while (std::getline(output, line)) {
-            result.stdout_output += line + "\n";
-        }
-        output.close();
-
-        // Read stderr
-        while (std::getline(error, line)) {
-            result.stderr_output += line + "\n";
-        }
+        // Read stdout and stderr concurrently to avoid deadlock
+        // if plugin writes enough to fill the stderr pipe while we're blocked reading stdout.
+        std::string stdout_content;
+        std::string stderr_content;
+        
+        std::thread stdout_reader([&output, &stdout_content]() {
+            std::string line;
+            while (std::getline(output, line)) {
+                stdout_content += line + "\n";
+            }
+        });
+        
+        std::thread stderr_reader([&error, &stderr_content]() {
+            std::string line;
+            while (std::getline(error, line)) {
+                stderr_content += line + "\n";
+            }
+        });
+        
+        stdout_reader.join();
+        stderr_reader.join();
+        
+        result.stdout_output = std::move(stdout_content);
+        result.stderr_output = std::move(stderr_content);
 
         c.wait();
         result.exit_code = c.exit_code();
