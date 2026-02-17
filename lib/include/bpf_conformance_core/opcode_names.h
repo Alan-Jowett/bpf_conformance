@@ -5,8 +5,9 @@
 
 #include <charconv>
 #include <map>
-#include <string>
 #include <set>
+#include <sstream>
+#include <string>
 #include "ebpf.h"
 #include "bpf_conformance.h"
 
