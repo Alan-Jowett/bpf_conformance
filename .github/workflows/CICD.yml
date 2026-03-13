@@ -8,6 +8,7 @@ name: CI/CD
 on:
   push:
     branches: [ "main" ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ "main" ]
   # Run on a daily schedule to perform the full set of tests.
