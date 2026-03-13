@@ -39,7 +39,7 @@ jobs:
 
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
       with:
         egress-policy: audit
 
@@ -113,7 +113,7 @@ jobs:
 
     - name: Upload build as artifact
       if: inputs.platform == 'windows-2022' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'RelWithDebInfo'
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: bpf_conformance-Release
         path: |
@@ -121,7 +121,7 @@ jobs:
 
     - name: Upload build as artifact
       if: inputs.platform == 'windows-2022' && (github.event_name == 'schedule' || github.event_name == 'push') && github.ref == 'refs/heads/main' && env.BUILD_TYPE == 'Debug'
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: bpf_conformance-Debug
         path: |
@@ -141,7 +141,7 @@ jobs:
 
     - name: Upload build folder for diagnosing issues
       if: always()
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: bpf_conformance-diagnostic-${{inputs.platform}}-${{inputs.configuration}}-enable-sanitizers-${{inputs.enable_sanitizers}}-enable-coverage-${{inputs.enable_coverage}}
         path: ${{github.workspace}}/build
@@ -162,7 +162,7 @@ jobs:
 
     - name: Log in to the Container registry
       if: inputs.publish_docker == true
-      uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+      uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
@@ -171,13 +171,13 @@ jobs:
     - name: Extract metadata (tags, labels) for Docker
       if: inputs.publish_docker == true
       id: meta
-      uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051
+      uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
     - name: Build and push Docker image
       if: inputs.publish_docker == true && github.event_name == 'push'
-      uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+      uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
       with:
         context: build
         push: true
