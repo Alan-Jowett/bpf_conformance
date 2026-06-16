@@ -14,7 +14,9 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(BOOST_VERSION "1.87.0")
   endif()
 
-  if ("${CMAKE_GENERATOR}" MATCHES "Visual Studio 17 2022")
+  if ("${CMAKE_GENERATOR}" MATCHES "Visual Studio 18 2026")
+    set(MSVC_PLATFORM "143")
+  elseif ("${CMAKE_GENERATOR}" MATCHES "Visual Studio 17 2022")
     set(MSVC_PLATFORM "143")
   elseif ("${CMAKE_GENERATOR}" MATCHES "Visual Studio 16 2019")
     set(MSVC_PLATFORM "142")
@@ -22,9 +24,10 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     message(FATAL_ERROR
       "Unsupported Visual Studio version: ${CMAKE_GENERATOR}\n"
       "Supported versions:\n"
+      "  - Visual Studio 18 2026 (vc143)\n"
       "  - Visual Studio 17 2022 (vc143)\n"
       "  - Visual Studio 16 2019 (vc142)\n"
-      "Use: cmake -G \"Visual Studio 17 2022\" ...")
+      "Use: cmake -G \"Visual Studio 18 2026\" ...")
   endif()
 
   if(NOT NUGET)
